@@ -54,6 +54,8 @@ export function NumTile({ n, state = 'idle', onClick, size = 'md', color = 'sun'
     <button
       className="no-select"
       onClick={onClick}
+      disabled={state === 'disabled'}
+      aria-disabled={state === 'disabled'}
       style={{
         width: s.w, height: s.h, borderRadius: s.rad,
         background: c.bg, color: c.ink,
@@ -88,6 +90,7 @@ export function NumTile({ n, state = 'idle', onClick, size = 'md', color = 'sun'
       }}
       onTouchEnd={e => {
         if (state !== 'idle') return;
+        e.preventDefault(); // prevent double-fire (touchend + synthetic click)
         e.currentTarget.style.transform = '';
         e.currentTarget.style.boxShadow = baseShadow;
       }}

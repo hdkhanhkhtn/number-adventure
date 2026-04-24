@@ -25,9 +25,22 @@ const BODY_DARK: Record<MascotColor, string> = {
 type EyeMap = Record<MascotMood, React.ReactElement>;
 type MouthMap = Record<MascotMood, React.ReactElement>;
 
-const EYES: EyeMap = {
-  happy:     <><ellipse cx="0" cy="0" rx="6" ry="7" fill="#2D3A2E"/><ellipse cx="-1.5" cy="-2" rx="2" ry="2.5" fill="#fff"/></>,
-  wink:      <path d="M -6 0 Q 0 -4 6 0" stroke="#2D3A2E" strokeWidth="3" fill="none" strokeLinecap="round"/>,
+const EYE_OPEN = <><ellipse cx="0" cy="0" rx="6" ry="7" fill="#2D3A2E"/><ellipse cx="-1.5" cy="-2" rx="2" ry="2.5" fill="#fff"/></>;
+const EYE_WINK_CLOSED = <path d="M -6 0 Q 0 4 6 0" stroke="#2D3A2E" strokeWidth="3" fill="none" strokeLinecap="round"/>;
+
+// Left eye (translate 42,66) — stays open during wink
+const LEFT_EYES: EyeMap = {
+  happy:     EYE_OPEN,
+  wink:      EYE_OPEN,
+  think:     <ellipse cx="0" cy="0" rx="5" ry="5" fill="#2D3A2E"/>,
+  sleep:     <path d="M -6 0 Q 0 4 6 0" stroke="#2D3A2E" strokeWidth="3" fill="none" strokeLinecap="round"/>,
+  celebrate: <path d="M -6 2 Q 0 -6 6 2" stroke="#2D3A2E" strokeWidth="3" fill="none" strokeLinecap="round"/>,
+};
+
+// Right eye (translate 78,66) — closes during wink
+const RIGHT_EYES: EyeMap = {
+  happy:     EYE_OPEN,
+  wink:      EYE_WINK_CLOSED,
   think:     <ellipse cx="0" cy="0" rx="5" ry="5" fill="#2D3A2E"/>,
   sleep:     <path d="M -6 0 Q 0 4 6 0" stroke="#2D3A2E" strokeWidth="3" fill="none" strokeLinecap="round"/>,
   celebrate: <path d="M -6 2 Q 0 -6 6 2" stroke="#2D3A2E" strokeWidth="3" fill="none" strokeLinecap="round"/>,
@@ -88,8 +101,8 @@ export function BapMascot({ size = 120, mood = 'happy', color = 'sun' }: BapMasc
       <circle cx="90" cy="82" r="7" fill="#FFA48C" opacity="0.7"/>
 
       {/* Eyes */}
-      <g transform="translate(42 66)">{EYES[mood]}</g>
-      <g transform="translate(78 66)">{EYES[mood]}</g>
+      <g transform="translate(42 66)">{LEFT_EYES[mood]}</g>
+      <g transform="translate(78 66)">{RIGHT_EYES[mood]}</g>
 
       {/* Mouth */}
       {MOUTHS[mood]}

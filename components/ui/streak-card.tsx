@@ -6,7 +6,7 @@ export interface StreakCardProps {
   weekData?: boolean[]; // 7 booleans Mon–Sun, true = completed
 }
 
-const DAYS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+const DAYS = ['M', 'Tu', 'W', 'Th', 'F', 'Sa', 'Su'];
 
 /** Shows flame + streak count + 7-day dot calendar */
 export function StreakCard({ currentStreak, longestStreak, weekData = [] }: StreakCardProps) {

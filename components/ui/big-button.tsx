@@ -40,6 +40,7 @@ export function BigButton({
     <button
       className={`no-select${className ? ` ${className}` : ''}`}
       onClick={disabled ? undefined : onClick}
+      disabled={disabled}
       style={{
         height: s.h,
         padding: `0 ${s.px}px`,
