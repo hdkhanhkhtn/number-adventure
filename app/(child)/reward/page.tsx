@@ -1,0 +1,64 @@
+'use client';
+
+import { useEffect, useState, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useGameProgress } from '@/context/game-progress-context';
+import { RewardContent } from '@/components/screens/reward-content';
+import type { MascotColor } from '@/lib/types/common';
+
+interface SessionResult {
+  session: { stars: number };
+  sticker?: { emoji: string; name: string } | null;
+  correct?: number;
+  total?: number;
+}
+
+function RewardInner() {
+  const { state } = useGameProgress();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [result, setResult] = useState<SessionResult | null>(null);
+
+  // Result can come from sessionStorage (set by game page on complete)
+  useEffect(() => {
+    const cached = sessionStorage.getItem('lastGameResult');
+    if (cached) {
+      setResult(JSON.parse(cached) as SessionResult);
+      sessionStorage.removeItem('lastGameResult');
+    } else {
+      // Fallback: minimal result
+      setResult({ session: { stars: 1 } });
+    }
+  }, []);
+
+  const profile = state.profile;
+  if (!result || !profile) return null;
+
+  const stars = result.session.stars;
+  const total = result.total ?? 5;
+  const correct = result.correct ?? total;
+
+  return (
+    <RewardContent
+      stars={stars}
+      correct={correct}
+      total={total}
+      sticker={result.sticker ?? null}
+      profileName={profile.name}
+      profileColor={profile.color as MascotColor}
+      onContinue={() => {
+        const worldId = searchParams.get('worldId');
+        if (worldId) router.push(`/worlds/${worldId}`);
+        else router.push('/worlds');
+      }}
+    />
+  );
+}
+
+export default function RewardPage() {
+  return (
+    <Suspense>
+      <RewardInner />
+    </Suspense>
+  );
+}

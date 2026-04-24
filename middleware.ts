@@ -21,6 +21,9 @@ export function middleware(request: NextRequest): NextResponse {
     return NextResponse.next();
   }
 
+  // PHASE C MERGE BLOCKER: Middleware validates cookie existence only.
+  // JWT validation and per-route IDOR guards must be implemented before
+  // this app is deployed to any user-accessible environment.
   // TODO Phase C: replace with JWT/NextAuth session validation
   const sessionToken = request.cookies.get('bap-session')?.value;
   if (!sessionToken) {

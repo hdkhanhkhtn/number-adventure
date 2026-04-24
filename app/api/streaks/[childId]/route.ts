@@ -1,15 +1,21 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { prisma } from '@/lib/prisma';
 
 type Params = { params: Promise<{ childId: string }> };
 
-/** GET /api/streaks/:childId — get streak data for a child */
-export async function GET(request: NextRequest, { params }: Params) {
+/** GET /api/streaks/:childId — current streak data */
+export async function GET(_request: NextRequest, { params }: Params) {
   try {
-    // TODO Phase B: verify child.parentId === session.parentId (IDOR guard)
-    void request; void params;
-    return NextResponse.json({ error: 'Not implemented', status: 501 }, { status: 501 });
-  } catch {
+    const { childId } = await params;
+    const streak = await prisma.streak.findUnique({ where: { childId } });
+    return NextResponse.json({
+      currentStreak: streak?.currentStreak ?? 0,
+      longestStreak: streak?.longestStreak ?? 0,
+      lastPlayDate: streak?.lastPlayDate?.toISOString() ?? null,
+    });
+  } catch (e) {
+    console.error('[api/streaks/childId GET] Error:', e);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

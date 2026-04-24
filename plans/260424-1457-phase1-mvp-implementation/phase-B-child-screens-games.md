@@ -13,7 +13,7 @@
 ## Overview
 
 - **Priority:** P0 -- core user experience
-- **Status:** Pending
+- **Status:** ✅ Complete
 - **Description:** Port all child-facing screens, build the game engine, port all 5 mini-games, implement API endpoints for sessions/attempts/AI question generation, and port the reward screen. Routes use `/worlds/[worldId]` and `/play/[gameType]/[lessonId]` pattern. Math Kitchen is a World; AddTake is a game type within it.
 
 ## Key Insights
@@ -488,39 +488,39 @@ Navigate through: splash -> welcome -> profile setup -> home -> world map -> lev
 
 ## Todo List
 
-- [ ] Create `lib/game-engine/types.ts`
-- [ ] Create `lib/game-engine/hear-tap-engine.ts`
-- [ ] Create `lib/game-engine/build-number-engine.ts`
-- [ ] Create `lib/game-engine/even-odd-engine.ts`
-- [ ] Create `lib/game-engine/number-order-engine.ts`
-- [ ] Create `lib/game-engine/add-take-engine.ts`
-- [ ] Create `lib/game-engine/score-calculator.ts`
-- [ ] Create `lib/game-engine/question-loader.ts`
-- [ ] Create `lib/hooks/use-game.ts`
-- [ ] Create `lib/hooks/use-game-session.ts`
-- [ ] Implement `POST /api/sessions`
-- [ ] Implement `PATCH /api/sessions/[id]`
-- [ ] Implement `POST /api/sessions/[id]/attempts`
-- [ ] Implement `POST /api/ai/generate-questions` (AI + fallback + DB storage)
-- [ ] Implement `GET /api/lessons/[lessonId]`
-- [ ] Implement `GET /api/progress/[childId]`
-- [ ] Implement `GET /api/stickers/[childId]`
-- [ ] Implement `GET/POST /api/streaks/[childId]`
-- [ ] Port GameHud to `components/game/game-hud.tsx`
-- [ ] Create `components/game/game-container.tsx`
-- [ ] Port SlotColumn, Basket, TenStick, OneDot
-- [ ] Port SplashScreen to `components/screens/splash-screen.tsx`
-- [ ] Port WelcomeScreen to `components/screens/welcome-screen.tsx`
-- [ ] Port ProfileSetup to `components/screens/profile-setup.tsx` (with API registration)
-- [ ] Port HomeScreen to `components/screens/home-screen.tsx` (with StreakCard, API data)
-- [ ] Port QuickTile, WorldCard, LevelNode
-- [ ] Port RewardContent + StatDisplay
-- [ ] Create 5 game page components (hear-tap, build-number, even-odd, number-order, add-take)
-- [ ] Create `app/(child)/play/[gameType]/[lessonId]/page.tsx` router
-- [ ] Create `app/(child)/layout.tsx` with onboarding flow
-- [ ] Create all route pages (home, worlds, worlds/[worldId], stickers, reward)
-- [ ] Build compiles with zero errors
-- [ ] Manual test: full flow splash -> home -> game (with AI questions) -> reward
+- [x]Create `lib/game-engine/types.ts`
+- [x]Create `lib/game-engine/hear-tap-engine.ts`
+- [x]Create `lib/game-engine/build-number-engine.ts`
+- [x]Create `lib/game-engine/even-odd-engine.ts`
+- [x]Create `lib/game-engine/number-order-engine.ts`
+- [x]Create `lib/game-engine/add-take-engine.ts`
+- [x]Create `lib/game-engine/score-calculator.ts`
+- [x]Create `lib/game-engine/question-loader.ts`
+- [x]Create `lib/hooks/use-game.ts`
+- [x]Create `lib/hooks/use-game-session.ts`
+- [x]Implement `POST /api/sessions`
+- [x]Implement `PATCH /api/sessions/[id]`
+- [x]Implement `POST /api/sessions/[id]/attempts`
+- [x]Implement `POST /api/ai/generate-questions` (AI + fallback + DB storage)
+- [x]Implement `GET /api/lessons/[lessonId]`
+- [x]Implement `GET /api/progress/[childId]`
+- [x]Implement `GET /api/stickers/[childId]`
+- [x]Implement `GET/POST /api/streaks/[childId]`
+- [x]Port GameHud to `components/game/game-hud.tsx`
+- [x]Create `components/game/game-container.tsx`
+- [x]Port SlotColumn, Basket, TenStick, OneDot
+- [x]Port SplashScreen to `components/screens/splash-screen.tsx`
+- [x]Port WelcomeScreen to `components/screens/welcome-screen.tsx`
+- [x]Port ProfileSetup to `components/screens/profile-setup.tsx` (with API registration)
+- [x]Port HomeScreen to `components/screens/home-screen.tsx` (with StreakCard, API data)
+- [x]Port QuickTile, WorldCard, LevelNode
+- [x]Port RewardContent + StatDisplay
+- [x]Create 5 game page components (hear-tap, build-number, even-odd, number-order, add-take)
+- [x]Create `app/(child)/play/[gameType]/[lessonId]/page.tsx` router
+- [x]Create `app/(child)/layout.tsx` with onboarding flow
+- [x]Create all route pages (home, worlds, worlds/[worldId], stickers, reward)
+- [x]Build compiles with zero errors
+- [x]Manual test: full flow splash -> home -> game (with AI questions) -> reward
 
 ## Acceptance Criteria
 
