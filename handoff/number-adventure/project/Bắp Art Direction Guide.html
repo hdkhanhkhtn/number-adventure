@@ -1,0 +1,740 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bắp Number Adventure — Art Direction Guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #F7F3EC;
+  --surface: #FFFFFF;
+  --ink: #1E2A1F;
+  --ink-soft: #5A6B5C;
+  --ink-faint: #9EAB9F;
+  --outline: rgba(30,42,31,.10);
+  --r: 16px;
+  --shadow: 0 2px 0 rgba(30,42,31,.05), 0 6px 16px rgba(30,42,31,.07);
+  --font-kid: 'Fredoka', ui-rounded, system-ui, sans-serif;
+  --font-body: 'Be Vietnam Pro', system-ui, sans-serif;
+
+  --sage: #A8D5A2; --sage-ink: #2F6A3C; --forest: #2E5A3A;
+  --sky: #B8DEEF; --sky-ink: #2E6F93;
+  --lavender: #D9C7F0; --lavender-ink: #6B4FA0;
+  --sun: #FFD36E; --sun-ink: #7A4E0E;
+  --coral: #FFA48C; --coral-ink: #C14A2A;
+  --berry: #E6779E; --berry-ink: #A23665;
+  --cream: #FFF8EC; --parchment: #FDE9C2;
+}
+html { scroll-behavior: smooth; }
+body { font-family: var(--font-body); background: var(--bg); color: var(--ink); line-height: 1.6; -webkit-font-smoothing: antialiased; }
+
+/* Layout */
+.layout { display: flex; min-height: 100vh; }
+.sidebar {
+  width: 260px; flex-shrink: 0; position: sticky; top: 0; height: 100vh;
+  overflow-y: auto; padding: 28px 0; background: var(--surface);
+  border-right: 1px solid var(--outline); z-index: 100;
+}
+.sidebar::-webkit-scrollbar { width: 0; }
+.sidebar-head { padding: 0 20px 20px; border-bottom: 1px solid var(--outline); margin-bottom: 12px; }
+.sidebar-title { font-family: var(--font-kid); font-size: 20px; font-weight: 700; color: var(--sage-ink); }
+.sidebar-sub { font-size: 11px; color: var(--ink-faint); font-weight: 500; margin-top: 2px; }
+.toc-group { padding: 0 12px; margin-bottom: 2px; }
+.toc-label { font-size: 10px; font-weight: 700; letter-spacing: .8px; color: var(--ink-faint); padding: 10px 8px 4px; text-transform: uppercase; }
+.toc-link { display: flex; align-items: center; gap: 8; padding: 7px 10px; border-radius: 10px; font-size: 13px; font-weight: 500; color: var(--ink-soft); cursor: pointer; text-decoration: none; transition: background .15s, color .15s; }
+.toc-link:hover { background: #D6EDD0; color: var(--sage-ink); }
+.toc-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+
+.main { flex: 1; padding: 48px 56px; max-width: 980px; }
+@media (max-width: 900px) { .sidebar { display: none; } .main { padding: 24px 18px; } }
+
+/* Typography */
+h1 { font-family: var(--font-kid); font-size: 36px; font-weight: 700; line-height: 1.1; margin-bottom: 8px; }
+.doc-sub { font-size: 15px; color: var(--ink-soft); margin-bottom: 36px; }
+h2 { font-family: var(--font-kid); font-size: 22px; font-weight: 700; margin: 48px 0 8px; padding-top: 24px; border-top: 1px solid var(--outline); }
+h2:first-of-type { border-top: none; margin-top: 0; }
+h3 { font-size: 15px; font-weight: 700; margin: 20px 0 8px; }
+h4 { font-size: 13px; font-weight: 700; color: var(--ink-soft); margin: 16px 0 6px; letter-spacing: .3px; }
+p, li { font-size: 14px; color: var(--ink-soft); line-height: 1.6; }
+ul { padding-left: 18px; margin-bottom: 12px; }
+strong { color: var(--ink); font-weight: 600; }
+
+/* Cards & boxes */
+.card { background: var(--surface); border-radius: var(--r); border: 1px solid var(--outline); box-shadow: var(--shadow); padding: 22px 24px; margin-bottom: 18px; }
+.principle-box { background: #FFF8EC; border-radius: 14px; padding: 16px 18px; border: 1px solid rgba(255,211,110,.3); margin-bottom: 16px; }
+.principle-box h4 { margin-top: 0; color: var(--sun-ink); }
+.do-dont { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 14px 0; }
+.do, .dont { border-radius: 14px; padding: 14px 16px; }
+.do { background: #EBF5E7; border: 1px solid rgba(95,179,106,.25); }
+.dont { background: #FFF0EC; border: 1px solid rgba(193,74,42,.15); }
+.do h4 { color: var(--sage-ink); margin-top: 0; }
+.dont h4 { color: var(--coral-ink); margin-top: 0; }
+.do li, .dont li { font-size: 13px; }
+
+/* Color swatches */
+.swatch-row { display: flex; flex-wrap: wrap; gap: 10px; margin: 12px 0 18px; }
+.swatch { width: 80px; text-align: center; }
+.swatch-circle { width: 64px; height: 64px; border-radius: 50%; margin: 0 auto 6px; border: 3px solid #2D3A2E; box-shadow: 0 3px 0 rgba(46,90,58,.18); }
+.swatch-label { font-size: 11px; font-weight: 700; color: var(--ink); }
+.swatch-hex { font-size: 10px; color: var(--ink-faint); font-family: monospace; }
+
+/* Inline SVG illustration examples */
+.illus-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px; margin: 14px 0 20px; }
+.illus-card { background: var(--surface); border-radius: 16px; border: 1px solid var(--outline); overflow: hidden; box-shadow: var(--shadow); }
+.illus-card svg, .illus-card .illus-preview { width: 100%; aspect-ratio: 4/3; display: block; }
+.illus-card .illus-caption { padding: 10px 14px; }
+.illus-card .illus-name { font-size: 13px; font-weight: 700; color: var(--ink); }
+.illus-card .illus-desc { font-size: 11px; color: var(--ink-faint); margin-top: 2px; }
+
+/* World palette strip */
+.world-strip { display: flex; gap: 12px; margin: 12px 0 18px; flex-wrap: wrap; }
+.world-chip { display: flex; align-items: center; gap: 8px; padding: 8px 14px 8px 8px; border-radius: 14px; border: 2px solid #2D3A2E; font-size: 13px; font-weight: 700; color: var(--ink); box-shadow: 0 3px 0 rgba(46,90,58,.15); }
+.world-chip .wc-dot { width: 28px; height: 28px; border-radius: 10px; border: 2px solid rgba(46,90,58,.2); }
+
+/* Mascot mood strip */
+.mood-strip { display: flex; gap: 16px; flex-wrap: wrap; margin: 14px 0 20px; justify-content: center; }
+.mood-item { text-align: center; }
+.mood-item .mood-label { font-size: 11px; font-weight: 600; color: var(--ink-soft); margin-top: 6px; }
+
+/* Spec table */
+.spec-table { width: 100%; border-collapse: separate; border-spacing: 0; border: 1px solid var(--outline); border-radius: var(--r); overflow: hidden; box-shadow: var(--shadow); margin: 12px 0 20px; }
+.spec-table th { background: #F0EDE5; text-align: left; padding: 10px 14px; font-size: 11px; font-weight: 700; color: var(--ink-faint); letter-spacing: .5px; text-transform: uppercase; }
+.spec-table td { padding: 10px 14px; font-size: 13px; vertical-align: top; border-top: 1px solid var(--outline); background: var(--surface); }
+.spec-table .label { font-weight: 600; color: var(--ink); }
+</style>
+</head>
+<body>
+<div class="layout">
+
+<!-- Sidebar -->
+<nav class="sidebar">
+  <div class="sidebar-head">
+    <div class="sidebar-title">Art Direction</div>
+    <div class="sidebar-sub">Bắp Number Adventure</div>
+  </div>
+  <div class="toc-group">
+    <div class="toc-label">Foundations</div>
+    <a class="toc-link" href="#principles"><span class="toc-dot" style="background:var(--sun)"></span> Core Principles</a>
+    <a class="toc-link" href="#style"><span class="toc-dot" style="background:var(--sun)"></span> Illustration Style</a>
+    <a class="toc-link" href="#palette"><span class="toc-dot" style="background:var(--sun)"></span> Color System</a>
+    <a class="toc-link" href="#line-shape"><span class="toc-dot" style="background:var(--sun)"></span> Line & Shape Rules</a>
+  </div>
+  <div class="toc-group">
+    <div class="toc-label">Characters</div>
+    <a class="toc-link" href="#mascot"><span class="toc-dot" style="background:var(--sage)"></span> Bắp Mascot</a>
+    <a class="toc-link" href="#expressions"><span class="toc-dot" style="background:var(--sage)"></span> Expressions & Moods</a>
+    <a class="toc-link" href="#color-variants"><span class="toc-dot" style="background:var(--sage)"></span> Color Variants</a>
+  </div>
+  <div class="toc-group">
+    <div class="toc-label">Worlds</div>
+    <a class="toc-link" href="#worlds-overview"><span class="toc-dot" style="background:var(--sky)"></span> World System</a>
+    <a class="toc-link" href="#world-forest"><span class="toc-dot" style="background:#7FB983"></span> Number Forest</a>
+    <a class="toc-link" href="#world-tens"><span class="toc-dot" style="background:var(--sky)"></span> Tens Town</a>
+    <a class="toc-link" href="#world-bridge"><span class="toc-dot" style="background:var(--lavender)"></span> Even/Odd Bridge</a>
+    <a class="toc-link" href="#world-kitchen"><span class="toc-dot" style="background:var(--coral)"></span> Math Kitchen</a>
+    <a class="toc-link" href="#world-castle"><span class="toc-dot" style="background:var(--sun)"></span> Big Number Castle</a>
+  </div>
+  <div class="toc-group">
+    <div class="toc-label">Elements</div>
+    <a class="toc-link" href="#props"><span class="toc-dot" style="background:var(--coral)"></span> Game Props</a>
+    <a class="toc-link" href="#stickers"><span class="toc-dot" style="background:var(--lavender)"></span> Stickers & Collectibles</a>
+    <a class="toc-link" href="#rewards"><span class="toc-dot" style="background:var(--berry)"></span> Reward Elements</a>
+    <a class="toc-link" href="#parent-mode"><span class="toc-dot" style="background:#8AC4DE"></span> Parent Mode</a>
+  </div>
+</nav>
+
+<!-- Main Content -->
+<main class="main">
+
+<h1>Bắp Number Adventure</h1>
+<p class="doc-sub">Art Direction & Illustration Guide — Character, worlds, props, and visual system</p>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- CORE PRINCIPLES -->
+<!-- ═══════════════════════════════════════ -->
+<h2 id="principles">Core Principles</h2>
+
+<div class="principle-box">
+  <h4>1 · Warmth Over Flash</h4>
+  <p>Illustrations should feel like a cozy picture book, not a flashy cartoon. Soft textures, muted vibrancy, gentle lighting. A child should feel safe and curious.</p>
+</div>
+<div class="principle-box">
+  <h4>2 · Support, Never Distract</h4>
+  <p>During gameplay, illustration serves the task. Backgrounds stay quiet. Props are clear and countable. Decoration lives in transitions, rewards, and world maps — never competing with the learning moment.</p>
+</div>
+<div class="principle-box">
+  <h4>3 · One Character, Many Moods</h4>
+  <p>Bắp is the single mascot across all worlds. Worlds are distinguished by color, environment props, and ambient elements — not by introducing new characters. This keeps the emotional bond strong and the system scalable.</p>
+</div>
+<div class="principle-box">
+  <h4>4 · Every World Feels Different</h4>
+  <p>Each world has its own dominant color, terrain shape language, and set of ambient objects. A child should know which world they're in from background alone, even with all UI removed.</p>
+</div>
+<div class="principle-box">
+  <h4>5 · Parent Mode Is Calm</h4>
+  <p>Parent-facing screens drop the playfulness to 10%. Illustration is minimal — small mascot avatars, subtle accents. Typography and whitespace do the work. Tone shifts from picture-book to clean editorial.</p>
+</div>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- ILLUSTRATION STYLE -->
+<!-- ═══════════════════════════════════════ -->
+<h2 id="style">Illustration Style</h2>
+
+<div class="card">
+<h3>Visual DNA</h3>
+<table class="spec-table">
+  <tr><th>Attribute</th><th>Direction</th></tr>
+  <tr><td class="label">Overall feel</td><td>Hand-drawn storybook meets flat vector — organic but clean</td></tr>
+  <tr><td class="label">Shapes</td><td>Rounded, blobby, organic. No sharp corners. Think bean shapes, not rectangles</td></tr>
+  <tr><td class="label">Outlines</td><td>Consistent 3–4px dark stroke (#2D3A2E), slightly rounded endpoints</td></tr>
+  <tr><td class="label">Fills</td><td>Flat color with 1–2 subtle inner shadow layers for depth. No gradients on characters</td></tr>
+  <tr><td class="label">Texture</td><td>Optional grain overlay on backgrounds only (noise at 3–5% opacity). Characters stay clean</td></tr>
+  <tr><td class="label">Shadows</td><td>Simple elliptical ground shadows. No drop shadows on characters</td></tr>
+  <tr><td class="label">Scale</td><td>Bắp is always the biggest character element on screen. Props are proportional to Bắp</td></tr>
+  <tr><td class="label">Perspective</td><td>Flat / slightly ¾ view. No strong perspective or vanishing points</td></tr>
+  <tr><td class="label">Detail level</td><td>Low. 3–5 elements per illustration. Negative space is your friend</td></tr>
+</table>
+
+<div class="do-dont">
+  <div class="do">
+    <h4>✓ Do</h4>
+    <ul>
+      <li>Use soft, rounded corners everywhere</li>
+      <li>Keep stroke weight consistent (3.5px at base scale)</li>
+      <li>Let backgrounds breathe with space</li>
+      <li>Use the dark ink color (#2D3A2E) for all outlines</li>
+      <li>Add rosy cheeks to any character/creature</li>
+      <li>Keep props countable and visually distinct</li>
+    </ul>
+  </div>
+  <div class="dont">
+    <h4>✗ Don't</h4>
+    <ul>
+      <li>Use sharp angles or pointed shapes</li>
+      <li>Add heavy textures or photorealistic elements</li>
+      <li>Use more than 4 colors per illustration</li>
+      <li>Draw scary, sad, or aggressive expressions</li>
+      <li>Add visual clutter during gameplay screens</li>
+      <li>Use thin hairline strokes</li>
+    </ul>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- COLOR SYSTEM -->
+<!-- ═══════════════════════════════════════ -->
+<h2 id="palette">Color System</h2>
+
+<div class="card">
+<h3>Primary Palette</h3>
+<p>All illustration colors pull from the app's token system. Each color has a light fill and a darker ink variant for outlines and text.</p>
+
+<div class="swatch-row">
+  <div class="swatch">
+    <div class="swatch-circle" style="background:#FFD36E"></div>
+    <div class="swatch-label">Sun</div>
+    <div class="swatch-hex">#FFD36E</div>
+  </div>
+  <div class="swatch">
+    <div class="swatch-circle" style="background:#A8D5A2"></div>
+    <div class="swatch-label">Sage</div>
+    <div class="swatch-hex">#A8D5A2</div>
+  </div>
+  <div class="swatch">
+    <div class="swatch-circle" style="background:#B8DEEF"></div>
+    <div class="swatch-label">Sky</div>
+    <div class="swatch-hex">#B8DEEF</div>
+  </div>
+  <div class="swatch">
+    <div class="swatch-circle" style="background:#D9C7F0"></div>
+    <div class="swatch-label">Lavender</div>
+    <div class="swatch-hex">#D9C7F0</div>
+  </div>
+  <div class="swatch">
+    <div class="swatch-circle" style="background:#FFA48C"></div>
+    <div class="swatch-label">Coral</div>
+    <div class="swatch-hex">#FFA48C</div>
+  </div>
+  <div class="swatch">
+    <div class="swatch-circle" style="background:#E6779E"></div>
+    <div class="swatch-label">Berry</div>
+    <div class="swatch-hex">#E6779E</div>
+  </div>
+</div>
+
+<h3>Neutral & Surface</h3>
+<div class="swatch-row">
+  <div class="swatch">
+    <div class="swatch-circle" style="background:#FFF8EC"></div>
+    <div class="swatch-label">Cream</div>
+    <div class="swatch-hex">#FFF8EC</div>
+  </div>
+  <div class="swatch">
+    <div class="swatch-circle" style="background:#FDE9C2"></div>
+    <div class="swatch-label">Parchment</div>
+    <div class="swatch-hex">#FDE9C2</div>
+  </div>
+  <div class="swatch">
+    <div class="swatch-circle" style="background:#2D3A2E"></div>
+    <div class="swatch-label">Ink</div>
+    <div class="swatch-hex">#2D3A2E</div>
+  </div>
+  <div class="swatch">
+    <div class="swatch-circle" style="background:#6B7A6C"></div>
+    <div class="swatch-label">Ink Soft</div>
+    <div class="swatch-hex">#6B7A6C</div>
+  </div>
+</div>
+
+<h4>Color Usage Rules</h4>
+<ul>
+  <li><strong>Backgrounds:</strong> Use the lightest tint of the world's primary color. Radial gradient from tinted to cream.</li>
+  <li><strong>Characters:</strong> Flat fill from primary palette. No gradients.</li>
+  <li><strong>Outlines:</strong> Always <code>#2D3A2E</code> (ink). Never colored outlines.</li>
+  <li><strong>Accents:</strong> Use a contrasting palette color sparingly — e.g. coral cheeks on a sun-colored Bắp.</li>
+  <li><strong>3 color max per scene:</strong> One dominant, one supporting, one accent. Plus ink for outlines.</li>
+</ul>
+</div>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- LINE & SHAPE -->
+<!-- ═══════════════════════════════════════ -->
+<h2 id="line-shape">Line & Shape Rules</h2>
+
+<div class="card">
+<div class="illus-grid">
+  <!-- Shape examples as inline SVGs -->
+  <div class="illus-card">
+    <div class="illus-preview" style="background:#EBF5E7; display:flex; align-items:center; justify-content:center; padding:20px;">
+      <svg viewBox="0 0 160 120" width="160" height="120">
+        <!-- Rounded blob shape -->
+        <path d="M40 100 C10 100 5 60 30 35 C50 15 110 15 130 35 C155 60 150 100 120 100 Z" fill="#A8D5A2" stroke="#2D3A2E" stroke-width="3.5" stroke-linejoin="round"/>
+        <text x="80" y="116" text-anchor="middle" font-size="10" fill="#5A6B5C" font-weight="600" font-family="Be Vietnam Pro, sans-serif">organic blob</text>
+      </svg>
+    </div>
+    <div class="illus-caption">
+      <div class="illus-name">Organic Blobs</div>
+      <div class="illus-desc">All terrain and body shapes use smooth curves, never geometric primitives</div>
+    </div>
+  </div>
+  <div class="illus-card">
+    <div class="illus-preview" style="background:#FFF4DE; display:flex; align-items:center; justify-content:center; padding:20px;">
+      <svg viewBox="0 0 160 120" width="160" height="120">
+        <!-- Rounded rectangle with thick outline -->
+        <rect x="25" y="20" width="110" height="80" rx="24" fill="#FFD36E" stroke="#2D3A2E" stroke-width="3.5"/>
+        <!-- Bottom shadow line -->
+        <rect x="25" y="96" width="110" height="6" rx="3" fill="#C79528" stroke="#2D3A2E" stroke-width="2"/>
+        <text x="80" y="116" text-anchor="middle" font-size="10" fill="#5A6B5C" font-weight="600" font-family="Be Vietnam Pro, sans-serif">tactile depth</text>
+      </svg>
+    </div>
+    <div class="illus-caption">
+      <div class="illus-name">Tactile Depth</div>
+      <div class="illus-desc">UI elements get a visible bottom edge for a physical, pressable feel</div>
+    </div>
+  </div>
+  <div class="illus-card">
+    <div class="illus-preview" style="background:#F5FAFD; display:flex; align-items:center; justify-content:center; padding:20px;">
+      <svg viewBox="0 0 160 120" width="160" height="120">
+        <!-- Consistent stroke demo -->
+        <circle cx="45" cy="50" r="22" fill="#B8DEEF" stroke="#2D3A2E" stroke-width="3.5"/>
+        <ellipse cx="105" cy="50" rx="30" ry="22" fill="#D9C7F0" stroke="#2D3A2E" stroke-width="3.5"/>
+        <line x1="45" y1="76" x2="105" y2="76" stroke="#2D3A2E" stroke-width="3.5" stroke-linecap="round"/>
+        <text x="80" y="116" text-anchor="middle" font-size="10" fill="#5A6B5C" font-weight="600" font-family="Be Vietnam Pro, sans-serif">uniform stroke</text>
+      </svg>
+    </div>
+    <div class="illus-caption">
+      <div class="illus-name">Uniform Stroke</div>
+      <div class="illus-desc">3.5px ink stroke on everything — shapes, lines, and details. Round caps and joins.</div>
+    </div>
+  </div>
+  <div class="illus-card">
+    <div class="illus-preview" style="background:#FFF0EC; display:flex; align-items:center; justify-content:center; padding:20px;">
+      <svg viewBox="0 0 160 120" width="160" height="120">
+        <!-- Rosy cheeks on a simple face -->
+        <circle cx="80" cy="55" r="35" fill="#FFA48C" stroke="#2D3A2E" stroke-width="3.5"/>
+        <circle cx="62" cy="58" r="6" fill="#FF8066" opacity="0.5"/>
+        <circle cx="98" cy="58" r="6" fill="#FF8066" opacity="0.5"/>
+        <ellipse cx="72" cy="48" rx="4" ry="5" fill="#2D3A2E"/>
+        <ellipse cx="88" cy="48" rx="4" ry="5" fill="#2D3A2E"/>
+        <path d="M 74 65 Q 80 72 86 65" stroke="#2D3A2E" stroke-width="3" fill="#C14A2A" stroke-linecap="round"/>
+        <text x="80" y="116" text-anchor="middle" font-size="10" fill="#5A6B5C" font-weight="600" font-family="Be Vietnam Pro, sans-serif">friendly faces</text>
+      </svg>
+    </div>
+    <div class="illus-caption">
+      <div class="illus-name">Friendly Faces</div>
+      <div class="illus-desc">Rosy cheeks, simple dot eyes, small upturned mouth. Always gentle.</div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- MASCOT -->
+<!-- ═══════════════════════════════════════ -->
+<h2 id="mascot">Bắp Mascot</h2>
+
+<div class="card">
+<h3>Character Sheet</h3>
+<p>Bắp is a small corn kernel / sprout character — round-bodied with two leaf sprouts on top. The name "Bắp" means corn in Vietnamese. The character is gender-neutral, species-ambiguous (part plant, part creature), and always approachable.</p>
+
+<table class="spec-table">
+  <tr><th>Attribute</th><th>Specification</th></tr>
+  <tr><td class="label">Body shape</td><td>Rounded kernel form — wider at bottom, narrower at top. Slightly egg-like. Drawn with a single bezier path.</td></tr>
+  <tr><td class="label">Sprout leaves</td><td>Two asymmetric leaves on top — one leaning left (lighter sage), one leaning right (darker sage). Gives a sprouting/growing metaphor.</td></tr>
+  <tr><td class="label">Face position</td><td>Eyes at 55% height, mouth at 70% height. Face lives in the upper-middle of the body.</td></tr>
+  <tr><td class="label">Eyes</td><td>Simple filled ellipses with a small white highlight dot. Never outlined — they're solid dark (#2D3A2E).</td></tr>
+  <tr><td class="label">Mouth</td><td>Small and expressive. Red-brown fill (#C14A2A) with ink outline. Changes dramatically by mood.</td></tr>
+  <tr><td class="label">Cheeks</td><td>Two circles at face sides, coral (#FFA48C) at 70% opacity. Always present in every mood.</td></tr>
+  <tr><td class="label">Body texture</td><td>Subtle horizontal curved lines across the body at 35% opacity — suggesting kernel rows. These are a signature detail.</td></tr>
+  <tr><td class="label">Ground shadow</td><td>Ellipse below body, ink at 18% opacity. Anchors the character spatially.</td></tr>
+  <tr><td class="label">Limbs</td><td>None. Bắp doesn't have arms or legs. It bobs and bounces to express movement.</td></tr>
+  <tr><td class="label">Default size</td><td>120×140px SVG viewbox. Scales cleanly from 32px (avatar chip) to 180px (welcome hero).</td></tr>
+</table>
+
+<div class="principle-box">
+  <h4>Why No Limbs?</h4>
+  <p>Keeping Bắp limbless makes the character simpler to draw consistently, easier to animate (bob, bounce, wiggle), and more like a natural sprout growing from the ground. Expression comes entirely from face and body motion.</p>
+</div>
+</div>
+
+<!-- EXPRESSIONS -->
+<h2 id="expressions">Expressions & Moods</h2>
+
+<div class="card">
+<p>Bắp has 5 core moods. Each is defined by eye shape and mouth shape only — body and cheeks stay the same. All expressions must be achievable with simple SVG path changes.</p>
+
+<table class="spec-table">
+  <tr><th>Mood</th><th>Eyes</th><th>Mouth</th><th>When to Use</th></tr>
+  <tr><td class="label">Happy</td><td>Open ellipses with highlight dot</td><td>Upturned curve, open with red fill</td><td>Default idle state, home screen, greeting</td></tr>
+  <tr><td class="label">Wink</td><td>One open, one curved-shut arc</td><td>Gentle smile, smaller opening</td><td>Welcome screen, hints, playful moments</td></tr>
+  <tr><td class="label">Think</td><td>Smaller circles (focused look)</td><td>Small "o" ellipse</td><td>Profile age question, waiting for answer</td></tr>
+  <tr><td class="label">Celebrate</td><td>Upward happy arcs (squinting with joy)</td><td>Wide open grin</td><td>Correct answer, reward screen, unlocks</td></tr>
+  <tr><td class="label">Sleep</td><td>Downward peaceful arcs</td><td>Gentle closed smile</td><td>Time limit reached, rest screen, quiet hours</td></tr>
+</table>
+
+<h4>Animation Behaviors</h4>
+<ul>
+  <li><strong>Idle:</strong> Gentle vertical bob — 6px up/down over 2.8s, ease-in-out, with a subtle 2° rotation</li>
+  <li><strong>Celebrate:</strong> Quick scale pop (0.6 → 1.08 → 1.0) over 400ms</li>
+  <li><strong>Wrong answer:</strong> Side-to-side wiggle (±4° rotation) over 500ms — sympathetic, not scolding</li>
+  <li><strong>Transition:</strong> Slide-up from 24px below with fade, 300ms</li>
+</ul>
+</div>
+
+<!-- COLOR VARIANTS -->
+<h2 id="color-variants">Mascot Color Variants</h2>
+
+<div class="card">
+<p>Players choose their Bắp color during profile setup. Each variant recolors the body fill and the kernel-row texture. Leaves, face, cheeks, and outline stay the same across all variants.</p>
+
+<table class="spec-table">
+  <tr><th>Variant</th><th>Body Fill</th><th>Texture Lines</th><th>Personality Feel</th></tr>
+  <tr><td class="label">Sun (default)</td><td>#FFD36E</td><td>#E8B23F</td><td>Warm, classic, cheerful — the "original"</td></tr>
+  <tr><td class="label">Sage</td><td>#A8D5A2</td><td>#7FB983</td><td>Calm, nature-loving, gentle</td></tr>
+  <tr><td class="label">Coral</td><td>#FFA48C</td><td>#E2815E</td><td>Energetic, playful, bold</td></tr>
+  <tr><td class="label">Lavender</td><td>#D9C7F0</td><td>#B39DD1</td><td>Dreamy, creative, soft</td></tr>
+  <tr><td class="label">Sky</td><td>#B8DEEF</td><td>#88BED4</td><td>Cool, curious, explorative</td></tr>
+</table>
+</div>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- WORLDS -->
+<!-- ═══════════════════════════════════════ -->
+<h2 id="worlds-overview">World System</h2>
+
+<div class="card">
+<p>Each world is a self-contained visual environment. Worlds are distinguished by three layers:</p>
+<ul>
+  <li><strong>Color:</strong> One dominant palette color per world</li>
+  <li><strong>Terrain:</strong> Unique shape language for ground, horizon, and structures</li>
+  <li><strong>Props:</strong> 4–6 ambient objects unique to that world</li>
+</ul>
+
+<div class="world-strip">
+  <div class="world-chip"><div class="wc-dot" style="background:#B9E2B2"></div>Number Forest</div>
+  <div class="world-chip"><div class="wc-dot" style="background:#B8DEEF"></div>Tens Town</div>
+  <div class="world-chip"><div class="wc-dot" style="background:#D9C7F0"></div>Even/Odd Bridge</div>
+  <div class="world-chip"><div class="wc-dot" style="background:#FFC9B8"></div>Math Kitchen</div>
+  <div class="world-chip"><div class="wc-dot" style="background:#FFE6A8"></div>Big Number Castle</div>
+</div>
+
+<h4>Background Construction</h4>
+<p>Every world background uses the same 3-layer structure:</p>
+<ol style="padding-left:18px; margin-bottom:12px;">
+  <li style="font-size:14px; color:var(--ink-soft);"><strong>Sky layer</strong> — Radial gradient from world's lightest tint (top) to cream (bottom). No clouds unless world-specific.</li>
+  <li style="font-size:14px; color:var(--ink-soft);"><strong>Terrain layer</strong> — Organic blob shapes at the bottom 30–40%. Uses the world's mid-tone color.</li>
+  <li style="font-size:14px; color:var(--ink-soft);"><strong>Ambient layer</strong> — Floating sparkles, leaves, bubbles, etc. Semi-transparent, gently animated. Never more than 8–12 particles.</li>
+</ol>
+</div>
+
+<!-- Individual worlds -->
+<h2 id="world-forest">World 1 — Number Forest</h2>
+<div class="card">
+<table class="spec-table">
+  <tr><th>Attribute</th><th>Direction</th></tr>
+  <tr><td class="label">Dominant color</td><td>Sage (#B9E2B2 background, #7FB983 mid, #2F6A3C ink)</td></tr>
+  <tr><td class="label">Terrain shapes</td><td>Soft rolling hills, rounded tree canopies, gentle slopes. Ground drawn as overlapping blobs.</td></tr>
+  <tr><td class="label">Ambient props</td><td>Rounded oak trees, mushrooms, tulips, butterflies, small bushes, fallen leaves</td></tr>
+  <tr><td class="label">Sparkle color</td><td>Gold (#FFD36E) — sunlight filtering through trees</td></tr>
+  <tr><td class="label">Mood</td><td>The first world — welcoming, familiar, safe. Like a garden behind your house.</td></tr>
+  <tr><td class="label">Math context</td><td>Numbers 1–20 are "found" in the forest — on trees, under mushrooms, among flowers</td></tr>
+</table>
+<h4>Prop Drawing Notes</h4>
+<ul>
+  <li>Trees: lollipop shape — circular canopy on a short trunk. 2 shades of sage.</li>
+  <li>Mushrooms: half-circle cap, short stump. Coral cap with cream dots.</li>
+  <li>Flowers: 5-petal simple shape, sun-yellow or berry-pink center.</li>
+  <li>Butterflies: two symmetrical wing blobs. Sky or lavender fills.</li>
+</ul>
+</div>
+
+<h2 id="world-tens">World 2 — Tens Town</h2>
+<div class="card">
+<table class="spec-table">
+  <tr><th>Attribute</th><th>Direction</th></tr>
+  <tr><td class="label">Dominant color</td><td>Sky (#B8DEEF background, #8AC4DE mid, #2E6F93 ink)</td></tr>
+  <tr><td class="label">Terrain shapes</td><td>Gentle hills with small houses. Buildings are simple rounded rectangles with triangle roofs.</td></tr>
+  <tr><td class="label">Ambient props</td><td>Little houses, street lamps, park benches, mail boxes, potted plants, a bridge</td></tr>
+  <tr><td class="label">Sparkle color</td><td>White (#FFFFFF) — clean sky sparkles</td></tr>
+  <tr><td class="label">Mood</td><td>A small cozy town. Friendly and orderly — numbers live in organized groups of ten.</td></tr>
+  <tr><td class="label">Math context</td><td>Numbers organized in "blocks" of 10. Houses have address numbers. Stacks of ten are visual metaphors.</td></tr>
+</table>
+<h4>Prop Drawing Notes</h4>
+<ul>
+  <li>Houses: rounded rectangles with oversized roofs. Each roof a different palette color.</li>
+  <li>Windows: simple rounded squares, cream-filled. No panes.</li>
+  <li>Street lamps: thin stem with a glowing circle top (sun-yellow glow at 30% opacity).</li>
+</ul>
+</div>
+
+<h2 id="world-bridge">World 3 — Even/Odd Bridge</h2>
+<div class="card">
+<table class="spec-table">
+  <tr><th>Attribute</th><th>Direction</th></tr>
+  <tr><td class="label">Dominant color</td><td>Lavender (#D9C7F0 background, #B9A4E0 mid, #5D3F94 ink)</td></tr>
+  <tr><td class="label">Terrain shapes</td><td>A long arched bridge spanning the scene. Water below as gentle wavy lines. Banks on both sides.</td></tr>
+  <tr><td class="label">Ambient props</td><td>Arch bridge, lily pads, small fish silhouettes, stones, reeds, paper boats</td></tr>
+  <tr><td class="label">Sparkle color</td><td>Lavender light — magical, twilight feeling</td></tr>
+  <tr><td class="label">Mood</td><td>Magical and slightly mysterious. The bridge is a crossing — "which side does this number belong to?"</td></tr>
+  <tr><td class="label">Math context</td><td>Even numbers on one side, odd on the other. The bridge is the sorting mechanism.</td></tr>
+</table>
+<h4>Prop Drawing Notes</h4>
+<ul>
+  <li>Bridge: single thick arch, stone-textured (layered rounded rectangles). Lavender-gray.</li>
+  <li>Water: horizontal wavy lines, sky-blue with white highlights. Gentle ripple animation.</li>
+  <li>Lily pads: simple ellipses with a notch cut. Sage-green.</li>
+</ul>
+</div>
+
+<h2 id="world-kitchen">World 4 — Math Kitchen</h2>
+<div class="card">
+<table class="spec-table">
+  <tr><th>Attribute</th><th>Direction</th></tr>
+  <tr><td class="label">Dominant color</td><td>Coral (#FFC9B8 background, #FFA48C mid, #C14A2A ink)</td></tr>
+  <tr><td class="label">Terrain shapes</td><td>Indoor scene — a counter surface at the bottom, shelves in the background. Warm and enclosed.</td></tr>
+  <tr><td class="label">Ambient props</td><td>Pots, pans, wooden spoons, apples, jars, a cutting board, oven mitts, salt shaker</td></tr>
+  <tr><td class="label">Sparkle color</td><td>Gold (#FFD36E) — warm kitchen light</td></tr>
+  <tr><td class="label">Mood</td><td>Cozy home kitchen. Addition is "adding more ingredients." Subtraction is "eating some."</td></tr>
+  <tr><td class="label">Math context</td><td>Combining and removing objects — apples in a bowl, cookies on a tray. Physical and tangible.</td></tr>
+</table>
+<h4>Prop Drawing Notes</h4>
+<ul>
+  <li>Apples: simple circle with a tiny leaf on top. Used as the primary counting object across add/subtract games.</li>
+  <li>Pots: half-circle body with two handle bumps. Coral or sun fill.</li>
+  <li>Wooden spoon: elongated oval with a stick. Parchment color.</li>
+  <li>Jars: rounded rectangles with a lid bump. Semi-transparent (white at 60%).</li>
+</ul>
+</div>
+
+<h2 id="world-castle">World 5 — Big Number Castle</h2>
+<div class="card">
+<table class="spec-table">
+  <tr><th>Attribute</th><th>Direction</th></tr>
+  <tr><td class="label">Dominant color</td><td>Sun (#FFE6A8 background, #FFD36E mid, #7A4E0E ink)</td></tr>
+  <tr><td class="label">Terrain shapes</td><td>Castle turrets and walls in the background. A grand but friendly fortress — rounded towers, no sharp battlements.</td></tr>
+  <tr><td class="label">Ambient props</td><td>Towers, flags/banners, treasure chests, crowns, shields, keys, gemstones</td></tr>
+  <tr><td class="label">Sparkle color</td><td>Gold and white — regal sparkle</td></tr>
+  <tr><td class="label">Mood</td><td>Grand and rewarding. The final world — the child has earned their way here. Celebratory but not overwhelming.</td></tr>
+  <tr><td class="label">Math context</td><td>Big numbers (100–1000) live in the castle. Each tower represents a place value. The crown level is the boss stage.</td></tr>
+</table>
+<h4>Prop Drawing Notes</h4>
+<ul>
+  <li>Towers: tall rounded rectangles with dome tops (not pointed). Sun-yellow with parchment detail.</li>
+  <li>Flags: small triangular pennants on sticks. Cycle through palette colors.</li>
+  <li>Crown: the boss-level icon. Simple 3-point crown shape, gold fill with ink outline.</li>
+  <li>Treasure chest: rounded trapezoid body, curved lid. Coral-brown with a gold clasp.</li>
+</ul>
+</div>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- GAME PROPS -->
+<!-- ═══════════════════════════════════════ -->
+<h2 id="props">Game Props</h2>
+
+<div class="card">
+<p>Game props are functional illustration elements used during gameplay. They must be visually clear, countable, and never ambiguous. Each prop type has a specific drawing spec.</p>
+
+<table class="spec-table">
+  <tr><th>Prop</th><th>Shape</th><th>Color</th><th>Used In</th></tr>
+  <tr><td class="label">Number tile</td><td>Rounded rectangle, bold numeral centered. 3D depth edge on bottom.</td><td>World-specific or cream/sun</td><td>All games</td></tr>
+  <tr><td class="label">Ten stick</td><td>Tall thin rounded rectangle (14×40px). Represents a group of 10.</td><td>Sky blue (#8AC4DE)</td><td>Build the Number</td></tr>
+  <tr><td class="label">One dot</td><td>Circle (18×18px). Represents a single unit.</td><td>Sun yellow (#FFD36E)</td><td>Build the Number</td></tr>
+  <tr><td class="label">Speaker button</td><td>Large circle with speaker icon. Pulses gently to invite tapping.</td><td>Sun yellow</td><td>Hear & Tap</td></tr>
+  <tr><td class="label">Sorting basket</td><td>Wide rounded rectangle, open top implied. Large tap target.</td><td>Sage (even) / Coral (odd)</td><td>Even/Odd</td></tr>
+  <tr><td class="label">Apple</td><td>Circle + leaf. Used as counting object for add/subtract.</td><td>Red with ink outline</td><td>Add/Take Away</td></tr>
+  <tr><td class="label">Dot array</td><td>Grid of small circles, alternating coral/sky to show pairs.</td><td>Coral + Sky</td><td>Even/Odd</td></tr>
+  <tr><td class="label">Sequence slot</td><td>Rounded rectangle with dashed border. Pulses to indicate "fill me."</td><td>White at 60%, dashed ink</td><td>Number Order</td></tr>
+</table>
+
+<div class="do-dont">
+  <div class="do">
+    <h4>✓ Prop Rules</h4>
+    <ul>
+      <li>Every countable object must be visually identical to its siblings</li>
+      <li>Minimum tap target: 44×44px on mobile</li>
+      <li>Props use the same 3.5px ink outline as everything else</li>
+      <li>Correct state: sage green glow. Wrong state: warm coral wobble.</li>
+      <li>Always include a tactile "bottom shadow" edge on tappable elements</li>
+    </ul>
+  </div>
+  <div class="dont">
+    <h4>✗ Avoid</h4>
+    <ul>
+      <li>Props that look similar but mean different things</li>
+      <li>Decorative elements near interactive props</li>
+      <li>Mixing counting objects within a single question</li>
+      <li>Props smaller than 14px at any screen size</li>
+    </ul>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- STICKERS -->
+<!-- ═══════════════════════════════════════ -->
+<h2 id="stickers">Stickers & Collectibles</h2>
+
+<div class="card">
+<h3>Sticker Design System</h3>
+<p>Stickers are earned by completing levels with 3 stars. They live in the Sticker Book — a collection screen. Each sticker is a self-contained mini illustration that follows the same style rules as the rest of the app.</p>
+
+<table class="spec-table">
+  <tr><th>Attribute</th><th>Specification</th></tr>
+  <tr><td class="label">Size</td><td>Square aspect ratio. Drawn at 80×80px, displayed at 40–60px in the grid.</td></tr>
+  <tr><td class="label">Container</td><td>Rounded square (border-radius: 18px). Cream background (#FFF8EC). Subtle bottom shadow.</td></tr>
+  <tr><td class="label">Content</td><td>A single object or creature from the current world. Simple, iconic, one subject per sticker.</td></tr>
+  <tr><td class="label">Locked state</td><td>Dashed border, no fill. A centered "?" in faint ink. No preview of the sticker.</td></tr>
+  <tr><td class="label">Earn animation</td><td>Pop-in (scale 0.6 → 1.08 → 1.0). Staggered by 20ms per sticker in the collection grid.</td></tr>
+  <tr><td class="label">Total count</td><td>40 stickers across all 5 worlds (8 per world). Progress bar tracks collection.</td></tr>
+</table>
+
+<h4>Sticker Subjects by World</h4>
+<ul>
+  <li><strong>Number Forest:</strong> Oak tree, Mushroom, Tulip, Butterfly, Bee, Ladybug, Apple, Sunflower</li>
+  <li><strong>Tens Town:</strong> House, Mailbox, Street lamp, Bench, Pot plant, Weather vane, Clock, Cat</li>
+  <li><strong>Even/Odd Bridge:</strong> Lily pad, Fish, Paper boat, Stone, Reed, Frog, Dragonfly, Lantern</li>
+  <li><strong>Math Kitchen:</strong> Apple pie, Cookie, Spoon, Jar, Oven mitt, Cupcake, Bowl, Whisk</li>
+  <li><strong>Big Number Castle:</strong> Crown, Shield, Key, Gem, Flag, Treasure chest, Tower, Star medal</li>
+</ul>
+
+<div class="principle-box">
+  <h4>Sticker Illustration Rules</h4>
+  <p>Each sticker should be recognizable at 40px. That means: one subject, centered, filling 70% of the frame. No background detail within the sticker. Use the same ink outline and flat fill style. Faces (on creatures) should always be happy/neutral — never sad or scary.</p>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- REWARDS -->
+<!-- ═══════════════════════════════════════ -->
+<h2 id="rewards">Reward Elements</h2>
+
+<div class="card">
+<h3>Celebration System</h3>
+<p>Reward moments are the most illustratively rich screens in the app. This is where decoration is encouraged — confetti, sparkles, large mascot, bright colors.</p>
+
+<table class="spec-table">
+  <tr><th>Element</th><th>Specification</th></tr>
+  <tr><td class="label">Stars (1–3)</td><td>Standard 5-point star shape. Gold (#FFD36E) filled with ink outline. Earned stars get a golden drop shadow (#B87C0E). Unearned stars are outlined only at 25% opacity. Pop-in animation staggered by 150ms.</td></tr>
+  <tr><td class="label">Confetti</td><td>30–40 small shapes falling from top. Mix of circles and rounded rectangles. Uses all 6 palette colors. Falls over 2–3 seconds with rotation. Each piece: 8–16px.</td></tr>
+  <tr><td class="label">Sparkles</td><td>4-point star shapes (diamond rotated). Gold (#FFB84A). 10–14 particles floating with scale-rotate animation. Duration: 2–4 seconds, looping.</td></tr>
+  <tr><td class="label">Coins</td><td>Circle with a subtle inner "C" mark. Gold fill. Displayed as "+N" count, not individually animated. Simple and not over-emphasized.</td></tr>
+  <tr><td class="label">Bắp mood</td><td>Always "celebrate" expression on reward screen. 140px size (hero). Bobble animation.</td></tr>
+  <tr><td class="label">Background</td><td>Sun variant gradient — brightest, warmest. Reward screens always feel golden and glowing.</td></tr>
+</table>
+
+<h4>Reward Intensity by Performance</h4>
+<ul>
+  <li><strong>3 stars:</strong> Full confetti burst (40 pieces) + 14 sparkles + sticker earn animation if applicable. Maximum celebration.</li>
+  <li><strong>2 stars:</strong> Light confetti (20 pieces) + 8 sparkles. Still celebratory, just quieter.</li>
+  <li><strong>1 star:</strong> Sparkles only (6). No confetti. Bắp still celebrates — the message is "you finished, that's great." Never feels like a lesser reward.</li>
+</ul>
+
+<div class="do-dont">
+  <div class="do">
+    <h4>✓ Reward Principles</h4>
+    <ul>
+      <li>Every completion is celebrated — there is no "fail" screen</li>
+      <li>Vary intensity, not positivity</li>
+      <li>Confetti colors use the full palette — the most colorful moment in the app</li>
+      <li>Sound design (out of scope here) should match intensity level</li>
+    </ul>
+  </div>
+  <div class="dont">
+    <h4>✗ Avoid</h4>
+    <ul>
+      <li>Greyed-out or empty stars that feel punitive</li>
+      <li>Comparison with other players or sessions</li>
+      <li>Excessive animation that delays the child from continuing</li>
+      <li>Reward screens that take longer than 3 seconds to fully animate in</li>
+    </ul>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- PARENT MODE -->
+<!-- ═══════════════════════════════════════ -->
+<h2 id="parent-mode">Parent Mode Illustration Tone</h2>
+
+<div class="card">
+<p>Parent mode has a completely different illustration density. The visual language shifts from picture-book to editorial dashboard.</p>
+
+<table class="spec-table">
+  <tr><th>Attribute</th><th>Child Mode</th><th>Parent Mode</th></tr>
+  <tr><td class="label">Illustration density</td><td>High — backgrounds, sparkles, mascot hero</td><td>Minimal — small mascot avatar, no background illustration</td></tr>
+  <tr><td class="label">Mascot presence</td><td>Large (88–180px), animated, central</td><td>Small (32–42px), static, avatar-only in header</td></tr>
+  <tr><td class="label">Color usage</td><td>Full palette, vibrant fills</td><td>Neutral surfaces (#F5F3ED, #FFF), accent colors only on data</td></tr>
+  <tr><td class="label">Typography role</td><td>Supporting — type is large and fun</td><td>Primary — type carries all information</td></tr>
+  <tr><td class="label">Decorative elements</td><td>Sparkles, confetti, terrain, ambient objects</td><td>None. Clean whitespace.</td></tr>
+  <tr><td class="label">Data visualization</td><td>None</td><td>Simple bar charts, progress bars, skill meters</td></tr>
+  <tr><td class="label">Iconography</td><td>Emoji-based (part of the playful language)</td><td>Emoji-based but smaller, more restrained</td></tr>
+  <tr><td class="label">Font family</td><td>Fredoka (rounded, kid-friendly)</td><td>Be Vietnam Pro (clean, modern Vietnamese support)</td></tr>
+</table>
+
+<div class="principle-box">
+  <h4>The Handoff Moment</h4>
+  <p>When a parent opens the parent gate, the visual tone shifts immediately. The background goes from warm gradient to flat gray-cream. Typography switches from Fredoka to Be Vietnam Pro. The mascot shrinks from hero to avatar. This contrast is intentional — it signals "you are now in the grown-up space" and gives parents confidence they're seeing real data, not a toy interface.</p>
+</div>
+
+<h4>Where Illustration Appears in Parent Mode</h4>
+<ul>
+  <li><strong>Child profile card:</strong> Small BapMini avatar (32–42px) in a cream circle. Static.</li>
+  <li><strong>Weekly summary card:</strong> Subtle sage gradient background — the only "warm" moment. No illustration, just color.</li>
+  <li><strong>Tip/recommendation card:</strong> Light parchment background with a small 💡 emoji. No illustration.</li>
+  <li><strong>Data charts:</strong> Use palette colors for bar fills — sage for goal-met days, sun for partial, cream for missed. This is the primary "color expression" in parent mode.</li>
+</ul>
+</div>
+
+<div style="text-align:center; padding: 48px 0 24px; font-size: 12px; color: var(--ink-faint);">
+  Bắp Number Adventure · Art Direction Guide · v1.0
+</div>
+
+</main>
+</div>
+</body>
+</html>

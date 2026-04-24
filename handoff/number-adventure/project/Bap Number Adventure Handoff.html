@@ -1,0 +1,1074 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bắp Number Adventure — Dev Handoff</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Fredoka:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:        #0F1310;
+      --bg2:       #151C17;
+      --bg3:       #1C2620;
+      --border:    rgba(255,255,255,0.07);
+      --border2:   rgba(255,255,255,0.12);
+      --text:      #E8F0E8;
+      --text-soft: rgba(232,240,232,0.55);
+      --text-faint:rgba(232,240,232,0.28);
+      --accent:    #7FC089;
+      --accent2:   #FFD36E;
+      --mono:      'JetBrains Mono', monospace;
+      --sans:      'Be Vietnam Pro', system-ui, sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg); color: var(--text);
+      font-family: var(--sans); font-size: 14px;
+      line-height: 1.6; -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── Layout ── */
+    .shell { display: flex; min-height: 100vh; }
+    .nav {
+      width: 220px; min-width: 220px; position: sticky; top: 0;
+      height: 100vh; overflow-y: auto;
+      background: var(--bg2); border-right: 1px solid var(--border);
+      padding: 24px 0 32px; display: flex; flex-direction: column; gap: 2px;
+    }
+    .nav-logo { padding: 0 18px 20px; border-bottom: 1px solid var(--border); margin-bottom: 10px; }
+    .nav-logo-name { font-size: 13px; font-weight: 700; color: var(--text); line-height: 1.2; }
+    .nav-logo-sub  { font-size: 10px; color: var(--text-faint); letter-spacing: 0.5px; }
+    .nav-label { padding: 8px 18px 4px; font-size: 9px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-faint); }
+    .nav a {
+      display: block; padding: 7px 18px; font-size: 12px; font-weight: 500;
+      color: var(--text-soft); text-decoration: none; border-radius: 0;
+      transition: color 0.12s, background 0.12s;
+    }
+    .nav a:hover { color: var(--text); background: rgba(255,255,255,0.04); }
+    .nav a.active { color: var(--accent); font-weight: 600; }
+
+    .main { flex: 1; padding: 48px 56px 80px; max-width: 1000px; overflow-x: hidden; }
+
+    /* ── Section ── */
+    .section { margin-bottom: 72px; scroll-margin-top: 32px; }
+    .section-num { font-size: 10px; font-weight: 700; letter-spacing: 2px; color: var(--accent); text-transform: uppercase; margin-bottom: 6px; }
+    h2 { font-size: 24px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+    .section-desc { font-size: 13px; color: var(--text-soft); margin-bottom: 28px; line-height: 1.7; max-width: 640px; }
+    h3 { font-size: 14px; font-weight: 700; color: var(--text); margin: 28px 0 12px; letter-spacing: 0.2px; }
+    h4 { font-size: 12px; font-weight: 700; color: var(--text-soft); margin: 20px 0 8px; text-transform: uppercase; letter-spacing: 0.8px; }
+    p  { font-size: 13px; color: var(--text-soft); line-height: 1.7; margin-bottom: 10px; }
+
+    /* ── Divider ── */
+    hr { border: none; border-top: 1px solid var(--border); margin: 32px 0; }
+
+    /* ── Code ── */
+    code {
+      font-family: var(--mono); font-size: 12px;
+      background: rgba(255,255,255,0.06); border: 1px solid var(--border);
+      padding: 1px 6px; border-radius: 4px; color: #A8D5A2;
+    }
+    pre {
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: 10px; padding: 16px 20px; overflow-x: auto;
+      font-family: var(--mono); font-size: 12px; line-height: 1.7;
+      color: #C8E6C2; margin: 12px 0;
+    }
+    pre .k { color: #B8DEEF; }
+    pre .v { color: #FFD36E; }
+    pre .c { color: rgba(200,230,194,0.35); }
+
+    /* ── Table ── */
+    .table-wrap { overflow-x: auto; margin: 12px 0 24px; border-radius: 10px; border: 1px solid var(--border); }
+    table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+    th { background: var(--bg3); padding: 10px 14px; text-align: left; font-weight: 700; color: var(--text-soft); font-size: 10px; letter-spacing: 0.8px; text-transform: uppercase; }
+    td { padding: 10px 14px; border-top: 1px solid var(--border); vertical-align: top; color: var(--text-soft); }
+    td:first-child { color: var(--text); font-weight: 500; }
+    td code { font-size: 11px; }
+    tr:hover td { background: rgba(255,255,255,0.02); }
+
+    /* ── Tag ── */
+    .tag {
+      display: inline-flex; align-items: center; padding: 2px 8px;
+      border-radius: 5px; font-size: 10px; font-weight: 700; letter-spacing: 0.6px;
+    }
+    .tag-green  { background: #2E4232; color: #A8D5A2; }
+    .tag-blue   { background: #1E2D3D; color: #B8DEEF; }
+    .tag-yellow { background: #3A2E10; color: #FFD36E; }
+    .tag-pink   { background: #3A1E2A; color: #E6779E; }
+    .tag-purple { background: #2A1E3A; color: #D9C7F0; }
+    .tag-orange { background: #3A2010; color: #FFA48C; }
+
+    /* ── Color swatch ── */
+    .swatch-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; margin: 12px 0 24px; }
+    .swatch {
+      border-radius: 10px; overflow: hidden;
+      border: 1px solid var(--border);
+    }
+    .swatch-color { height: 52px; }
+    .swatch-info { padding: 8px 10px; background: var(--bg2); }
+    .swatch-name { font-size: 11px; font-weight: 700; color: var(--text); }
+    .swatch-hex  { font-family: var(--mono); font-size: 10.5px; color: var(--text-faint); }
+    .swatch-var  { font-family: var(--mono); font-size: 9.5px; color: var(--accent); margin-top: 2px; }
+
+    /* ── Component demo card ── */
+    .demo-card {
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: 12px; padding: 20px 24px; margin-bottom: 14px;
+    }
+    .demo-label { font-size: 9px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-faint); margin-bottom: 14px; }
+    .demo-row { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; }
+
+    /* ── State badge row ── */
+    .states-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 20px; }
+    .state-badge {
+      padding: 6px 12px; border-radius: 8px; font-size: 11px; font-weight: 600;
+      border: 1px solid var(--border2);
+    }
+
+    /* ── Inline note ── */
+    .note {
+      background: #1E2A1E; border: 1px solid #2E4232;
+      border-radius: 8px; padding: 10px 14px; margin: 10px 0;
+      font-size: 12px; color: #A8D5A2; line-height: 1.6;
+    }
+    .note-warn {
+      background: #2A2010; border-color: #4A3A18; color: #FFD36E;
+    }
+
+    /* ── Screen inventory ── */
+    .screen-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; margin: 12px 0; }
+    .screen-card {
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: 10px; padding: 12px 14px;
+    }
+    .screen-card-name { font-size: 12.5px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+    .screen-card-desc { font-size: 11px; color: var(--text-faint); line-height: 1.5; }
+    .screen-card-route { font-family: var(--mono); font-size: 10px; color: var(--accent); margin-top: 6px; }
+
+    /* ── Shadow preview ── */
+    .shadow-demo {
+      display: inline-block; background: #FFF8EC; border-radius: 16px;
+      padding: 12px 20px; font-size: 12px; font-weight: 700; color: #2D3A2E;
+      font-family: 'Fredoka', sans-serif;
+    }
+
+    /* ── Type specimen ── */
+    .type-specimen { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; padding: 20px; margin-bottom: 10px; }
+
+    /* ── Spacing scale ── */
+    .spacing-scale { display: flex; align-items: flex-end; gap: 14px; flex-wrap: wrap; margin: 14px 0; }
+    .spacing-block { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+    .spacing-bar { background: #3D7A46; border-radius: 3px; width: 28px; }
+    .spacing-val { font-family: var(--mono); font-size: 10px; color: var(--text-faint); }
+
+    /* Anchor offset */
+    [id] { scroll-margin-top: 28px; }
+
+    /* Print nicely */
+    @media print { .nav { display: none; } .main { max-width: 100%; padding: 24px; } }
+  </style>
+</head>
+<body>
+<div class="shell">
+
+<!-- ── NAV ── -->
+<nav class="nav">
+  <div class="nav-logo">
+    <div style="width:32px;height:32px;border-radius:9px;background:#FFD36E;display:flex;align-items:center;justify-content:center;margin-bottom:8px;font-size:18px;">🌽</div>
+    <div class="nav-logo-name">Bắp Number Adventure</div>
+    <div class="nav-logo-sub">MVP Dev Handoff · v1.0</div>
+  </div>
+
+  <div class="nav-label">Contents</div>
+  <a href="#screens">1 · Screen Inventory</a>
+  <a href="#components">2 · Components</a>
+  <a href="#layout">3 · Layout System</a>
+  <a href="#tokens">4 · Design Tokens</a>
+  <a href="#states">5 · States</a>
+  <a href="#interactions">6 · Interaction Notes</a>
+  <a href="#content">7 · Content Notes</a>
+  <a href="#a11y">8 · Accessibility</a>
+</nav>
+
+<!-- ── MAIN ── -->
+<main class="main">
+
+  <!-- HEADER -->
+  <div style="margin-bottom:52px;padding-bottom:32px;border-bottom:1px solid var(--border)">
+    <div style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--accent);margin-bottom:8px">Developer Handoff</div>
+    <h1 style="font-size:32px;font-weight:700;color:var(--text);line-height:1.1;margin-bottom:10px">Bắp Number Adventure</h1>
+    <p style="font-size:15px;color:var(--text-soft);max-width:580px;line-height:1.7;margin-bottom:20px">
+      Mobile-first preschool math web app (ages 3–6). Audio-led gameplay, bilingual support (EN/VI), parent dashboard in Vietnamese. All screens are single-column, touch-first, 390 px reference width.
+    </p>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <span class="tag tag-green">React · Hooks</span>
+      <span class="tag tag-blue">Mobile-first</span>
+      <span class="tag tag-yellow">Fredoka + Be Vietnam Pro</span>
+      <span class="tag tag-purple">Web Speech API</span>
+      <span class="tag tag-pink">CSS custom properties</span>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════ -->
+  <!-- 1 · SCREEN INVENTORY -->
+  <!-- ══════════════════════════════════════════════════════ -->
+  <section class="section" id="screens">
+    <div class="section-num">Section 01</div>
+    <h2>Screen Inventory</h2>
+    <p class="section-desc">All screens in the MVP, grouped by user mode. Route keys map to the app router's <code>route</code> state value.</p>
+
+    <h3>Child Mode</h3>
+    <div class="screen-grid">
+      <div class="screen-card"><div class="screen-card-name">Splash</div><div class="screen-card-desc">App launch, mascot animation, auto-advance 2.2 s</div><div class="screen-card-route">route: splash</div></div>
+      <div class="screen-card"><div class="screen-card-name">Welcome</div><div class="screen-card-desc">Language picker, "Hi I'm Bắp", Start / existing profile</div><div class="screen-card-route">route: welcome</div></div>
+      <div class="screen-card"><div class="screen-card-name">Profile Setup</div><div class="screen-card-desc">3-step wizard: name → age → mascot colour</div><div class="screen-card-route">route: profile</div></div>
+      <div class="screen-card"><div class="screen-card-name">Home</div><div class="screen-card-desc">Daily mission card, streak badge, quick-tiles, weekly calendar</div><div class="screen-card-route">route: home</div></div>
+      <div class="screen-card"><div class="screen-card-name">World Map</div><div class="screen-card-desc">5 world cards stacked, locked/unlocked states, star progress</div><div class="screen-card-route">route: map</div></div>
+      <div class="screen-card"><div class="screen-card-name">Level List</div><div class="screen-card-desc">9 nodes on winding path, stars per node, boss level</div><div class="screen-card-route">route: level_list</div></div>
+      <div class="screen-card"><div class="screen-card-name">Hear & Tap</div><div class="screen-card-desc">Speaker button + 4 number tiles, audio-first</div><div class="screen-card-route">game: hear_tap</div></div>
+      <div class="screen-card"><div class="screen-card-name">Build Number</div><div class="screen-card-desc">Tens/ones counters to build target number</div><div class="screen-card-route">game: build</div></div>
+      <div class="screen-card"><div class="screen-card-name">Even / Odd</div><div class="screen-card-desc">Dot-array visual, two basket buttons</div><div class="screen-card-route">game: even_odd</div></div>
+      <div class="screen-card"><div class="screen-card-name">Number Order</div><div class="screen-card-desc">5-number sequence, 1 missing tile, 3 choices</div><div class="screen-card-route">game: order</div></div>
+      <div class="screen-card"><div class="screen-card-name">Add / Take Away</div><div class="screen-card-desc">Apple visual + equation, 4 answer tiles</div><div class="screen-card-route">game: add</div></div>
+      <div class="screen-card"><div class="screen-card-name">Reward</div><div class="screen-card-desc">Stars, confetti, sticker unlock, coins earned</div><div class="screen-card-route">route: reward</div></div>
+      <div class="screen-card"><div class="screen-card-name">Sticker Book</div><div class="screen-card-desc">4-col grid, unlocked + locked slots, progress bar</div><div class="screen-card-route">route: stickers</div></div>
+      <div class="screen-card"><div class="screen-card-name">Streak</div><div class="screen-card-desc">🔥 day count, weekly calendar row</div><div class="screen-card-route">route: streak</div></div>
+    </div>
+
+    <h3>Parent Mode</h3>
+    <div class="screen-grid">
+      <div class="screen-card"><div class="screen-card-name">Parent Gate</div><div class="screen-card-desc">Bottom sheet, arithmetic challenge (a + b = ?), 4 options</div><div class="screen-card-route">overlay: gate</div></div>
+      <div class="screen-card"><div class="screen-card-name">Parent Dashboard</div><div class="screen-card-desc">VN: metrics grid, weekly chart, skill bars, menu</div><div class="screen-card-route">route: parent</div></div>
+      <div class="screen-card"><div class="screen-card-name">Progress Report</div><div class="screen-card-desc">VN: bar chart, per-game table, AI tip card</div><div class="screen-card-route">route: parent_report</div></div>
+      <div class="screen-card"><div class="screen-card-name">Settings — Time</div><div class="screen-card-desc">Daily limit chips, quiet hours toggle, difficulty</div><div class="screen-card-route">route: parent_settings</div></div>
+      <div class="screen-card"><div class="screen-card-name">Settings — Language</div><div class="screen-card-desc">Kid audio lang + parent UI lang radio selectors</div><div class="screen-card-route">route: parent_settings</div></div>
+      <div class="screen-card"><div class="screen-card-name">Settings — Audio</div><div class="screen-card-desc">SFX, music, voice, voice style toggles</div><div class="screen-card-route">route: parent_settings</div></div>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════ -->
+  <!-- 2 · COMPONENTS -->
+  <!-- ══════════════════════════════════════════════════════ -->
+  <section class="section" id="components">
+    <div class="section-num">Section 02</div>
+    <h2>Components</h2>
+    <p class="section-desc">All components are React function components. Props documented below with TypeScript-style signatures. Every tappable element uses <code>no-select</code> class and custom press handlers (not CSS <code>:active</code>).</p>
+
+    <!-- NumTile -->
+    <h3>NumTile</h3>
+    <p>Core interactive element — a tactile 3D number button used in games. Features a physical press-down effect (translateY + shadow crush on pointer-down).</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Prop</th><th>Type</th><th>Default</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td><code>n</code></td><td>number</td><td>—</td><td>The number to display</td></tr>
+          <tr><td><code>size</code></td><td>'sm' | 'md' | 'lg' | 'xl'</td><td>'md'</td><td>sm 64×72 · md 92×104 · lg 124×140 · xl 160×180</td></tr>
+          <tr><td><code>color</code></td><td>'sun' | 'sage' | 'sky' | 'lavender' | 'coral' | 'berry' | 'cream'</td><td>'sun'</td><td>Maps to colour token pairs</td></tr>
+          <tr><td><code>state</code></td><td>'idle' | 'correct' | 'wrong' | 'disabled'</td><td>'idle'</td><td>See States section</td></tr>
+          <tr><td><code>onClick</code></td><td>() → void</td><td>—</td><td>Disabled when state ≠ idle</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="demo-card">
+      <div class="demo-label">Sizes — Fredoka font, ink colour matches token</div>
+      <div class="demo-row" style="align-items:flex-end">
+        <div style="width:64px;height:72px;border-radius:18px;background:#FFF8EC;border:3px solid #2D3A2E;box-shadow:0 4px 0 #E2CFA7;display:flex;align-items:center;justify-content:center;font-family:'Fredoka',sans-serif;font-weight:700;font-size:34px;color:#3A2D15">7</div>
+        <div style="width:92px;height:104px;border-radius:24px;background:#FFD36E;border:3px solid #2D3A2E;box-shadow:0 4px 0 #C79528;display:flex;align-items:center;justify-content:center;font-family:'Fredoka',sans-serif;font-weight:700;font-size:52px;color:#7A4E0E">7</div>
+        <div style="width:124px;height:140px;border-radius:30px;background:#A8D5A2;border:3px solid #2D3A2E;box-shadow:0 4px 0 #6FA876;display:flex;align-items:center;justify-content:center;font-family:'Fredoka',sans-serif;font-weight:700;font-size:72px;color:#2F6A3C">7</div>
+        <div style="width:160px;height:180px;border-radius:36px;background:#B8DEEF;border:3px solid #2D3A2E;box-shadow:0 4px 0 #7DB0C8;display:flex;align-items:center;justify-content:center;font-family:'Fredoka',sans-serif;font-weight:700;font-size:92px;color:#2E6F93">7</div>
+      </div>
+    </div>
+
+    <!-- BigButton -->
+    <h3>BigButton</h3>
+    <p>Primary CTA — used for Play, Next, Check, Start, Let's Go. Same 3D press mechanic as NumTile.</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Prop</th><th>Type</th><th>Default</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td><code>color</code></td><td>'sage' | 'sun' | 'coral' | 'sky' | 'lavender' | 'cream'</td><td>'sage'</td><td></td></tr>
+          <tr><td><code>size</code></td><td>'md' | 'lg' | 'xl'</td><td>'lg'</td><td>md h52 · lg h68 · xl h82</td></tr>
+          <tr><td><code>icon</code></td><td>string</td><td>—</td><td>Rendered left of label, font-size × 1.1</td></tr>
+          <tr><td><code>disabled</code></td><td>boolean</td><td>false</td><td>Opacity 0.5, pointer-events none</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="demo-card">
+      <div class="demo-label">Button colours</div>
+      <div class="demo-row">
+        <div style="height:68px;padding:0 28px;border-radius:24px;background:#7FC089;color:#1F4A28;font-family:'Fredoka',sans-serif;font-weight:700;font-size:22px;border:3px solid #2D3A2E;box-shadow:0 5px 0 #4D8B58;display:inline-flex;align-items:center;gap:10px">▶ Play</div>
+        <div style="height:68px;padding:0 28px;border-radius:24px;background:#FFC94A;color:#5E3A00;font-family:'Fredoka',sans-serif;font-weight:700;font-size:22px;border:3px solid #2D3A2E;box-shadow:0 5px 0 #C89220;display:inline-flex;align-items:center;gap:10px">▶ Start</div>
+        <div style="height:68px;padding:0 28px;border-radius:24px;background:#FF8F74;color:#6B1F0A;font-family:'Fredoka',sans-serif;font-weight:700;font-size:22px;border:3px solid #2D3A2E;box-shadow:0 5px 0 #C8614A;display:inline-flex;align-items:center;gap:10px">✓ Check</div>
+      </div>
+    </div>
+
+    <!-- IconBtn -->
+    <h3>IconBtn</h3>
+    <p>Circular icon button. Used for back (‹), close (✕), speaker (🔊), parent avatar (👤). Min tap size enforced at 44 px.</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Prop</th><th>Type</th><th>Default</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td><code>size</code></td><td>number (px)</td><td>52</td><td>Min 44 for touch</td></tr>
+          <tr><td><code>color</code></td><td>'cream' | 'sage' | 'sun' | 'coral' | 'sky'</td><td>'cream'</td><td>Background token</td></tr>
+          <tr><td><code>pulse</code></td><td>boolean</td><td>false</td><td>Applies pulse-soft animation (speaker button)</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ProgressBar -->
+    <h3>ProgressBar</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Prop</th><th>Type</th><th>Default</th></tr></thead>
+        <tbody>
+          <tr><td><code>value</code></td><td>number</td><td>0</td></tr>
+          <tr><td><code>max</code></td><td>number</td><td>1</td></tr>
+          <tr><td><code>color</code></td><td>string (hex)</td><td>#7FC089</td></tr>
+          <tr><td><code>height</code></td><td>number (px)</td><td>14</td></tr>
+          <tr><td><code>showStar</code></td><td>boolean</td><td>false</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="demo-card">
+      <div class="demo-label">Game HUD bar (height 14, yellow) · Skill bar (height 8)</div>
+      <div style="display:flex;flex-direction:column;gap:12px;max-width:300px">
+        <div style="height:14px;border-radius:14px;background:rgba(46,90,58,0.12);border:2px solid #2D3A2E;overflow:hidden">
+          <div style="height:100%;width:60%;border-radius:14px;background:#FFD36E;box-shadow:inset 0 -2px 0 rgba(0,0,0,0.12),inset 0 2px 0 rgba(255,255,255,0.35)"></div>
+        </div>
+        <div style="height:8px;border-radius:8px;background:#F0EADC;overflow:hidden">
+          <div style="height:100%;width:80%;border-radius:8px;background:#5FB36A"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Game HUD -->
+    <h3>Game HUD (GameHud)</h3>
+    <p>Top bar present in all mini-games. Contains close button, progress bar, and hearts counter.</p>
+    <div class="demo-card" style="background:#B9E2B2;border:none">
+      <div class="demo-label" style="color:rgba(46,90,58,0.6)">Game HUD — sage background</div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="width:44px;height:44px;border-radius:50%;background:#FFF8EC;border:3px solid #2D3A2E;box-shadow:0 4px 0 #D9C38A;display:flex;align-items:center;justify-content:center;font-size:20px;color:#2D3A2E">✕</div>
+        <div style="flex:1;height:14px;border-radius:14px;background:rgba(46,90,58,0.12);border:2px solid #2D3A2E;overflow:hidden">
+          <div style="height:100%;width:40%;border-radius:14px;background:#FFD36E"></div>
+        </div>
+        <div style="padding:6px 12px;border-radius:999px;background:#FFDDE2;border:2px solid #2D3A2E;font-weight:700;color:#A33A1D;font-size:14px;font-family:'Fredoka',sans-serif">❤️ 3</div>
+      </div>
+    </div>
+
+    <!-- StarRow -->
+    <h3>StarRow</h3>
+    <p>1–3 star rating displayed on the reward screen. Stars pop in with staggered <code>pop-in</code> animation (0, 150, 300 ms delay).</p>
+    <div class="demo-card">
+      <div class="demo-row">
+        <div style="display:flex;gap:6px;font-size:28px">⭐⭐⭐</div>
+        <div style="display:flex;gap:6px;font-size:28px">⭐⭐<span style="opacity:0.25">☆</span></div>
+        <div style="display:flex;gap:6px;font-size:28px">⭐<span style="opacity:0.25">☆☆</span></div>
+      </div>
+    </div>
+
+    <!-- Card -->
+    <h3>Card</h3>
+    <p>Soft-rounded container. Used for parent dashboard metric cards and general content grouping.</p>
+    <pre><span class="k">background:</span> <span class="v">#FFFFFF</span>;
+<span class="k">border-radius:</span> <span class="v">var(--r-lg)</span>; <span class="c">/* 28px */</span>
+<span class="k">border:</span> <span class="v">2px solid rgba(46,90,58,0.12)</span>;
+<span class="k">box-shadow:</span> <span class="v">var(--shadow-card)</span>;</pre>
+
+    <!-- BapMascot -->
+    <h3>BapMascot</h3>
+    <p>Original SVG character — a corn-kernel sprout. Never reference external assets; always renders inline.</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Prop</th><th>Values</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td><code>size</code></td><td>number (px)</td><td>Height is size × 140/120</td></tr>
+          <tr><td><code>mood</code></td><td>'happy' | 'wink' | 'think' | 'sleep' | 'celebrate'</td><td>Changes eye + mouth SVG paths</td></tr>
+          <tr><td><code>color</code></td><td>'sun' | 'sage' | 'coral' | 'lavender' | 'sky'</td><td>Body fill colour</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Parent Stat Card -->
+    <h3>MetricCard (Parent)</h3>
+    <p>Used in a 2-col grid on the parent dashboard. Always shows a label, large value, and sub-label.</p>
+    <div class="demo-card">
+      <div class="demo-row">
+        <div style="background:#fff;border-radius:16px;padding:12px 14px;width:140px;border:1px solid rgba(0,0,0,0.06)">
+          <div style="font-size:11px;color:#6B7A6C;font-weight:600;font-family:var(--sans)">Hôm nay</div>
+          <div style="font-size:22px;font-weight:700;color:#5FB36A;font-family:var(--sans);line-height:1.1;margin-top:4px">12 phút</div>
+          <div style="font-size:11px;color:#9AA69A;font-family:var(--sans)">Thời gian chơi</div>
+        </div>
+        <div style="background:#fff;border-radius:16px;padding:12px 14px;width:140px;border:1px solid rgba(0,0,0,0.06)">
+          <div style="font-size:11px;color:#6B7A6C;font-weight:600;font-family:var(--sans)">Chuỗi ngày</div>
+          <div style="font-size:22px;font-weight:700;color:#C14A2A;font-family:var(--sans);line-height:1.1;margin-top:4px">3 ngày</div>
+          <div style="font-size:11px;color:#9AA69A;font-family:var(--sans)">🔥 liên tiếp</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tag -->
+    <h3>Tag / Pill</h3>
+    <p>Pill-shaped label used for badges and labels. Rendered as <code>&lt;span&gt;</code>.</p>
+    <div class="demo-card">
+      <div class="demo-row">
+        <span style="display:inline-flex;align-items:center;padding:6px 12px;border-radius:999px;background:#FFF4DE;color:#7A4E0E;font-weight:600;font-size:13px;border:1.5px solid rgba(46,90,58,0.15);font-family:'Fredoka',sans-serif">⭐ TODAY'S ADVENTURE</span>
+        <span style="display:inline-flex;align-items:center;padding:6px 12px;border-radius:999px;background:#C4E5BE;color:#2F6A3C;font-weight:600;font-size:13px;border:1.5px solid rgba(46,90,58,0.15);font-family:'Fredoka',sans-serif">WORLD 1</span>
+      </div>
+    </div>
+
+    <!-- GardenBg -->
+    <h3>GardenBg</h3>
+    <p>Full-bleed screen background. Uses a radial gradient per variant. Always <code>position: absolute; inset: 0</code>. Content sits above it in a relative-positioned layer.</p>
+    <div class="demo-card">
+      <div class="demo-row">
+        <div style="width:80px;height:60px;border-radius:10px;background:radial-gradient(ellipse 100% 60% at 50% 0%, #FFE6A8 0%, #FFF2CC 50%, #FFF9E6 100%);border:1px solid var(--border)"><div style="padding:6px;font-size:9px;color:#7A4E0E;font-weight:700">sun</div></div>
+        <div style="width:80px;height:60px;border-radius:10px;background:radial-gradient(ellipse 100% 60% at 50% 0%, #D6ECCE 0%, #E8F4E0 50%, #F4FAEE 100%);border:1px solid var(--border)"><div style="padding:6px;font-size:9px;color:#2F6A3C;font-weight:700">sage</div></div>
+        <div style="width:80px;height:60px;border-radius:10px;background:radial-gradient(ellipse 100% 60% at 50% 0%, #D4EAF5 0%, #E7F3FA 50%, #F5FAFD 100%);border:1px solid var(--border)"><div style="padding:6px;font-size:9px;color:#2E6F93;font-weight:700">sky</div></div>
+        <div style="width:80px;height:60px;border-radius:10px;background:radial-gradient(ellipse 100% 60% at 50% 0%, #FFF4DE 0%, #FFF8EC 50%, #FFFDF7 100%);border:1px solid var(--border)"><div style="padding:6px;font-size:9px;color:#7A4E0E;font-weight:700">cream</div></div>
+        <div style="width:80px;height:60px;border-radius:10px;background:radial-gradient(ellipse 100% 60% at 50% 0%, #E3D2F4 0%, #EEE3F8 50%, #F7F1FC 100%);border:1px solid var(--border)"><div style="padding:6px;font-size:9px;color:#5D3F94;font-weight:700">lavender</div></div>
+      </div>
+    </div>
+
+    <!-- Bottom Navigation (World context) -->
+    <h3>World Context Header</h3>
+    <p>Appears on Level List and inside mini-games. Contains a back/close <code>IconBtn</code> on the left and the world name + star tally on the right. Always padded <code>top: 56px</code> to clear the iOS status bar.</p>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════ -->
+  <!-- 3 · LAYOUT SYSTEM -->
+  <!-- ══════════════════════════════════════════════════════ -->
+  <section class="section" id="layout">
+    <div class="section-num">Section 03</div>
+    <h2>Layout System</h2>
+    <p class="section-desc">All screens are single-column flex columns. Layouts are built with fixed pixel values rather than a responsive grid — child screens are specifically designed for a single-hand 390 px mobile experience.</p>
+
+    <h3>Reference Dimensions</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Context</th><th>Width</th><th>Height</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td>Mobile baseline</td><td>390 px</td><td>844 px</td><td>iPhone 14 reference</td></tr>
+          <tr><td>Small mobile</td><td>375 px</td><td>667 px</td><td>Min supported (iPhone SE)</td></tr>
+          <tr><td>Tablet (optional)</td><td>768 px+</td><td>—</td><td>Center-align phone column, max-width 480 px, bg fills remainder</td></tr>
+          <tr><td>Screen top padding</td><td>—</td><td>56–64 px</td><td>Clears iOS/Android status bar</td></tr>
+          <tr><td>Screen bottom padding</td><td>—</td><td>24–32 px</td><td>Above home indicator</td></tr>
+          <tr><td>Side padding</td><td>20 px (child) · 18–20 px (parent)</td><td>—</td><td>Consistent gutter</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Spacing Scale</h3>
+    <div class="spacing-scale">
+      <div class="spacing-block"><div class="spacing-bar" style="height:4px"></div><div class="spacing-val">4</div></div>
+      <div class="spacing-block"><div class="spacing-bar" style="height:6px"></div><div class="spacing-val">6</div></div>
+      <div class="spacing-block"><div class="spacing-bar" style="height:8px"></div><div class="spacing-val">8</div></div>
+      <div class="spacing-block"><div class="spacing-bar" style="height:10px"></div><div class="spacing-val">10</div></div>
+      <div class="spacing-block"><div class="spacing-bar" style="height:12px"></div><div class="spacing-val">12</div></div>
+      <div class="spacing-block"><div class="spacing-bar" style="height:14px"></div><div class="spacing-val">14</div></div>
+      <div class="spacing-block"><div class="spacing-bar" style="height:16px"></div><div class="spacing-val">16</div></div>
+      <div class="spacing-block"><div class="spacing-bar" style="height:20px"></div><div class="spacing-val">20</div></div>
+      <div class="spacing-block"><div class="spacing-bar" style="height:24px"></div><div class="spacing-val">24</div></div>
+      <div class="spacing-block"><div class="spacing-bar" style="height:28px"></div><div class="spacing-val">28</div></div>
+      <div class="spacing-block"><div class="spacing-bar" style="height:32px"></div><div class="spacing-val">32</div></div>
+      <div class="spacing-block"><div class="spacing-bar" style="height:40px"></div><div class="spacing-val">40</div></div>
+      <div class="spacing-block"><div class="spacing-bar" style="height:48px"></div><div class="spacing-val">48</div></div>
+    </div>
+    <p style="font-size:12px">Base unit: <strong>4 px</strong>. All padding, margin, gap values are multiples of 4.</p>
+
+    <h3>Touch Targets</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Component</th><th>Min Size</th><th>Actual</th></tr></thead>
+        <tbody>
+          <tr><td>IconBtn (back, close)</td><td>44 × 44</td><td>44–52 px circle</td></tr>
+          <tr><td>NumTile sm</td><td>44 × 44</td><td>64 × 72 px</td></tr>
+          <tr><td>BigButton md</td><td>44 × 44</td><td>full-width × 52 px</td></tr>
+          <tr><td>BigButton lg / xl</td><td>44 × 44</td><td>full-width × 68–82 px</td></tr>
+          <tr><td>WorldCard</td><td>44 × 44</td><td>full-width × ~108 px</td></tr>
+          <tr><td>LevelNode</td><td>44 × 44</td><td>84 × 84 px circle</td></tr>
+          <tr><td>Basket (Even/Odd)</td><td>44 × 44</td><td>half-width, full-height</td></tr>
+          <tr><td>Parent menu row</td><td>44 × 44</td><td>full-width × ~52 px</td></tr>
+          <tr><td>Settings toggle pill</td><td>44 × 44</td><td>48 × 28 (+ surrounding padding)</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Tablet Responsive</h3>
+    <div class="note">
+      At ≥ 768 px, center the app column with <code>max-width: 480px; margin: 0 auto</code>. The outer background uses the body color (<code>#EFE6D3</code>) to frame the phone-column. No layout changes needed inside components.
+    </div>
+
+    <h3>Z-index Layers</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Layer</th><th>z-index</th></tr></thead>
+        <tbody>
+          <tr><td>GardenBg (below content)</td><td>0</td></tr>
+          <tr><td>Screen content</td><td>1</td></tr>
+          <tr><td>Game HUD (top bar)</td><td>10</td></tr>
+          <tr><td>Parent gate overlay</td><td>100</td></tr>
+          <tr><td>Dynamic Island (iOS)</td><td>50</td></tr>
+          <tr><td>Dev jump nav</td><td>9999</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════ -->
+  <!-- 4 · DESIGN TOKENS -->
+  <!-- ══════════════════════════════════════════════════════ -->
+  <section class="section" id="tokens">
+    <div class="section-num">Section 04</div>
+    <h2>Design Tokens</h2>
+    <p class="section-desc">All tokens defined in <code>tokens.css</code> as CSS custom properties on <code>:root</code>. Two theme overrides (<code>[data-theme="candy"]</code>, <code>[data-theme="sunny"]</code>) can be applied to the root element.</p>
+
+    <pre><span class="c">/* tokens.css — load before any component styles */</span>
+<span class="k">@import url</span>(<span class="v">'https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap'</span>);
+</pre>
+
+    <h3>Palette</h3>
+
+    <h4>Garden Palette (Child UI)</h4>
+    <div class="swatch-grid">
+      <div class="swatch"><div class="swatch-color" style="background:#FFF8EC"></div><div class="swatch-info"><div class="swatch-name">Cream</div><div class="swatch-hex">#FFF8EC</div><div class="swatch-var">--cream</div></div></div>
+      <div class="swatch"><div class="swatch-color" style="background:#FFEFD3"></div><div class="swatch-info"><div class="swatch-name">Cream 2</div><div class="swatch-hex">#FFEFD3</div><div class="swatch-var">--cream-2</div></div></div>
+      <div class="swatch"><div class="swatch-color" style="background:#FDE9C2"></div><div class="swatch-info"><div class="swatch-name">Parchment</div><div class="swatch-hex">#FDE9C2</div><div class="swatch-var">--parchment</div></div></div>
+      <div class="swatch"><div class="swatch-color" style="background:#A8D5A2"></div><div class="swatch-info"><div class="swatch-name">Sage</div><div class="swatch-hex">#A8D5A2</div><div class="swatch-var">--sage</div></div></div>
+      <div class="swatch"><div class="swatch-color" style="background:#3E7B4A"></div><div class="swatch-info"><div class="swatch-name">Sage Ink</div><div class="swatch-hex">#3E7B4A</div><div class="swatch-var">--sage-ink</div></div></div>
+      <div class="swatch"><div class="swatch-color" style="background:#2E5A3A"></div><div class="swatch-info"><div class="swatch-name">Forest</div><div class="swatch-hex">#2E5A3A</div><div class="swatch-var">--forest</div></div></div>
+      <div class="swatch"><div class="swatch-color" style="background:#B8DEEF"></div><div class="swatch-info"><div class="swatch-name">Sky</div><div class="swatch-hex">#B8DEEF</div><div class="swatch-var">--sky</div></div></div>
+      <div class="swatch"><div class="swatch-color" style="background:#2E6F93"></div><div class="swatch-info"><div class="swatch-name">Sky Ink</div><div class="swatch-hex">#2E6F93</div><div class="swatch-var">--sky-ink</div></div></div>
+      <div class="swatch"><div class="swatch-color" style="background:#D9C7F0"></div><div class="swatch-info"><div class="swatch-name">Lavender</div><div class="swatch-hex">#D9C7F0</div><div class="swatch-var">--lavender</div></div></div>
+      <div class="swatch"><div class="swatch-color" style="background:#6B4FA0"></div><div class="swatch-info"><div class="swatch-name">Lavender Ink</div><div class="swatch-hex">#6B4FA0</div><div class="swatch-var">--lavender-ink</div></div></div>
+      <div class="swatch"><div class="swatch-color" style="background:#FFD36E"></div><div class="swatch-info"><div class="swatch-name">Sun</div><div class="swatch-hex">#FFD36E</div><div class="swatch-var">--sun</div></div></div>
+      <div class="swatch"><div class="swatch-color" style="background:#B87C0E"></div><div class="swatch-info"><div class="swatch-name">Sun Ink</div><div class="swatch-hex">#B87C0E</div><div class="swatch-var">--sun-ink</div></div></div>
+      <div class="swatch"><div class="swatch-color" style="background:#FFA48C"></div><div class="swatch-info"><div class="swatch-name">Coral</div><div class="swatch-hex">#FFA48C</div><div class="swatch-var">--coral</div></div></div>
+      <div class="swatch"><div class="swatch-color" style="background:#C14A2A"></div><div class="swatch-info"><div class="swatch-name">Coral Ink</div><div class="swatch-hex">#C14A2A</div><div class="swatch-var">--coral-ink</div></div></div>
+      <div class="swatch"><div class="swatch-color" style="background:#E6779E"></div><div class="swatch-info"><div class="swatch-name">Berry</div><div class="swatch-hex">#E6779E</div><div class="swatch-var">--berry</div></div></div>
+    </div>
+
+    <h4>Ink & Surface</h4>
+    <div class="swatch-grid">
+      <div class="swatch"><div class="swatch-color" style="background:#2D3A2E"></div><div class="swatch-info"><div class="swatch-name">Ink</div><div class="swatch-hex">#2D3A2E</div><div class="swatch-var">--ink</div></div></div>
+      <div class="swatch"><div class="swatch-color" style="background:#6B7A6C"></div><div class="swatch-info"><div class="swatch-name">Ink Soft</div><div class="swatch-hex">#6B7A6C</div><div class="swatch-var">--ink-soft</div></div></div>
+      <div class="swatch"><div class="swatch-color" style="background:#A9B4A8"></div><div class="swatch-info"><div class="swatch-name">Ink Faint</div><div class="swatch-hex">#A9B4A8</div><div class="swatch-var">--ink-faint</div></div></div>
+      <div class="swatch"><div class="swatch-color" style="background:#FFFDF7"></div><div class="swatch-info"><div class="swatch-name">Surface</div><div class="swatch-hex">#FFFDF7</div><div class="swatch-var">--surface</div></div></div>
+      <div class="swatch"><div class="swatch-color" style="background:#FFF4DE"></div><div class="swatch-info"><div class="swatch-name">Surface 2</div><div class="swatch-hex">#FFF4DE</div><div class="swatch-var">--surface-2</div></div></div>
+      <div class="swatch"><div class="swatch-color" style="background:#FFFFFF;border:1px solid #eee"></div><div class="swatch-info"><div class="swatch-name">Card</div><div class="swatch-hex">#FFFFFF</div><div class="swatch-var">--card</div></div></div>
+    </div>
+
+    <h4>Semantic</h4>
+    <div class="swatch-grid">
+      <div class="swatch"><div class="swatch-color" style="background:#5FB36A"></div><div class="swatch-info"><div class="swatch-name">Correct</div><div class="swatch-hex">#5FB36A</div><div class="swatch-var">--correct</div></div></div>
+      <div class="swatch"><div class="swatch-color" style="background:#F2A97A"></div><div class="swatch-info"><div class="swatch-name">Gentle Miss</div><div class="swatch-hex">#F2A97A</div><div class="swatch-var">--gentle-miss</div></div></div>
+    </div>
+
+    <h3>Typography</h3>
+    <div class="demo-card">
+      <div class="demo-label">Child UI — Fredoka (var(--font-kid), var(--font-num))</div>
+      <div style="display:flex;flex-direction:column;gap:8px;font-family:'Fredoka',sans-serif">
+        <div style="font-size:44px;font-weight:700;color:#2D3A2E;letter-spacing:-1px;line-height:1">Bắp · 123</div>
+        <div style="font-size:28px;font-weight:700;color:#2D3A2E">World Map · Number Forest</div>
+        <div style="font-size:20px;font-weight:600;color:#2D3A2E">Play Now · 3 games · 2 min</div>
+        <div style="font-size:14px;font-weight:600;color:#6B7A6C;letter-spacing:0.5px;text-transform:uppercase">WORLD 1 · TAP WHAT YOU HEAR</div>
+        <div style="font-size:12px;font-weight:600;color:#6B7A6C">12 / 40 collected · This week</div>
+      </div>
+    </div>
+    <div class="demo-card" style="margin-top:10px">
+      <div class="demo-label">Parent UI — Be Vietnam Pro (var(--font-parent))</div>
+      <div style="display:flex;flex-direction:column;gap:8px;font-family:'Be Vietnam Pro',sans-serif">
+        <div style="font-size:18px;font-weight:700;color:#FFF8EC">Bảng điều khiển</div>
+        <div style="font-size:15px;font-weight:700;color:#FFF8EC">Hoạt động tuần này</div>
+        <div style="font-size:13px;font-weight:600;color:rgba(255,255,255,0.6)">mục tiêu 15ph/ngày</div>
+        <div style="font-size:12px;font-weight:500;color:rgba(255,255,255,0.4)">Nhận biết số 1–20 · Giỏi</div>
+        <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.25);letter-spacing:0.5px;text-transform:uppercase">CHA MẸ · CỔNG PHỤ HUYNH</div>
+      </div>
+    </div>
+
+    <div class="table-wrap" style="margin-top:14px">
+      <table>
+        <thead><tr><th>Token</th><th>Value</th><th>Usage</th></tr></thead>
+        <tbody>
+          <tr><td><code>--font-kid</code></td><td>'Fredoka', 'Baloo 2', ui-rounded</td><td>All child-facing UI, numbers</td></tr>
+          <tr><td><code>--font-num</code></td><td>same as --font-kid</td><td>Number tiles, game numbers</td></tr>
+          <tr><td><code>--font-parent</code></td><td>'Be Vietnam Pro', 'Inter', system-ui</td><td>Parent dashboard, settings</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Border Radius</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Token</th><th>Value</th><th>Usage</th></tr></thead>
+        <tbody>
+          <tr><td><code>--r-sm</code></td><td>12 px</td><td>Small chips, tags, avatar frames</td></tr>
+          <tr><td><code>--r-md</code></td><td>20 px</td><td>Input fields, smaller cards</td></tr>
+          <tr><td><code>--r-lg</code></td><td>28 px</td><td>Cards, world cards, game zones</td></tr>
+          <tr><td><code>--r-xl</code></td><td>36 px</td><td>Mission card, large panels</td></tr>
+          <tr><td><code>--r-pill</code></td><td>9999 px</td><td>Pill tags, streak badge, lang buttons</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Shadows</h3>
+    <div class="demo-card">
+      <div style="display:flex;gap:24px;align-items:center;flex-wrap:wrap">
+        <div>
+          <div style="margin-bottom:8px;font-size:10px;color:var(--text-faint);letter-spacing:1px;text-transform:uppercase">--shadow-tile</div>
+          <div class="shadow-demo" style="box-shadow:0 3px 0 rgba(46,90,58,0.14)">Tile</div>
+        </div>
+        <div>
+          <div style="margin-bottom:8px;font-size:10px;color:var(--text-faint);letter-spacing:1px;text-transform:uppercase">--shadow-card</div>
+          <div class="shadow-demo" style="box-shadow:0 2px 0 rgba(46,90,58,0.08), 0 10px 24px rgba(46,90,58,0.10)">Card</div>
+        </div>
+        <div>
+          <div style="margin-bottom:8px;font-size:10px;color:var(--text-faint);letter-spacing:1px;text-transform:uppercase">--shadow-pop</div>
+          <div class="shadow-demo" style="box-shadow:0 4px 0 rgba(46,90,58,0.18), 0 18px 32px rgba(46,90,58,0.14)">Pop</div>
+        </div>
+      </div>
+      <pre style="margin-top:16px"><span class="k">--shadow-tile:</span> <span class="v">0 3px 0 rgba(46,90,58,0.14)</span>;
+<span class="k">--shadow-card:</span> <span class="v">0 2px 0 rgba(46,90,58,0.08), 0 10px 24px rgba(46,90,58,0.10)</span>;
+<span class="k">--shadow-pop:</span>  <span class="v">0 4px 0 rgba(46,90,58,0.18), 0 18px 32px rgba(46,90,58,0.14)</span>;</pre>
+    </div>
+
+    <h3>Keyframe Animations</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Name</th><th>Duration</th><th>Usage</th></tr></thead>
+        <tbody>
+          <tr><td><code>bobble</code></td><td>2.8 s infinite</td><td>Mascot idle state on splash, home</td></tr>
+          <tr><td><code>pop-in</code></td><td>0.4 s (spring)</td><td>Stars on reward, sticker unlock, profile colour change</td></tr>
+          <tr><td><code>wiggle</code></td><td>0.5 s</td><td>Wrong answer feedback on NumTile</td></tr>
+          <tr><td><code>sparkle</code></td><td>2–4 s infinite</td><td>Background sparkle particles</td></tr>
+          <tr><td><code>slide-up</code></td><td>0.3 s ease-out</td><td>Parent gate bottom sheet entrance</td></tr>
+          <tr><td><code>confetti-fall</code></td><td>2–4 s forwards</td><td>Reward screen confetti pieces</td></tr>
+          <tr><td><code>pulse-soft</code></td><td>2 s infinite</td><td>Speaker button, missing-number ? tile</td></tr>
+          <tr><td><code>shimmer</code></td><td>—</td><td>Reserved for loading states</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════ -->
+  <!-- 5 · STATES -->
+  <!-- ══════════════════════════════════════════════════════ -->
+  <section class="section" id="states">
+    <div class="section-num">Section 05</div>
+    <h2>States</h2>
+    <p class="section-desc">All interactive states documented with exact visual values. No <code>:hover</code> pseudo-class is used in games — hover is handled via <code>onMouseEnter/Leave</code> in React to keep touch and mouse in parity.</p>
+
+    <h3>NumTile States</h3>
+    <div class="demo-card">
+      <div class="demo-row" style="align-items:flex-end;flex-wrap:wrap;gap:16px">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:8px">
+          <div style="width:92px;height:104px;border-radius:24px;background:#FFD36E;border:3px solid #2D3A2E;box-shadow:0 4px 0 #C79528,0 10px 18px rgba(46,90,58,0.12);display:flex;align-items:center;justify-content:center;font-family:'Fredoka',sans-serif;font-weight:700;font-size:52px;color:#7A4E0E">5</div>
+          <span style="font-size:10px;color:var(--text-faint)">idle</span>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:8px">
+          <div style="width:92px;height:104px;border-radius:24px;background:#FFD36E;border:3px solid #2D3A2E;box-shadow:0 1px 0 #C79528,0 3px 6px rgba(46,90,58,0.1);display:flex;align-items:center;justify-content:center;font-family:'Fredoka',sans-serif;font-weight:700;font-size:52px;color:#7A4E0E;transform:translateY(3px)">5</div>
+          <span style="font-size:10px;color:var(--text-faint)">pressed</span>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:8px">
+          <div style="width:92px;height:104px;border-radius:24px;background:#C4EBB9;border:3px solid #2D3A2E;box-shadow:0 4px 0 #6FB05F,0 10px 20px rgba(95,179,106,0.35);display:flex;align-items:center;justify-content:center;font-family:'Fredoka',sans-serif;font-weight:700;font-size:52px;color:#2F6A3C;transform:translateY(-2px)">5</div>
+          <span style="font-size:10px;color:var(--text-faint)">correct</span>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:8px">
+          <div style="width:92px;height:104px;border-radius:24px;background:#FFD6C6;border:3px solid #2D3A2E;box-shadow:0 2px 0 #E88866,0 4px 8px rgba(232,136,102,0.3);display:flex;align-items:center;justify-content:center;font-family:'Fredoka',sans-serif;font-weight:700;font-size:52px;color:#A33A1D">5</div>
+          <span style="font-size:10px;color:var(--text-faint)">wrong</span>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:8px">
+          <div style="width:92px;height:104px;border-radius:24px;background:#FFD36E;border:3px solid #2D3A2E;box-shadow:0 4px 0 #C79528;display:flex;align-items:center;justify-content:center;font-family:'Fredoka',sans-serif;font-weight:700;font-size:52px;color:#7A4E0E;opacity:0.4">5</div>
+          <span style="font-size:10px;color:var(--text-faint)">disabled</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>State</th><th>Background</th><th>Shadow</th><th>Transform</th><th>Other</th></tr></thead>
+        <tbody>
+          <tr><td>idle</td><td>token colour (e.g. #FFD36E)</td><td><code>0 4px 0 {sh}, 0 10px 18px rgba(…0.12)</code></td><td>translateY(0)</td><td>—</td></tr>
+          <tr><td>pressed</td><td>unchanged</td><td><code>0 1px 0 {sh}, 0 3px 6px …</code></td><td>translateY(3px)</td><td>onMouseDown/Up</td></tr>
+          <tr><td>correct</td><td>#C4EBB9</td><td><code>0 4px 0 #6FB05F, 0 10px 20px rgba(95,179,106,0.35)</code></td><td>translateY(-2px)</td><td>—</td></tr>
+          <tr><td>wrong</td><td>#FFD6C6</td><td><code>0 2px 0 #E88866, …</code></td><td>—</td><td>wiggle animation</td></tr>
+          <tr><td>disabled</td><td>unchanged</td><td>unchanged</td><td>—</td><td>opacity: 0.4, pointer-events: none</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>BigButton States</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>State</th><th>Transform</th><th>Shadow change</th></tr></thead>
+        <tbody>
+          <tr><td>idle</td><td>translateY(0)</td><td><code>0 5px 0 {sh}</code></td></tr>
+          <tr><td>pressed</td><td>translateY(4px)</td><td><code>0 1px 0 {sh}</code></td></tr>
+          <tr><td>disabled</td><td>—</td><td>opacity: 0.5, pointer-events: none</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Level Node States</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>State</th><th>Background</th><th>Visual</th></tr></thead>
+        <tbody>
+          <tr><td>completed (3★)</td><td>world colour (bright)</td><td>Number + 3 stars below</td></tr>
+          <tr><td>completed (1–2★)</td><td>world colour (bright)</td><td>Number + partial stars</td></tr>
+          <tr><td>current (0★)</td><td>world colour (bright)</td><td>Number, no stars yet</td></tr>
+          <tr><td>locked</td><td>#E8DFCE</td><td>🔒 icon, opacity 0.65, disabled</td></tr>
+          <tr><td>boss</td><td>#FFD36E (always)</td><td>👑 icon instead of number</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Toggle (Parent Settings)</h3>
+    <div class="demo-card">
+      <div class="demo-row">
+        <div style="display:flex;align-items:center;gap:12px">
+          <div style="width:48px;height:28px;border-radius:999px;padding:3px;background:#5FB36A;display:flex;justify-content:flex-end">
+            <div style="width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.2)"></div>
+          </div>
+          <span style="font-size:12px;color:var(--text-soft)">on</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px">
+          <div style="width:48px;height:28px;border-radius:999px;padding:3px;background:#D8D2C0;display:flex;justify-content:flex-start">
+            <div style="width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.2)"></div>
+          </div>
+          <span style="font-size:12px;color:var(--text-soft)">off</span>
+        </div>
+      </div>
+    </div>
+
+    <h3>World Card States</h3>
+    <div class="states-row">
+      <div class="state-badge" style="background:#2E4232;color:#A8D5A2;border-color:#4D8B5840">Unlocked</div>
+      <div class="state-badge" style="background:#2A2010;color:rgba(255,255,255,0.35);border-color:rgba(255,255,255,0.1)">Locked (opacity 0.65, cursor not-allowed)</div>
+    </div>
+    <p style="font-size:12px">Locked cards show <code>#E8DFCE</code> background and 🔒 emoji in place of the world emoji.</p>
+
+    <h3>Sticker Slot States</h3>
+    <div class="states-row">
+      <div class="state-badge" style="background:#2E4232;color:#A8D5A2;border-color:#4D8B5840">Unlocked — white bg, pop-in anim</div>
+      <div class="state-badge" style="background:rgba(255,255,255,0.03);color:rgba(255,255,255,0.3);border-color:rgba(255,255,255,0.08)">Locked — dashed border, ? colour rgba(46,90,58,0.3)</div>
+    </div>
+
+    <h3>Loading / Splash</h3>
+    <p>Three pulsing dots using <code>pulse-soft</code> animation, staggered 0 / 0.15 / 0.30 s delays. Background: <code>sun</code> variant GardenBg.</p>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════ -->
+  <!-- 6 · INTERACTION NOTES -->
+  <!-- ══════════════════════════════════════════════════════ -->
+  <section class="section" id="interactions">
+    <div class="section-num">Section 06</div>
+    <h2>Interaction Notes</h2>
+    <p class="section-desc">Timing and sequencing for all key micro-interactions and flows. All durations are in milliseconds unless otherwise noted.</p>
+
+    <h3>Audio Replay (Hear & Tap)</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Event</th><th>Behaviour</th></tr></thead>
+        <tbody>
+          <tr><td>Round mount</td><td>Auto-play via Web Speech API (<code>speechSynthesis.speak()</code>). Rate: 0.85, pitch: 1.1, lang: en-US</td></tr>
+          <tr><td>Speaker button tap</td><td>Cancel any in-progress speech → replay same number</td></tr>
+          <tr><td>API unavailable</td><td>Silently no-op (<code>if (!('speechSynthesis' in window)) return</code>) — game still fully playable visually</td></tr>
+          <tr><td>Bilingual mode (future)</td><td>Play English first, then Vietnamese after 0.8 s pause</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note">Speaker button uses <code>pulse-soft</code> animation on idle, stops pulsing after first tap. Do not replay audio automatically between rounds — always wait for explicit user tap.</div>
+
+    <h3>Correct Answer Feedback</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Time</th><th>Action</th></tr></thead>
+        <tbody>
+          <tr><td>0 ms</td><td>Set tile state → <code>correct</code>. Tile turns green, translateY(-2px)</td></tr>
+          <tr><td>0 ms</td><td>Set <code>correctPicked = true</code> — all other tiles become non-interactive</td></tr>
+          <tr><td>900 ms</td><td>Advance to next round (or call onRoundEnd if last round)</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Wrong Answer Feedback</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Time</th><th>Action</th></tr></thead>
+        <tbody>
+          <tr><td>0 ms</td><td>Set tile state → <code>wrong</code>. Tile turns coral + wiggle animation (0.4 s)</td></tr>
+          <tr><td>0 ms</td><td>Decrement hearts (<code>Math.max(0, h - 1)</code>)</td></tr>
+          <tr><td>0 ms</td><td>Add to <code>wrongs</code> Set — tile stays visually wrong, but re-tap is silently blocked</td></tr>
+          <tr><td>—</td><td>Correct tile remains hittable. No auto-advance; user must find correct answer</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note note-warn">Hearts floor at 0 — never show negative. At 0 hearts, game completes with 1 star regardless of remaining questions.</div>
+
+    <h3>Button Press Physics</h3>
+    <pre><span class="c">// onMouseDown (and onTouchStart equivalent)</span>
+<span class="k">style.transform</span> = <span class="v">'translateY(4px)'</span>;
+<span class="k">style.boxShadow</span> = <span class="v">`0 1px 0 ${c.sh}, 0 3px 8px …`</span>;
+
+<span class="c">// onMouseUp + onMouseLeave (reset)</span>
+<span class="k">style.transform</span> = <span class="v">''</span>;
+<span class="k">style.boxShadow</span> = <span class="v">`0 5px 0 ${c.sh}, 0 10px 20px …`</span>;
+
+<span class="c">// CSS transition on all interactive buttons:</span>
+<span class="k">transition:</span> <span class="v">'transform 0.1s ease, box-shadow 0.1s ease'</span>;</pre>
+
+    <h3>Drag-and-Drop Behaviour (Build Number)</h3>
+    <p>The BuildNumber game uses <code>+</code> / <code>−</code> tap buttons (not drag) for the MVP. Tens and ones columns each have their own counter. Visual feedback: each added block uses <code>pop-in</code> animation class.</p>
+    <div class="note">Drag-and-drop is deferred post-MVP. The current tap-to-add/remove mechanic works reliably on touch without gesture conflicts.</div>
+
+    <h3>Reward Modal Sequence</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Time</th><th>Action</th></tr></thead>
+        <tbody>
+          <tr><td>0 ms</td><td>Route changes to <code>reward</code>. GardenBg (sun variant) + Confetti mount</td></tr>
+          <tr><td>0 ms</td><td>"Amazing, {name}!" headline: <code>pop-in 0.4s both</code></td></tr>
+          <tr><td>0 ms</td><td>Mascot starts <code>bobble</code>, mood: <code>celebrate</code></td></tr>
+          <tr><td>0–450 ms</td><td>Stars appear with <code>pop-in</code> staggered: 0 / 150 / 300 ms</td></tr>
+          <tr><td>500 ms</td><td>Sticker unlock badge: <code>pop-in 0.5s ease-out 0.5s both</code></td></tr>
+          <tr><td>User-driven</td><td>Tap Next → navigate to <code>stickers</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Parent Gate Behaviour</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Step</th><th>Detail</th></tr></thead>
+        <tbody>
+          <tr><td>Trigger</td><td>Tap 👤 avatar on home screen → <code>showParentGate = true</code></td></tr>
+          <tr><td>Entry</td><td>Bottom sheet slides up (<code>slide-up 0.3s ease-out</code>). Backdrop: <code>rgba(46,90,58,0.4)</code> + <code>backdropFilter: blur(6px)</code></td></tr>
+          <tr><td>Challenge</td><td>Random a (3–6) + b (2–4) = ? with 4 answer options, one correct</td></tr>
+          <tr><td>Correct</td><td>Tile state → <code>correct</code>. After 400 ms, close gate + navigate to <code>parent</code></td></tr>
+          <tr><td>Wrong</td><td>Tile state → <code>wrong</code>. After 600 ms, reset <code>choice = null</code>. Regenerate same question (a+b stays same, options shuffle)</td></tr>
+          <tr><td>Cancel</td><td>Tap "Hủy" → <code>showParentGate = false</code>, stay on home</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Splash Auto-Advance</h3>
+    <p><code>setTimeout(onReady, 2200)</code> with cleanup on unmount. If user taps during splash, nothing happens — no skip. Clean up the timer properly to avoid navigation side-effects when the component unmounts.</p>
+
+    <h3>Session Completion</h3>
+    <p>Each game calls <code>onRoundEnd({ stars, correct, total })</code> when <code>round + 1 >= rounds</code>. The parent computes a sticker reward: if <code>stars === 3 && Math.random() > 0.5</code> → random sticker granted. This probability is intentional — not every 3-star run gives a sticker.</p>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════ -->
+  <!-- 7 · CONTENT NOTES -->
+  <!-- ══════════════════════════════════════════════════════ -->
+  <section class="section" id="content">
+    <div class="section-num">Section 07</div>
+    <h2>Content Notes</h2>
+    <p class="section-desc">Copy guidelines, bilingual rules, and dynamic string patterns.</p>
+
+    <h3>Child-Facing Copy Style</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Rule</th><th>Example</th></tr></thead>
+        <tbody>
+          <tr><td>Short, imperative, 2–5 words</td><td>"Tap what you hear" · "Make this number"</td></tr>
+          <tr><td>ALL CAPS for game labels</td><td>"EVEN or ODD?" · "BUILD THE NUMBER" · "WHAT COMES NEXT?"</td></tr>
+          <tr><td>Sentence case for nav</td><td>"World Map" · "Stickers" · "Play"</td></tr>
+          <tr><td>Exclamations on reward</td><td>"Amazing, {name}!" · "Great job, {name}!" · "Good try, {name}!"</td></tr>
+          <tr><td>Star threshold for reward copy</td><td>3★ → Amazing · 2★ → Great job · 1★ → Good try</td></tr>
+          <tr><td>No negative language</td><td>Wrong = "gentle miss", never "wrong" or "failed"</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Parent-Facing Copy Style (Vietnamese)</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>UI Element</th><th>Vietnamese</th><th>English Equivalent</th></tr></thead>
+        <tbody>
+          <tr><td>Dashboard title</td><td>Bảng điều khiển</td><td>Dashboard</td></tr>
+          <tr><td>Parent gate title</td><td>Cổng phụ huynh</td><td>Parent Gate</td></tr>
+          <tr><td>Gate instruction</td><td>Giải phép tính để tiếp tục</td><td>Solve the equation to continue</td></tr>
+          <tr><td>Cancel</td><td>Hủy</td><td>Cancel</td></tr>
+          <tr><td>Today's play</td><td>Hôm nay</td><td>Today</td></tr>
+          <tr><td>Streak label</td><td>Chuỗi ngày</td><td>Day streak</td></tr>
+          <tr><td>Accuracy</td><td>Độ chính xác</td><td>Accuracy</td></tr>
+          <tr><td>Detailed report</td><td>Báo cáo chi tiết</td><td>Detailed Report</td></tr>
+          <tr><td>Time limit</td><td>Giới hạn thời gian</td><td>Time Limit</td></tr>
+          <tr><td>Language</td><td>Ngôn ngữ & Âm thanh</td><td>Language & Audio</td></tr>
+          <tr><td>Settings</td><td>Cài đặt</td><td>Settings</td></tr>
+          <tr><td>Days of week</td><td>T2 T3 T4 T5 T6 T7 CN</td><td>Mon–Sun</td></tr>
+          <tr><td>Minutes</td><td>phút</td><td>minutes</td></tr>
+          <tr><td>Days in a row</td><td>ngày liên tiếp</td><td>—</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Bilingual Support</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Mode</th><th>Kid Audio</th><th>Parent UI</th><th>Welcome Screen</th></tr></thead>
+        <tbody>
+          <tr><td>EN</td><td>Numbers in English</td><td>Vietnamese (default)</td><td>🇬🇧 EN selected</td></tr>
+          <tr><td>VI</td><td>Numbers in Vietnamese</td><td>Vietnamese</td><td>🇻🇳 VI selected</td></tr>
+          <tr><td>BI (Bilingual)</td><td>Both languages per prompt</td><td>Vietnamese</td><td>🌍 BI selected</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note">Bilingual mode plays English number first, then Vietnamese after a 0.8 s pause. Use two sequential <code>SpeechSynthesisUtterance</code> calls with <code>onend</code> chaining.</div>
+
+    <h3>Dynamic Strings</h3>
+    <pre><span class="c">// Reward headline</span>
+<span class="k">const</span> headline = stars === 3 ? <span class="v">`Amazing, ${name}!`</span>
+               : stars === 2 ? <span class="v">`Great job, ${name}!`</span>
+               :               <span class="v">`Good try, ${name}!`</span>;
+
+<span class="c">// Parent status chip</span>
+<span class="k">const</span> status = <span class="v">"● Đang học"</span>; <span class="c">// "● Learning"</span>
+
+<span class="c">// Sticker count</span>
+<span class="k">const</span> label = <span class="v">`${collected} of ${total} collected`</span>; <span class="c">// "12 of 40 collected"</span>
+
+<span class="c">// Age display (parent)</span>
+<span class="k">const</span> label = <span class="v">`${age} tuổi · Mẫu giáo`</span>; <span class="c">// "4 tuổi · Mẫu giáo"</span></pre>
+
+    <h3>World Content</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>ID</th><th>Name</th><th>Subtitle</th><th>Emoji</th><th>Unlocked MVP</th></tr></thead>
+        <tbody>
+          <tr><td>forest</td><td>Number Forest</td><td>1–20</td><td>🌳</td><td>✅</td></tr>
+          <tr><td>tens</td><td>Tens Town</td><td>10–100</td><td>🏘️</td><td>✅</td></tr>
+          <tr><td>even</td><td>Even/Odd Bridge</td><td>even • odd</td><td>🌉</td><td>✅</td></tr>
+          <tr><td>kitchen</td><td>Math Kitchen</td><td>+ / −</td><td>🍳</td><td>🔒</td></tr>
+          <tr><td>castle</td><td>Big Number Castle</td><td>100–1000</td><td>🏰</td><td>🔒</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════════════════════════════ -->
+  <!-- 8 · ACCESSIBILITY -->
+  <!-- ══════════════════════════════════════════════════════ -->
+  <section class="section" id="a11y">
+    <div class="section-num">Section 08</div>
+    <h2>Accessibility Notes</h2>
+    <p class="section-desc">The primary users (ages 3–6) are pre-literate — audio is the primary instruction medium. Visual design must reinforce, never replace, audio feedback.</p>
+
+    <h3>Touch Areas</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Component</th><th>Min Touch Target</th><th>Note</th></tr></thead>
+        <tbody>
+          <tr><td>All game tiles (NumTile sm+)</td><td>64 × 72 px</td><td>Well above 44 px minimum</td></tr>
+          <tr><td>IconBtn (back, close)</td><td>44 × 44 px</td><td>Enforce min in props; default 52 px</td></tr>
+          <tr><td>BigButton</td><td>Full-width × 52–82 px</td><td>Always comfortable</td></tr>
+          <tr><td>Level nodes</td><td>84 × 84 px circle</td><td>Generous</td></tr>
+          <tr><td>Parent toggle</td><td>48 × 28 (tappable area padded to 44 × 44)</td><td>Wrap in <code>min-height: 44px</code> row</td></tr>
+          <tr><td>Language option rows</td><td>Full-width × 44 px min</td><td>Comfortable for adult thumbs</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Contrast</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Pair</th><th>Ratio (approx)</th><th>Pass AA?</th></tr></thead>
+        <tbody>
+          <tr><td>ink (#2D3A2E) on cream (#FFF8EC)</td><td>~13:1</td><td>✅ AAA</td></tr>
+          <tr><td>sun-ink (#7A4E0E) on sun (#FFD36E)</td><td>~5.2:1</td><td>✅ AA</td></tr>
+          <tr><td>sage-ink (#2F6A3C) on sage (#A8D5A2)</td><td>~4.8:1</td><td>✅ AA</td></tr>
+          <tr><td>sky-ink (#2E6F93) on sky (#B8DEEF)</td><td>~4.6:1</td><td>✅ AA</td></tr>
+          <tr><td>ink-soft (#6B7A6C) on cream (#FFF8EC)</td><td>~5.1:1</td><td>✅ AA (body)</td></tr>
+          <tr><td>correct (#5FB36A) on white</td><td>~3.1:1</td><td>⚠️ Use for state only, not body text</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Audio Alternatives</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Audio Cue</th><th>Visual Equivalent</th></tr></thead>
+        <tbody>
+          <tr><td>Spoken number (Hear & Tap)</td><td>Speaker icon pulses; can replay by tapping</td></tr>
+          <tr><td>Correct chime (future)</td><td>Green tile flash + Bắp wiggle</td></tr>
+          <tr><td>Wrong buzz (future)</td><td>Coral tile + wiggle animation</td></tr>
+          <tr><td>Reward fanfare (future)</td><td>Confetti + star pop-in animation</td></tr>
+          <tr><td>Sticker unlock sound (future)</td><td>Pop-in animation at 0.5 s delay</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note">Audio effects are listed as "(future)" — the MVP uses Web Speech API for number reading only. SFX/music are behind a parent settings toggle, default off.</div>
+
+    <h3>Semantic HTML</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Pattern</th><th>Implementation</th></tr></thead>
+        <tbody>
+          <tr><td>Game answer buttons</td><td><code>&lt;button&gt;</code> elements, not divs. Keyboard-focusable by default</td></tr>
+          <tr><td>Number tiles</td><td><code>&lt;button&gt;</code> with text content = the number (no aria-label needed)</td></tr>
+          <tr><td>Speaker button</td><td><code>aria-label="Tap to hear the number"</code> (add in implementation)</td></tr>
+          <tr><td>Progress bars</td><td><code>role="progressbar"</code> + <code>aria-valuenow</code> + <code>aria-valuemax</code> (add in implementation)</td></tr>
+          <tr><td>Disabled buttons</td><td>Use <code>pointer-events: none</code> + visual opacity. Add <code>aria-disabled="true"</code> for screen reader users</td></tr>
+          <tr><td>Icon-only buttons (back ‹)</td><td>Add <code>aria-label="Go back"</code></td></tr>
+          <tr><td>Mascot SVG</td><td><code>aria-hidden="true"</code> — decorative only</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Control Consistency</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Rule</th><th>Detail</th></tr></thead>
+        <tbody>
+          <tr><td>Back button always top-left</td><td>‹ IconBtn, same position on all sub-screens</td></tr>
+          <tr><td>Close (game) always top-left</td><td>✕ IconBtn, consistent with system close conventions</td></tr>
+          <tr><td>Primary CTA always bottom-center</td><td>BigButton, full-width or centered, above safe area</td></tr>
+          <tr><td>Hearts always top-right in-game</td><td>HUD always present during active game rounds</td></tr>
+          <tr><td>Parent icon always top-right of Home</td><td>👤 IconBtn, consistent entry point to parent mode</td></tr>
+          <tr><td>No UI changes without user action in games</td><td>After wrong answer: wait; after correct: 900 ms then advance. Never auto-skip.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Motion & Cognitive Load</h3>
+    <p>All animations are purposeful, not decorative loops during gameplay. <code>bobble</code> and <code>sparkle</code> animations are idle-only — they do not compete with active interaction areas. For children with motion sensitivity, future iterations should honour <code>prefers-reduced-motion</code>:</p>
+    <pre><span class="k">@media (prefers-reduced-motion: reduce)</span> {
+  <span class="k">.bobble, .sparkle, .pulse-soft</span> { <span class="k">animation:</span> <span class="v">none</span>; }
+  <span class="k">.pop-in</span> { <span class="k">animation-duration:</span> <span class="v">0.01ms</span>; }
+}</pre>
+
+    <hr>
+    <div style="display:flex;justify-content:space-between;align-items:center;padding-top:8px">
+      <div style="font-size:11px;color:var(--text-faint)">Bắp Number Adventure · Dev Handoff v1.0 · April 2026</div>
+      <div style="display:flex;gap:8px">
+        <span class="tag tag-green">React</span>
+        <span class="tag tag-blue">Mobile-first</span>
+        <span class="tag tag-yellow">MVP</span>
+      </div>
+    </div>
+  </section>
+
+</main>
+</div>
+
+<script>
+  // Active nav highlight on scroll
+  const navLinks = document.querySelectorAll('.nav a');
+  const sections = document.querySelectorAll('.section[id]');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        navLinks.forEach(a => a.classList.remove('active'));
+        const link = document.querySelector(`.nav a[href="#${entry.target.id}"]`);
+        if (link) link.classList.add('active');
+      }
+    });
+  }, { threshold: 0.25, rootMargin: '-10% 0px -70% 0px' });
+  sections.forEach(s => observer.observe(s));
+</script>
+</body>
+</html>

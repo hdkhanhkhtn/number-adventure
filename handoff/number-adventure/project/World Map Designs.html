@@ -1,0 +1,638 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bắp — World Map & Level Selection</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; font-family: 'Fredoka', ui-rounded, sans-serif; background: #E8E0D3; -webkit-font-smoothing: antialiased; overflow: hidden; }
+button { cursor: pointer; font-family: inherit; border: none; background: none; }
+@keyframes bobble { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
+@keyframes pop-in { 0%{transform:scale(0.6);opacity:0} 60%{transform:scale(1.08);opacity:1} 100%{transform:scale(1)} }
+@keyframes pulse-soft { 0%,100%{transform:scale(1)} 50%{transform:scale(1.05)} }
+@keyframes sparkle { 0%,100%{transform:scale(.6) rotate(0);opacity:.3} 50%{transform:scale(1.2) rotate(180deg);opacity:1} }
+@keyframes float-cloud { 0%,100%{transform:translateX(0)} 50%{transform:translateX(8px)} }
+@keyframes path-dash { to{stroke-dashoffset:-24} }
+@keyframes glow-ring { 0%,100%{box-shadow:0 0 0 0 rgba(255,211,110,0.6)} 50%{box-shadow:0 0 0 10px rgba(255,211,110,0)} }
+@keyframes slide-up { from{transform:translateY(20px);opacity:0} to{transform:translateY(0);opacity:1} }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script type="text/babel" src="design-canvas.jsx"></script>
+<script type="text/babel">
+const { useState, useMemo } = React;
+
+// ─── TOKENS ──────────────────────────────────────────────────
+const T = {
+  ink:'#2D3A2E', inkSoft:'#6B7A6C', inkFaint:'#A9B4A8',
+  sun:'#FFD36E', sunSh:'#C79528', sunInk:'#5E3A00',
+  sage:'#7FC089', sageSh:'#4D8B58', sageInk:'#1F4A28',
+  sagePale:'#C4EBB9', sageBg:'#EAF7E4',
+  sky:'#8AC4DE', skySh:'#5A96B1', skyInk:'#1F4A61', skyBg:'#E4F2FA',
+  lav:'#B9A4E0', lavSh:'#8872B4', lavInk:'#3D256D', lavBg:'#EEE8F8',
+  coral:'#FF8F74', coralSh:'#C8614A', coralInk:'#6B1F0A', coralBg:'#FFF0EA',
+  gold:'#FFC94A', goldSh:'#C89220', goldInk:'#5E3A00', goldBg:'#FFF7E0',
+  berry:'#E6779E', berrySh:'#B44B7A',
+  cream:'#FFF8EC', correct:'#5FB36A',
+};
+
+// ─── MASCOT ─────────────────────────────────────────────────
+function BapMascot({ size=80, mood='happy', color='sun' }) {
+  const body={sun:'#FFD36E',sage:'#A8D5A2',coral:'#FFA48C',lavender:'#D9C7F0',sky:'#B8DEEF'}[color]||'#FFD36E';
+  const dark={sun:'#E8B23F',sage:'#7FB983',coral:'#E2815E',lavender:'#B39DD1',sky:'#88BED4'}[color]||'#E8B23F';
+  const eye={
+    happy:<><ellipse cx="0" cy="0" rx="6" ry="7" fill="#2D3A2E"/><ellipse cx="-1.5" cy="-2" rx="2" ry="2.5" fill="#fff"/></>,
+    celebrate:<path d="M -6 2 Q 0 -6 6 2" stroke="#2D3A2E" strokeWidth="3" fill="none" strokeLinecap="round"/>,
+    wink:<path d="M -6 0 Q 0 -4 6 0" stroke="#2D3A2E" strokeWidth="3" fill="none" strokeLinecap="round"/>,
+    excited:<><ellipse cx="0" cy="0" rx="7" ry="8" fill="#2D3A2E"/><ellipse cx="-2" cy="-2.5" rx="2.5" ry="3" fill="#fff"/></>,
+  };
+  const mouth={
+    happy:<path d="M 35 85 Q 50 98 65 85" stroke="#2D3A2E" strokeWidth="3.5" fill="#C14A2A" strokeLinecap="round"/>,
+    celebrate:<path d="M 32 82 Q 50 105 68 82 Q 50 95 32 82" fill="#C14A2A" stroke="#2D3A2E" strokeWidth="3"/>,
+    wink:<path d="M 40 85 Q 50 92 60 85" stroke="#2D3A2E" strokeWidth="3.5" fill="#C14A2A" strokeLinecap="round"/>,
+    excited:<path d="M 30 80 Q 50 108 70 80 Q 50 96 30 80" fill="#C14A2A" stroke="#2D3A2E" strokeWidth="3"/>,
+  };
+  return (
+    <svg viewBox="0 0 120 140" width={size} height={size*140/120} style={{display:'block'}}>
+      <g><ellipse cx="38" cy="18" rx="14" ry="20" fill="#7FB983" transform="rotate(-30 38 18)"/>
+      <ellipse cx="38" cy="18" rx="7" ry="16" fill="#A8D5A2" transform="rotate(-30 38 18)"/>
+      <ellipse cx="76" cy="14" rx="16" ry="22" fill="#5FA36A" transform="rotate(25 76 14)"/>
+      <ellipse cx="76" cy="14" rx="8" ry="18" fill="#A8D5A2" transform="rotate(25 76 14)"/></g>
+      <ellipse cx="60" cy="126" rx="38" ry="6" fill="rgba(46,90,58,0.18)"/>
+      <path d="M 60 28 C 92 28 100 56 100 82 C 100 110 82 126 60 126 C 38 126 20 110 20 82 C 20 56 28 28 60 28 Z" fill={body} stroke="#2D3A2E" strokeWidth="3.5"/>
+      <g opacity="0.35" stroke={dark} strokeWidth="2" fill="none" strokeLinecap="round">
+        <path d="M 30 62 Q 60 56 90 62"/><path d="M 28 80 Q 60 74 92 80"/><path d="M 30 98 Q 60 104 90 98"/>
+      </g>
+      <circle cx="30" cy="82" r="7" fill="#FFA48C" opacity="0.7"/>
+      <circle cx="90" cy="82" r="7" fill="#FFA48C" opacity="0.7"/>
+      <g transform="translate(42 66)">{eye[mood]||eye.happy}</g>
+      <g transform="translate(78 66)">{eye[mood]||eye.happy}</g>
+      {mouth[mood]||mouth.happy}
+    </svg>
+  );
+}
+
+// ─── UI ATOMS ────────────────────────────────────────────────
+function BigBtn({ children, color='sage', icon, style={} }) {
+  const c={sage:{bg:T.sage,sh:T.sageSh,ink:T.sageInk},sun:{bg:T.sun,sh:T.sunSh,ink:T.sunInk},sky:{bg:T.sky,sh:T.skySh,ink:T.skyInk},gold:{bg:T.gold,sh:T.goldSh,ink:T.goldInk}}[color]||{bg:T.sage,sh:T.sageSh,ink:T.sageInk};
+  return (
+    <button style={{height:60,padding:'0 24px',borderRadius:22,background:c.bg,color:c.ink,fontFamily:'Fredoka',fontWeight:700,fontSize:20,boxShadow:`0 5px 0 ${c.sh}`,border:`3px solid ${T.ink}`,display:'inline-flex',alignItems:'center',justifyContent:'center',gap:8,...style}}>
+      {icon&&<span style={{fontSize:20}}>{icon}</span>}{children}
+    </button>
+  );
+}
+function IconBtn({ children, size=44 }) {
+  return (
+    <button style={{width:size,height:size,borderRadius:'50%',background:T.cream,boxShadow:'0 3px 0 #D9C38A',border:`3px solid ${T.ink}`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:size*.44}}>
+      {children}
+    </button>
+  );
+}
+function ProgBar({ value, max, color=T.correct, h=10 }) {
+  return (
+    <div style={{height:h,borderRadius:h,background:'rgba(46,90,58,0.1)',border:`2px solid ${T.ink}`,overflow:'hidden'}}>
+      <div style={{height:'100%',width:`${Math.max(0,Math.min(1,value/max))*100}%`,borderRadius:h,background:color}}/>
+    </div>
+  );
+}
+function Sparkle({x,y,s=10,d=0}) {
+  return <div style={{position:'absolute',left:x,top:y,width:s,height:s,pointerEvents:'none',animation:`sparkle ${1.8+d}s ease-in-out ${d}s infinite`}}><svg viewBox="0 0 20 20" width="100%" height="100%"><path d="M10 0 L12 8 L20 10 L12 12 L10 20 L8 12 L0 10 L8 8 Z" fill="#FFD36E"/></svg></div>;
+}
+function Cloud({x,y,w=60,d=0}) {
+  return <div style={{position:'absolute',left:x,top:y,width:w,height:w*.5,background:'rgba(255,255,255,0.7)',borderRadius:999,animation:`float-cloud ${3+d}s ease-in-out ${d}s infinite`,filter:'blur(2px)'}}/>;
+}
+
+// ─── WINDING PATH SVG ────────────────────────────────────────
+// Returns path data + node positions for a winding map
+function WindingPath({ worlds, width=335, height=620 }) {
+  // 5 worlds, alternating left/right
+  const nodes = [
+    { cx: 80,  cy: 560 },
+    { cx: 255, cy: 450 },
+    { cx: 90,  cy: 340 },
+    { cx: 250, cy: 230 },
+    { cx: 100, cy: 120 },
+  ];
+
+  // Smooth path through nodes
+  const pathD = `M ${nodes[0].cx} ${nodes[0].cy}
+    C ${nodes[0].cx+60} ${nodes[0].cy-40}, ${nodes[1].cx-60} ${nodes[1].cy+40}, ${nodes[1].cx} ${nodes[1].cy}
+    C ${nodes[1].cx+40} ${nodes[1].cy-50}, ${nodes[2].cx+60} ${nodes[2].cy+50}, ${nodes[2].cx} ${nodes[2].cy}
+    C ${nodes[2].cx-40} ${nodes[2].cy-50}, ${nodes[3].cx-60} ${nodes[3].cy+50}, ${nodes[3].cx} ${nodes[3].cy}
+    C ${nodes[3].cx+40} ${nodes[3].cy-50}, ${nodes[4].cx+60} ${nodes[4].cy+50}, ${nodes[4].cx} ${nodes[4].cy}`;
+
+  return { nodes, pathD };
+}
+
+// ══════════════════════════════════════════════════════════════
+// SCREEN 1 — WORLD MAP OVERVIEW
+// ══════════════════════════════════════════════════════════════
+function WorldMapScreen() {
+  const worlds = [
+    { id:'forest', name:'Number Forest',   emoji:'🌳', color:T.sage,   sh:T.sageSh,   bg:'#C4E8BC', stars:24, total:27, status:'active',    desc:'1–20' },
+    { id:'tens',   name:'Tens Town',       emoji:'🏘️', color:T.sky,    sh:T.skySh,    bg:'#B8DEEF', stars:6,  total:27, status:'available', desc:'10–100' },
+    { id:'bridge', name:'Even/Odd Bridge', emoji:'🌉', color:T.lav,    sh:T.lavSh,    bg:'#D9C7F0', stars:0,  total:18, status:'locked',    desc:'Even & Odd' },
+    { id:'kitchen',name:'Math Kitchen',    emoji:'🍳', color:T.coral,  sh:T.coralSh,  bg:'#FFC9B8', stars:0,  total:18, status:'locked',    desc:'+ / −' },
+    { id:'castle', name:'Big # Castle',    emoji:'🏰', color:T.gold,   sh:T.goldSh,   bg:'#FFE6A8', stars:0,  total:27, status:'locked',    desc:'100–1000' },
+  ];
+
+  const { nodes, pathD } = WindingPath({ worlds });
+
+  return (
+    <div style={{position:'absolute',inset:0,background:'linear-gradient(180deg,#C5E8F8 0%,#D9EDD5 40%,#E8E0C8 100%)'}}>
+      {/* Sky clouds */}
+      <Cloud x="10%" y={30} w={70} d={0}/>
+      <Cloud x="60%" y={15} w={50} d={1.2}/>
+      <Cloud x="78%" y={50} w={40} d={0.6}/>
+      <Sparkle x="75%" y="8%" s={12} d={0}/>
+      <Sparkle x="15%" y="14%" s={9} d={.7}/>
+
+      {/* Header */}
+      <div style={{position:'absolute',top:0,left:0,right:0,padding:'52px 20px 14px',display:'flex',alignItems:'center',gap:12,zIndex:10,background:'linear-gradient(180deg,rgba(197,232,248,0.95) 0%,transparent 100%)'}}>
+        <IconBtn>‹</IconBtn>
+        <div style={{flex:1}}>
+          <div style={{fontSize:22,fontWeight:700,color:T.ink}}>World Map</div>
+          <div style={{fontSize:12,color:T.inkSoft,fontWeight:600}}>2 of 5 worlds unlocked</div>
+        </div>
+        <div style={{padding:'7px 12px',borderRadius:999,background:T.cream,border:`2px solid ${T.ink}`,boxShadow:'0 3px 0 #D9C38A',fontWeight:700,color:T.sunInk,fontSize:13}}>
+          ⭐ 30 / 117
+        </div>
+      </div>
+
+      {/* Map scroll area */}
+      <div style={{position:'absolute',inset:0,top:100,overflow:'hidden'}}>
+        <svg width="335" height="620" style={{position:'absolute',left:'50%',transform:'translateX(-50%)',top:20}}>
+          {/* Ground/terrain blobs */}
+          <ellipse cx="80" cy="575" rx="55" ry="28" fill="#A8D5A2" opacity=".5"/>
+          <ellipse cx="255" cy="465" rx="52" ry="26" fill="#8AC4DE" opacity=".45"/>
+          <ellipse cx="90" cy="355" rx="48" ry="24" fill="#C5AADA" opacity=".4"/>
+          <ellipse cx="250" cy="245" rx="50" ry="25" fill="#FFBBA8" opacity=".4"/>
+          <ellipse cx="100" cy="135" rx="50" ry="25" fill="#FFD36E" opacity=".4"/>
+
+          {/* Completed path segment (sage) */}
+          <path d={`M 80 560 C 140 520 195 490 255 450`} stroke={T.sage} strokeWidth="8" fill="none" strokeLinecap="round" strokeDasharray="1 0" opacity=".6"/>
+          {/* Active path segment (dashed animated) */}
+          <path d={`M 255 450 C 295 400 130 380 90 340`} stroke={T.sky} strokeWidth="6" fill="none" strokeLinecap="round" strokeDasharray="12 8" style={{animation:'path-dash 1s linear infinite'}} opacity=".8"/>
+          {/* Locked path */}
+          <path d={`M 90 340 C 50 290 210 270 250 230 C 290 190 140 160 100 120`} stroke="rgba(46,90,58,0.2)" strokeWidth="5" fill="none" strokeLinecap="round" strokeDasharray="8 8"/>
+
+          {/* World nodes */}
+          {worlds.map((w,i) => {
+            const {cx,cy} = nodes[i];
+            const done = w.status === 'active' || w.stars > 0;
+            const active = w.status === 'active';
+            const avail = w.status === 'available';
+            const locked = w.status === 'locked';
+            const ringColor = active ? T.sun : avail ? T.sky : 'rgba(46,90,58,0.2)';
+            return (
+              <g key={w.id} transform={`translate(${cx},${cy})`}>
+                {/* Glow ring for active */}
+                {active && <circle cx="0" cy="0" r="46" fill="none" stroke={T.sun} strokeWidth="3" opacity=".5" style={{animation:'pulse-soft 1.5s ease-in-out infinite'}}/>}
+                {/* Shadow */}
+                <ellipse cx="0" cy="38" rx="34" ry="8" fill="rgba(46,90,58,0.15)"/>
+                {/* Main circle */}
+                <circle cx="0" cy="0" r="38" fill={locked ? '#E8DFCE' : w.bg} stroke={T.ink} strokeWidth="3"/>
+                {/* Stars ring for completed */}
+                {w.stars > 0 && !active && <circle cx="0" cy="0" r="34" fill="none" stroke={T.sun} strokeWidth="2" strokeDasharray={`${(w.stars/w.total)*214} 214`} strokeLinecap="round" transform="rotate(-90)"/>}
+                {/* Emoji */}
+                <text x="0" y="12" textAnchor="middle" fontSize={locked ? 20 : 26} style={{userSelect:'none'}}>{locked ? '🔒' : w.emoji}</text>
+                {/* Label */}
+                <text x="0" y="58" textAnchor="middle" fontSize="11" fontWeight="700" fontFamily="Fredoka" fill={locked ? T.inkFaint : T.ink}>{w.name.split(' ')[0]}</text>
+                {/* Stars under node */}
+                {!locked && w.stars > 0 && (
+                  <text x="0" y="72" textAnchor="middle" fontSize="10" fill="#B87C0E">{'⭐'.repeat(Math.min(3,Math.round(w.stars/(w.total/3))))}</text>
+                )}
+                {/* Active pulse badge */}
+                {active && <circle cx="28" cy="-28" r="10" fill={T.sun} stroke={T.ink} strokeWidth="2"/>}
+                {active && <text x="28" y="-24" textAnchor="middle" fontSize="12" style={{userSelect:'none'}}>▶</text>}
+              </g>
+            );
+          })}
+        </svg>
+      </div>
+
+      {/* Bottom mascot hint */}
+      <div style={{position:'absolute',bottom:0,left:0,right:0,padding:'10px 20px 16px',background:'linear-gradient(0deg,rgba(232,224,200,0.95) 0%,transparent 100%)',display:'flex',alignItems:'center',gap:12}}>
+        <div style={{animation:'bobble 2.4s ease-in-out infinite'}}>
+          <BapMascot size={60} mood="wink" color="sun"/>
+        </div>
+        <div style={{background:T.cream,borderRadius:16,padding:'10px 14px',border:`2px solid ${T.ink}`,boxShadow:'0 3px 0 #D9C38A',flex:1,fontSize:13,fontWeight:600,color:T.ink}}>
+          Tap a world to explore! 🗺️
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════
+// SCREEN 2 — SINGLE WORLD DETAIL (Number Forest — Active)
+// ══════════════════════════════════════════════════════════════
+function WorldDetailActive() {
+  const levels = [
+    { n:1, label:'Hear the number',    stars:3, status:'done',    game:'🔊' },
+    { n:2, label:'Tap what you hear',  stars:3, status:'done',    game:'🔊' },
+    { n:3, label:'What comes next?',   stars:3, status:'done',    game:'🔢' },
+    { n:4, label:'Build the number',   stars:2, status:'done',    game:'🧱' },
+    { n:5, label:'Even or Odd?',       stars:0, status:'current', game:'⚖️' },
+    { n:6, label:'Number order',       stars:0, status:'next',    game:'🔢' },
+    { n:7, label:'Missing number',     stars:0, status:'locked',  game:'❓' },
+    { n:8, label:'Big numbers!',       stars:0, status:'locked',  game:'🏆' },
+    { n:9, label:'⚔️ Boss Level',      stars:0, status:'locked',  game:'👑', boss:true },
+  ];
+
+  return (
+    <div style={{position:'absolute',inset:0,background:T.sageBg}}>
+      <Sparkle x="8%" y="12%" s={10} d={0}/><Sparkle x="85%" y="18%" s={8} d={.8}/>
+
+      {/* Hero header */}
+      <div style={{padding:'52px 20px 18px',background:'linear-gradient(180deg,#A8D5A2 0%,#C4E8BC 100%)',borderBottom:`3px solid ${T.ink}`,position:'relative',overflow:'hidden'}}>
+        <div style={{position:'absolute',right:-10,bottom:-10,fontSize:110,opacity:.15}}>🌳</div>
+        <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:14}}>
+          <IconBtn>‹</IconBtn>
+          <div style={{flex:1}}>
+            <div style={{fontSize:11,fontWeight:700,color:T.sageInk,letterSpacing:.5,opacity:.8}}>WORLD 1</div>
+            <div style={{fontSize:24,fontWeight:700,color:T.ink,lineHeight:1}}>Number Forest 🌳</div>
+          </div>
+          <div style={{padding:'6px 12px',borderRadius:999,background:T.cream,border:`2px solid ${T.ink}`,fontWeight:700,color:T.sunInk,fontSize:13}}>
+            ⭐ 11/27
+          </div>
+        </div>
+        <div style={{fontSize:13,color:T.sageInk,fontWeight:600,marginBottom:10}}>Learn numbers 1–20 through listening, matching, and building!</div>
+        <ProgBar value={11} max={27} color={T.correct} h={12}/>
+        <div style={{display:'flex',justifyContent:'space-between',fontSize:11,color:T.sageInk,fontWeight:600,marginTop:4}}>
+          <span>4 of 9 levels done</span><span>41%</span>
+        </div>
+      </div>
+
+      {/* Continue CTA */}
+      <div style={{padding:'12px 20px',background:T.sageBg,borderBottom:`1px solid rgba(46,90,58,0.1)`}}>
+        <BigBtn color="sun" icon="▶" style={{width:'100%',justifyContent:'center',height:54,fontSize:18}}>
+          Continue — Level 5
+        </BigBtn>
+      </div>
+
+      {/* Level list */}
+      <div style={{flex:1,overflowY:'auto',padding:'12px 20px 24px',display:'flex',flexDirection:'column',gap:8}}>
+        {levels.map(lv => <LevelRow key={lv.n} lv={lv}/>)}
+      </div>
+    </div>
+  );
+}
+
+function LevelRow({ lv }) {
+  const isDone = lv.status === 'done';
+  const isCur  = lv.status === 'current';
+  const isNext = lv.status === 'next';
+  const isLock = lv.status === 'locked';
+
+  const bg = isCur ? '#FFF8EC' : isDone ? '#FFFDF7' : isNext ? '#F5FAEE' : '#F0EADD';
+  const border = isCur ? `3px solid ${T.sun}` : isDone ? `2px solid rgba(46,90,58,0.12)` : isNext ? `2px solid ${T.sage}` : `2px dashed rgba(46,90,58,0.18)`;
+  const sh = isCur ? `0 4px 14px rgba(199,149,40,0.2)` : isDone ? `0 2px 6px rgba(46,90,58,0.06)` : 'none';
+
+  return (
+    <button style={{
+      padding:'12px 14px',borderRadius:20,background:bg,border,boxShadow:sh,
+      display:'flex',alignItems:'center',gap:12,textAlign:'left',
+      opacity:isLock?0.55:1,
+      animation:isCur?'slide-up .3s ease-out both':'none',
+    }}>
+      {/* Number node */}
+      <div style={{
+        width:44,height:44,borderRadius:14,flexShrink:0,
+        background: isDone ? T.sage : isCur ? T.sun : isNext ? T.sagePale : '#E8DFCE',
+        border:`2.5px solid ${T.ink}`,
+        boxShadow: isDone ? `0 3px 0 ${T.sageSh}` : isCur ? `0 3px 0 ${T.sunSh}` : 'none',
+        display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',
+      }}>
+        {isLock ? <span style={{fontSize:18}}>🔒</span>
+          : isDone ? <span style={{fontSize:20}}>✓</span>
+          : isCur ? <span style={{fontSize:18}}>▶</span>
+          : <span style={{fontFamily:'Fredoka',fontWeight:700,fontSize:18,color:T.ink}}>{lv.n}</span>}
+      </div>
+
+      {/* Label */}
+      <div style={{flex:1}}>
+        <div style={{display:'flex',alignItems:'center',gap:6,marginBottom:3}}>
+          <span style={{fontSize:14,fontWeight:700,color:T.ink}}>{lv.boss ? '👑 ' : ''}{lv.label}</span>
+          {isCur && <span style={{fontSize:10,fontWeight:700,background:T.sun,color:T.sunInk,padding:'2px 8px',borderRadius:999,border:`1.5px solid ${T.sunSh}`}}>NOW</span>}
+          {isNext && <span style={{fontSize:10,fontWeight:700,background:T.sagePale,color:T.sageInk,padding:'2px 8px',borderRadius:999}}>NEXT</span>}
+        </div>
+        <div style={{display:'flex',alignItems:'center',gap:6}}>
+          <span style={{fontSize:14}}>{lv.game}</span>
+          {isDone && (
+            <div style={{display:'flex',gap:1}}>
+              {[0,1,2].map(i=><span key={i} style={{fontSize:12,opacity:i<lv.stars?1:.2}}>{i<lv.stars?'⭐':'☆'}</span>)}
+            </div>
+          )}
+          {!isDone && !isLock && <span style={{fontSize:11,color:T.inkFaint,fontWeight:600}}>~1 min</span>}
+        </div>
+      </div>
+
+      {!isLock && <span style={{fontSize:20,color:T.inkFaint}}>›</span>}
+    </button>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════
+// SCREEN 3 — LEVEL NODE PATH (visual node map style)
+// ══════════════════════════════════════════════════════════════
+function LevelNodePath() {
+  const levels = [
+    { n:1, stars:3, status:'done',    game:'🔊', x:'20%' },
+    { n:2, stars:3, status:'done',    game:'🔊', x:'60%' },
+    { n:3, stars:3, status:'done',    game:'🔢', x:'25%' },
+    { n:4, stars:2, status:'done',    game:'🧱', x:'65%' },
+    { n:5, stars:0, status:'current', game:'⚖️', x:'20%' },
+    { n:6, stars:0, status:'next',    game:'🔢', x:'62%' },
+    { n:7, stars:0, status:'locked',  game:'❓', x:'22%' },
+    { n:8, stars:0, status:'locked',  game:'❓', x:'60%' },
+    { n:9, stars:0, status:'boss',    game:'👑', x:'38%' },
+  ];
+
+  return (
+    <div style={{position:'absolute',inset:0,background:'linear-gradient(180deg,#C4EBB9 0%,#D6ECCE 30%,#E8F4E0 100%)'}}>
+      <Sparkle x="10%" y="10%" s={11} d={0}/><Sparkle x="82%" y="7%" s={8} d={.9}/>
+      <Cloud x="60%" y={20} w={50} d={1}/>
+
+      {/* Header */}
+      <div style={{padding:'52px 20px 14px',display:'flex',alignItems:'center',gap:10,background:'linear-gradient(180deg,rgba(168,213,162,0.9) 0%,transparent 100%)'}}>
+        <IconBtn>‹</IconBtn>
+        <div style={{flex:1}}>
+          <div style={{fontSize:11,fontWeight:700,color:T.sageInk,letterSpacing:.5}}>WORLD 1</div>
+          <div style={{fontSize:20,fontWeight:700,color:T.ink}}>Number Forest 🌳</div>
+        </div>
+        <div style={{padding:'6px 12px',borderRadius:999,background:T.cream,border:`2px solid ${T.ink}`,fontWeight:700,color:T.sunInk,fontSize:13}}>
+          ⭐ 11/27
+        </div>
+      </div>
+
+      {/* Path progress bar */}
+      <div style={{padding:'0 20px 12px'}}>
+        <ProgBar value={11} max={27} color={T.correct} h={10}/>
+      </div>
+
+      {/* Winding level nodes */}
+      <div style={{flex:1,overflowY:'auto',padding:'0 16px 32px',position:'relative'}}>
+        {levels.map((lv,i) => {
+          const isDone = lv.status==='done';
+          const isCur  = lv.status==='current';
+          const isNext = lv.status==='next';
+          const isBoss = lv.status==='boss';
+          const isLock = lv.status==='locked';
+          const offset = parseInt(lv.x);
+          const leftPct = offset;
+
+          const nodeBg = isDone ? T.sage : isCur ? T.sun : isNext ? '#E8F5E4' : isBoss ? T.gold : '#E8DFCE';
+          const nodeSh = isDone ? T.sageSh : isCur ? T.sunSh : isNext ? T.sageSh : isBoss ? T.goldSh : 'rgba(46,90,58,0.2)';
+
+          return (
+            <div key={lv.n} style={{height:88,position:'relative'}}>
+              {/* Connector line to next */}
+              {i < levels.length-1 && (
+                <div style={{
+                  position:'absolute',
+                  left:`calc(${leftPct}% + 42px)`,
+                  top:84,width:3,height:40,
+                  background: isDone ? `linear-gradient(180deg,${T.sage},${T.sagePale})` : 'rgba(46,90,58,0.15)',
+                  borderRadius:2,zIndex:0,
+                  display:'none', // using node spacing instead
+                }}/>
+              )}
+              <button style={{
+                position:'absolute',left:`${leftPct}%`,top:0,
+                display:'flex',flexDirection:'column',alignItems:'center',gap:0,
+                opacity:isLock?0.55:1,
+              }}>
+                {/* Node */}
+                <div style={{
+                  width:84,height:84,borderRadius:'50%',
+                  background:nodeBg,border:`3.5px solid ${T.ink}`,
+                  boxShadow:`0 5px 0 ${nodeSh},0 10px 18px rgba(46,90,58,0.12)`,
+                  display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',
+                  position:'relative',
+                  animation:isCur?'glow-ring 1.8s ease-in-out infinite':'none',
+                }}>
+                  {isLock && <span style={{fontSize:28}}>🔒</span>}
+                  {isDone && <><span style={{fontSize:32}}>✓</span></>}
+                  {(isCur||isNext) && <span style={{fontFamily:'Fredoka',fontWeight:700,fontSize:32,color:T.ink,lineHeight:1}}>{lv.n}</span>}
+                  {isBoss && <span style={{fontSize:34}}>👑</span>}
+                  {/* Stars under */}
+                  {isDone && (
+                    <div style={{position:'absolute',bottom:-18,display:'flex',gap:1}}>
+                      {[0,1,2].map(j=><span key={j} style={{fontSize:14,filter:j<lv.stars?'drop-shadow(0 1px 0 #B87C0E)':'none',opacity:j<lv.stars?1:.25}}>{j<lv.stars?'⭐':'☆'}</span>)}
+                    </div>
+                  )}
+                  {/* NOW badge */}
+                  {isCur && <div style={{position:'absolute',top:-10,right:-8,background:T.sun,border:`2px solid ${T.ink}`,borderRadius:999,padding:'2px 8px',fontSize:10,fontWeight:700,color:T.sunInk,boxShadow:`0 2px 0 ${T.sunSh}`}}>NOW</div>}
+                </div>
+                {/* Game label */}
+                <div style={{marginTop:24,fontSize:11,fontWeight:700,color:isLock?T.inkFaint:T.inkSoft,textAlign:'center',maxWidth:84,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>
+                  {isLock?'Locked':isBoss?'Boss Level!':lv.game}
+                </div>
+              </button>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════
+// SCREEN 4 — LOCKED WORLD
+// ══════════════════════════════════════════════════════════════
+function LockedWorldScreen() {
+  return (
+    <div style={{position:'absolute',inset:0,background:'linear-gradient(180deg,#E8E0D0 0%,#F0EAE0 100%)'}}>
+      <Sparkle x="20%" y="12%" s={8} d={.5}/>
+
+      {/* Header */}
+      <div style={{padding:'52px 20px 14px',display:'flex',alignItems:'center',gap:12}}>
+        <IconBtn>‹</IconBtn>
+        <div style={{flex:1}}>
+          <div style={{fontSize:11,fontWeight:700,color:T.inkFaint,letterSpacing:.5}}>WORLD 3</div>
+          <div style={{fontSize:22,fontWeight:700,color:T.inkSoft}}>Even/Odd Bridge 🌉</div>
+        </div>
+      </div>
+
+      {/* Lock visual */}
+      <div style={{padding:'8px 20px',display:'flex',flexDirection:'column',alignItems:'center',gap:20}}>
+        {/* Big locked card */}
+        <div style={{
+          width:'100%',padding:'28px 24px',borderRadius:28,
+          background:'#E8DFCE',border:`3px dashed rgba(46,90,58,0.25)`,
+          display:'flex',flexDirection:'column',alignItems:'center',gap:16,
+          position:'relative',overflow:'hidden',
+        }}>
+          {/* Silhouette preview */}
+          <div style={{fontSize:80,opacity:.2,lineHeight:1}}>🌉</div>
+          <div style={{
+            width:72,height:72,borderRadius:'50%',
+            background:'rgba(46,90,58,0.1)',border:`3px dashed rgba(46,90,58,0.3)`,
+            display:'flex',alignItems:'center',justifyContent:'center',fontSize:40,
+          }}>🔒</div>
+          <div style={{textAlign:'center'}}>
+            <div style={{fontSize:20,fontWeight:700,color:T.inkSoft,marginBottom:6}}>Even/Odd Bridge</div>
+            <div style={{fontSize:13,color:T.inkFaint,fontWeight:600,lineHeight:1.5,maxWidth:240}}>
+              Finish <b style={{color:T.inkSoft}}>Tens Town</b> to unlock this world!
+            </div>
+          </div>
+        </div>
+
+        {/* Unlock requirement */}
+        <div style={{width:'100%',background:T.cream,borderRadius:22,border:`2px solid rgba(46,90,58,0.15)`,padding:'16px 18px'}}>
+          <div style={{fontSize:13,fontWeight:700,color:T.ink,marginBottom:10}}>How to unlock:</div>
+          <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:10}}>
+            <div style={{width:44,height:44,borderRadius:14,background:T.sky,border:`2.5px solid ${T.ink}`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:22}}>🏘️</div>
+            <div style={{flex:1}}>
+              <div style={{fontSize:14,fontWeight:700,color:T.ink}}>Complete Tens Town</div>
+              <div style={{fontSize:12,color:T.inkSoft,marginTop:2}}>6 of 9 levels done</div>
+              <div style={{marginTop:6}}><ProgBar value={6} max={9} color={T.sky} h={8}/></div>
+            </div>
+          </div>
+          <BigBtn color="sky" icon="▶" style={{width:'100%',justifyContent:'center',height:52}}>
+            Keep going in Tens Town
+          </BigBtn>
+        </div>
+
+        {/* Preview sneak peek */}
+        <div style={{width:'100%',borderRadius:20,overflow:'hidden',border:`2px solid rgba(46,90,58,0.12)`,background:'rgba(217,199,240,0.3)'}}>
+          <div style={{padding:'12px 16px',borderBottom:'1px dashed rgba(46,90,58,0.12)',display:'flex',gap:8,alignItems:'center'}}>
+            <span style={{fontSize:20}}>👀</span>
+            <div style={{fontSize:13,fontWeight:700,color:T.lavInk}}>Coming up: Even/Odd Bridge</div>
+          </div>
+          <div style={{padding:'12px 16px',display:'flex',gap:8,flexWrap:'wrap'}}>
+            {['Sort even numbers','Group by pairs','Even vs Odd race'].map(s=>(
+              <div key={s} style={{padding:'5px 10px',borderRadius:999,background:'rgba(185,164,224,0.3)',border:'1px dashed rgba(100,60,160,0.25)',fontSize:12,color:T.lavInk,fontWeight:600}}>🔒 {s}</div>
+            ))}
+          </div>
+        </div>
+
+        {/* Mascot */}
+        <div style={{display:'flex',alignItems:'center',gap:12,padding:'0 4px'}}>
+          <div style={{animation:'bobble 2.4s ease-in-out infinite'}}><BapMascot size={60} mood="wink" color="sun"/></div>
+          <div style={{flex:1,background:T.cream,borderRadius:16,padding:'10px 14px',border:`2px solid ${T.ink}`,boxShadow:'0 3px 0 #D9C38A',fontSize:13,fontWeight:600,color:T.ink}}>
+            Almost there! Finish World 2 first 🌟
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════
+// SCREEN 5 — COMPLETED WORLD (Number Forest done)
+// ══════════════════════════════════════════════════════════════
+function CompletedWorldScreen() {
+  return (
+    <div style={{position:'absolute',inset:0,background:'linear-gradient(180deg,#A8D5A2 0%,#C4EBB9 40%,#EAF7E4 100%)'}}>
+      <Sparkle x="10%" y="10%" s={12} d={0}/>
+      <Sparkle x="80%" y="8%"  s={9}  d={.6}/>
+      <Sparkle x="55%" y="15%" s={7}  d={1.2}/>
+
+      {/* Header */}
+      <div style={{padding:'52px 20px 14px',display:'flex',alignItems:'center',gap:12}}>
+        <IconBtn>‹</IconBtn>
+        <div style={{flex:1}}>
+          <div style={{fontSize:11,fontWeight:700,color:T.sageInk,letterSpacing:.5}}>WORLD 1 — COMPLETE!</div>
+          <div style={{fontSize:22,fontWeight:700,color:T.ink}}>Number Forest 🌳</div>
+        </div>
+        <div style={{padding:'6px 12px',borderRadius:999,background:T.sun,border:`2px solid ${T.ink}`,boxShadow:`0 3px 0 ${T.sunSh}`,fontWeight:700,color:T.sunInk,fontSize:13}}>
+          ⭐ 27/27
+        </div>
+      </div>
+
+      {/* Trophy card */}
+      <div style={{padding:'8px 20px 0',display:'flex',flexDirection:'column',gap:14}}>
+        <div style={{
+          background:'linear-gradient(160deg,#FFD36E 0%,#FFC94A 100%)',
+          borderRadius:28,border:`3px solid ${T.ink}`,
+          boxShadow:`0 6px 0 ${T.sunSh},0 16px 28px rgba(199,149,40,0.22)`,
+          padding:'20px 20px 22px',
+          display:'flex',alignItems:'center',gap:16,
+          position:'relative',overflow:'hidden',
+        }}>
+          <div style={{position:'absolute',right:-8,top:-8,opacity:.15,fontSize:120}}>🏆</div>
+          <div style={{animation:'bobble 2.4s ease-in-out infinite',flexShrink:0}}>
+            <BapMascot size={88} mood="celebrate" color="sun"/>
+          </div>
+          <div>
+            <div style={{fontSize:13,fontWeight:700,color:T.sunInk,letterSpacing:.5,marginBottom:4}}>🎉 WORLD COMPLETE!</div>
+            <div style={{fontSize:22,fontWeight:700,color:T.ink,lineHeight:1.1,marginBottom:8}}>Perfect score!</div>
+            <div style={{display:'flex',gap:4}}>
+              {[0,1,2].map(i=><span key={i} style={{fontSize:26,filter:'drop-shadow(0 2px 0 #B87C0E)'}}>⭐</span>)}
+            </div>
+          </div>
+        </div>
+
+        {/* Stats row */}
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:10}}>
+          {[['9','Levels','#5FB36A'],['27','Stars ⭐','#B87C0E'],['100%','Accuracy','#2E6F93']].map(([v,l,c])=>(
+            <div key={l} style={{background:'rgba(255,255,255,0.8)',borderRadius:18,padding:'12px 8px',textAlign:'center',border:`2px solid rgba(46,90,58,0.12)`}}>
+              <div style={{fontSize:22,fontWeight:700,color:c,lineHeight:1}}>{v}</div>
+              <div style={{fontSize:11,color:T.inkSoft,fontWeight:600,marginTop:3}}>{l}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Level list — all done */}
+        <div style={{background:'rgba(255,255,255,0.6)',borderRadius:22,padding:'14px 16px',border:`1.5px solid rgba(46,90,58,0.12)`}}>
+          <div style={{fontSize:14,fontWeight:700,color:T.ink,marginBottom:10}}>All 9 levels completed</div>
+          <div style={{display:'flex',flexWrap:'wrap',gap:8}}>
+            {Array.from({length:9},(_,i)=>(
+              <div key={i} style={{width:44,height:44,borderRadius:14,background:T.sage,border:`2.5px solid ${T.ink}`,boxShadow:`0 3px 0 ${T.sageSh}`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:18,fontWeight:700,color:'#fff'}}>✓</div>
+            ))}
+          </div>
+        </div>
+
+        {/* Next world CTA */}
+        <div style={{background:T.skyBg,borderRadius:22,border:`2.5px solid ${T.sky}`,padding:'14px 16px',display:'flex',alignItems:'center',gap:12}}>
+          <div style={{fontSize:40}}>🏘️</div>
+          <div style={{flex:1}}>
+            <div style={{fontSize:14,fontWeight:700,color:T.skyInk}}>Next: Tens Town</div>
+            <div style={{fontSize:12,color:T.inkSoft,fontWeight:600}}>Numbers 10–100 await!</div>
+          </div>
+          <BigBtn color="sky" icon="▶" style={{height:46,fontSize:15,padding:'0 16px',flexShrink:0}}>Go!</BigBtn>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── CANVAS ─────────────────────────────────────────────────
+function App() {
+  return (
+    <DesignCanvas title="Bắp Number Adventure — World Map & Level Selection">
+      <DCSection id="s1" title="World Map">
+        <DCArtboard id="a1" label="World Map Overview" width={375} height={780}>
+          <WorldMapScreen/>
+        </DCArtboard>
+        <DCArtboard id="a4" label="Locked World" width={375} height={780}>
+          <LockedWorldScreen/>
+        </DCArtboard>
+        <DCArtboard id="a5" label="Completed World" width={375} height={780}>
+          <CompletedWorldScreen/>
+        </DCArtboard>
+      </DCSection>
+      <DCSection id="s2" title="Level Selection">
+        <DCArtboard id="a2" label="World Detail (Active)" width={375} height={780}>
+          <WorldDetailActive/>
+        </DCArtboard>
+        <DCArtboard id="a3" label="Level Node Path" width={375} height={780}>
+          <LevelNodePath/>
+        </DCArtboard>
+      </DCSection>
+    </DesignCanvas>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>

@@ -1,0 +1,1526 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bắp Number Adventure — MVP Screen List</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #F7F3EC;
+  --surface: #FFFFFF;
+  --ink: #1E2A1F;
+  --ink-soft: #5A6B5C;
+  --ink-faint: #9EAB9F;
+  --outline: rgba(30,42,31,.10);
+  --outline-md: rgba(30,42,31,.18);
+  --r: 14px;
+  --shadow: 0 2px 0 rgba(30,42,31,.05), 0 6px 16px rgba(30,42,31,.07);
+  --font-kid: 'Fredoka', ui-rounded, sans-serif;
+  --font-body: 'Be Vietnam Pro', system-ui, sans-serif;
+
+  /* Area colors */
+  --c1: #A8D5A2; --c1-ink: #2F6A3C; --c1-bg: #EBF5E7;
+  --c2: #FFD36E; --c2-ink: #7A4E0E; --c2-bg: #FFF6DA;
+  --c3: #B8DEEF; --c3-ink: #2E6F93; --c3-bg: #E8F2F8;
+  --c4: #D9C7F0; --c4-ink: #6B4FA0; --c4-bg: #F0EBFA;
+  --c5: #FFA48C; --c5-ink: #C14A2A; --c5-bg: #FFF0EC;
+  --c6: #E6779E; --c6-ink: #A23665; --c6-bg: #FCE8F1;
+  --c7: #FDE9C2; --c7-ink: #7A4E0E; --c7-bg: #FFF8EC;
+  --c8: #B9E2B2; --c8-ink: #2F6A3C; --c8-bg: #EBF5E7;
+  --c9: #8AC4DE; --c9-ink: #2E6F93; --c9-bg: #E4F1F8;
+  --c10: #E0DAD0; --c10-ink: #5A6B5C; --c10-bg: #F4F1EB;
+}
+
+html { scroll-behavior: smooth; }
+body { font-family: var(--font-body); background: var(--bg); color: var(--ink); line-height: 1.5; -webkit-font-smoothing: antialiased; }
+
+/* ─── Layout ─── */
+.layout { display: flex; min-height: 100vh; }
+
+.sidebar {
+  width: 252px; flex-shrink: 0; position: sticky; top: 0; height: 100vh;
+  overflow-y: auto; background: var(--surface); border-right: 1px solid var(--outline);
+  padding: 24px 0; z-index: 100;
+}
+.sidebar::-webkit-scrollbar { width: 0; }
+.sidebar-head { padding: 0 18px 18px; border-bottom: 1px solid var(--outline); margin-bottom: 10px; }
+.sidebar-title { font-family: var(--font-kid); font-size: 19px; color: var(--c1-ink); }
+.sidebar-sub { font-size: 11px; color: var(--ink-faint); font-weight: 500; margin-top: 2px; }
+.toc-group { padding: 0 10px; margin-bottom: 2px; }
+.toc-label { font-size: 10px; font-weight: 700; letter-spacing: .8px; color: var(--ink-faint); padding: 8px 8px 3px; text-transform: uppercase; }
+.toc-link { display: flex; align-items: center; gap: 8px; padding: 6px 10px; border-radius: 9px; font-size: 12.5px; font-weight: 500; color: var(--ink-soft); text-decoration: none; transition: background .12s, color .12s; cursor: pointer; }
+.toc-link:hover { color: var(--c1-ink); background: var(--c1-bg); }
+.toc-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.toc-count { margin-left: auto; font-size: 11px; font-weight: 700; color: var(--ink-faint); }
+
+.main { flex: 1; padding: 44px 52px 64px; min-width: 0; }
+@media (max-width: 900px) { .sidebar { display: none; } .main { padding: 20px 16px 40px; } }
+
+/* ─── Typography ─── */
+h1 { font-family: var(--font-kid); font-size: 34px; font-weight: 700; line-height: 1.1; }
+.doc-meta { display: flex; gap: 16px; margin: 10px 0 32px; flex-wrap: wrap; }
+.meta-chip { font-size: 12px; font-weight: 600; color: var(--ink-soft); background: var(--surface); border: 1px solid var(--outline); border-radius: 20px; padding: 4px 12px; }
+h2 { font-family: var(--font-kid); font-size: 20px; font-weight: 700; margin: 48px 0 14px; padding-top: 24px; border-top: 1px solid var(--outline-md); scroll-margin-top: 20px; }
+h2:first-of-type { border-top: none; margin-top: 0; padding-top: 0; }
+p, li { font-size: 13.5px; color: var(--ink-soft); line-height: 1.55; }
+
+/* ─── Area header ─── */
+.area-header {
+  display: flex; align-items: center; gap: 14px; padding: 14px 16px;
+  border-radius: var(--r); margin-bottom: 14px;
+}
+.area-num { font-family: var(--font-kid); font-size: 22px; font-weight: 700; opacity: .6; }
+.area-title { font-family: var(--font-kid); font-size: 20px; font-weight: 700; }
+.area-sub { font-size: 12px; font-weight: 600; margin-top: 1px; opacity: .75; }
+
+/* ─── Screen card ─── */
+.screen-card {
+  background: var(--surface); border: 1px solid var(--outline);
+  border-radius: var(--r); box-shadow: var(--shadow);
+  margin-bottom: 14px; overflow: hidden;
+}
+.screen-header {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  padding: 14px 16px 10px; gap: 10px;
+}
+.screen-id { font-size: 10px; font-weight: 700; letter-spacing: .6px; color: var(--ink-faint); }
+.screen-name { font-size: 15px; font-weight: 700; color: var(--ink); margin-top: 2px; }
+.screen-purpose { font-size: 12.5px; color: var(--ink-soft); margin-top: 3px; line-height: 1.4; }
+.screen-badges { display: flex; gap: 6px; flex-wrap: wrap; flex-shrink: 0; }
+.badge { font-size: 10px; font-weight: 700; padding: 3px 9px; border-radius: 99px; white-space: nowrap; }
+.badge-child { background: var(--c1-bg); color: var(--c1-ink); }
+.badge-parent { background: var(--c3-bg); color: var(--c3-ink); }
+.badge-both { background: var(--c7-bg); color: var(--c7-ink); }
+.badge-mvp { background: #FFF8EC; border: 1.5px solid #E8B23F; color: var(--c2-ink); }
+.badge-v2 { background: #F4F1EB; border: 1.5px solid #C4C0B3; color: var(--c10-ink); }
+
+.screen-body { padding: 0 16px 14px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 700px) { .screen-body { grid-template-columns: 1fr; } }
+
+.detail-block { }
+.detail-label { font-size: 10px; font-weight: 700; letter-spacing: .5px; color: var(--ink-faint); text-transform: uppercase; margin-bottom: 5px; }
+.detail-primary { font-size: 13px; font-weight: 600; color: var(--ink); }
+.detail-secondary { font-size: 12.5px; color: var(--ink-soft); }
+
+.elements-list { list-style: none; padding: 0; }
+.elements-list li { font-size: 12.5px; color: var(--ink-soft); padding: 2px 0; display: flex; gap: 6px; align-items: flex-start; }
+.elements-list li::before { content: '·'; color: var(--ink-faint); flex-shrink: 0; }
+
+.states-row { display: flex; flex-wrap: wrap; gap: 6px; }
+.state-pill { font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 99px; background: var(--bg); border: 1px solid var(--outline-md); color: var(--ink-soft); }
+
+.screen-divider { border: none; border-top: 1px solid var(--outline); margin: 0 16px 10px; }
+
+/* ─── Summary bar ─── */
+.summary-bar {
+  display: grid; grid-template-columns: repeat(5, 1fr); gap: 1px;
+  background: var(--outline-md); border: 1px solid var(--outline-md);
+  border-radius: var(--r); overflow: hidden; margin-bottom: 32px;
+  box-shadow: var(--shadow);
+}
+.summary-cell { background: var(--surface); padding: 14px 16px; text-align: center; }
+.summary-num { font-family: var(--font-kid); font-size: 26px; font-weight: 700; color: var(--ink); }
+.summary-label { font-size: 11px; font-weight: 600; color: var(--ink-faint); margin-top: 2px; }
+
+/* ─── Legend ─── */
+.legend { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 28px; }
+.legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--ink-soft); }
+</style>
+</head>
+<body>
+<div class="layout">
+
+<!-- ── Sidebar ── -->
+<nav class="sidebar">
+  <div class="sidebar-head">
+    <div class="sidebar-title">MVP Screens</div>
+    <div class="sidebar-sub">Bắp Number Adventure</div>
+  </div>
+  <div class="toc-group">
+    <a class="toc-link" href="#area1"><span class="toc-dot" style="background:var(--c1)"></span>1 · Onboarding<span class="toc-count">4</span></a>
+    <a class="toc-link" href="#area2"><span class="toc-dot" style="background:var(--c2)"></span>2 · Child Home<span class="toc-count">3</span></a>
+    <a class="toc-link" href="#area3"><span class="toc-dot" style="background:var(--c3)"></span>3 · World Map / Levels<span class="toc-count">3</span></a>
+    <a class="toc-link" href="#area4"><span class="toc-dot" style="background:var(--c4)"></span>4 · Mini-Games<span class="toc-count">5</span></a>
+    <a class="toc-link" href="#area5"><span class="toc-dot" style="background:var(--c5)"></span>5 · Rewards<span class="toc-count">3</span></a>
+    <a class="toc-link" href="#area6"><span class="toc-dot" style="background:var(--c6)"></span>6 · Collections<span class="toc-count">2</span></a>
+    <a class="toc-link" href="#area7"><span class="toc-dot" style="background:var(--c7)"></span>7 · Parent Gate<span class="toc-count">1</span></a>
+    <a class="toc-link" href="#area8"><span class="toc-dot" style="background:var(--c8)"></span>8 · Parent Dashboard<span class="toc-count">3</span></a>
+    <a class="toc-link" href="#area9"><span class="toc-dot" style="background:var(--c9)"></span>9 · Parent Settings<span class="toc-count">4</span></a>
+    <a class="toc-link" href="#area10"><span class="toc-dot" style="background:var(--c10)"></span>10 · Utility States<span class="toc-count">5</span></a>
+  </div>
+</nav>
+
+<!-- ── Main ── -->
+<main class="main">
+
+<h1>MVP Screen List</h1>
+<div class="doc-meta">
+  <span class="meta-chip">Bắp Number Adventure</span>
+  <span class="meta-chip">Mobile-first · iOS + Android</span>
+  <span class="meta-chip">33 screens + variants</span>
+  <span class="meta-chip">v1.0 · April 2026</span>
+</div>
+
+<!-- Summary -->
+<div class="summary-bar">
+  <div class="summary-cell"><div class="summary-num">33</div><div class="summary-label">Total Screens</div></div>
+  <div class="summary-cell"><div class="summary-num">22</div><div class="summary-label">Child-Facing</div></div>
+  <div class="summary-cell"><div class="summary-num">9</div><div class="summary-label">Parent-Facing</div></div>
+  <div class="summary-cell"><div class="summary-num">28</div><div class="summary-label">MVP Scope</div></div>
+  <div class="summary-cell"><div class="summary-num">5</div><div class="summary-label">v2 Deferred</div></div>
+</div>
+
+<!-- Legend -->
+<div class="legend">
+  <div class="legend-item"><span class="badge badge-child">CHILD</span> Child-facing screen</div>
+  <div class="legend-item"><span class="badge badge-parent">PARENT</span> Parent-facing screen</div>
+  <div class="legend-item"><span class="badge badge-both">BOTH</span> Shared / transition screen</div>
+  <div class="legend-item"><span class="badge badge-mvp">MVP</span> In v1 scope</div>
+  <div class="legend-item"><span class="badge badge-v2">V2</span> Deferred to v2</div>
+</div>
+
+<!-- ═══════════════════════════════ -->
+<!-- AREA 1: ONBOARDING -->
+<!-- ═══════════════════════════════ -->
+<h2 id="area1">Feature Area 1 · Onboarding</h2>
+<div class="area-header" style="background:var(--c1-bg); color:var(--c1-ink);">
+  <div class="area-num">01</div>
+  <div>
+    <div class="area-title">Onboarding</div>
+    <div class="area-sub">First-run experience — splash → welcome → profile → ready to play</div>
+  </div>
+</div>
+
+<!-- 1.1 Splash -->
+<div class="screen-card">
+  <div class="screen-header">
+    <div>
+      <div class="screen-id">1.1</div>
+      <div class="screen-name">Splash Screen</div>
+      <div class="screen-purpose">Brand moment on app launch. Auto-advances after 2.2s.</div>
+    </div>
+    <div class="screen-badges"><span class="badge badge-both">BOTH</span><span class="badge badge-mvp">MVP</span></div>
+  </div>
+  <hr class="screen-divider">
+  <div class="screen-body">
+    <div class="detail-block">
+      <div class="detail-label">Key UI Elements</div>
+      <ul class="elements-list">
+        <li>Bắp mascot (160px, bobble animation)</li>
+        <li>App name "Bắp" (44px, bold)</li>
+        <li>Tagline "NUMBER ADVENTURE"</li>
+        <li>3 loading dots (pulse animation)</li>
+        <li>Garden background gradient</li>
+      </ul>
+    </div>
+    <div class="detail-block">
+      <div class="detail-label">CTAs</div>
+      <div class="detail-primary">—</div>
+      <div class="detail-secondary">No interaction. Auto-advances to Welcome.</div>
+      <div class="detail-label" style="margin-top:12px">States</div>
+      <div class="states-row">
+        <span class="state-pill">Loading</span>
+        <span class="state-pill">Ready</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 1.2 Welcome -->
+<div class="screen-card">
+  <div class="screen-header">
+    <div>
+      <div class="screen-id">1.2</div>
+      <div class="screen-name">Welcome Screen</div>
+      <div class="screen-purpose">First introduction to Bắp. Language selection. Entry point to onboarding or login.</div>
+    </div>
+    <div class="screen-badges"><span class="badge badge-both">BOTH</span><span class="badge badge-mvp">MVP</span></div>
+  </div>
+  <hr class="screen-divider">
+  <div class="screen-body">
+    <div class="detail-block">
+      <div class="detail-label">Key UI Elements</div>
+      <ul class="elements-list">
+        <li>Bắp mascot (180px, wink mood)</li>
+        <li>Language toggle: EN / VI / Bilingual</li>
+        <li>"Hi, I'm Bắp!" heading</li>
+        <li>Subtext: "Let's play with numbers together"</li>
+        <li>Audio hint chip (tap to hear)</li>
+        <li>Garden cream background</li>
+      </ul>
+    </div>
+    <div class="detail-block">
+      <div class="detail-label">Primary CTA</div>
+      <div class="detail-primary">Start → Profile Setup</div>
+      <div class="detail-label" style="margin-top:10px">Secondary CTA</div>
+      <div class="detail-secondary">I already have a profile → Home</div>
+      <div class="detail-label" style="margin-top:12px">States</div>
+      <div class="states-row">
+        <span class="state-pill">EN selected</span>
+        <span class="state-pill">VI selected</span>
+        <span class="state-pill">Bilingual selected</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 1.3 Profile Setup -->
+<div class="screen-card">
+  <div class="screen-header">
+    <div>
+      <div class="screen-id">1.3</div>
+      <div class="screen-name">Profile Setup</div>
+      <div class="screen-purpose">3-step wizard: child enters name, age, and picks mascot color. Creates the play profile.</div>
+    </div>
+    <div class="screen-badges"><span class="badge badge-child">CHILD</span><span class="badge badge-mvp">MVP</span></div>
+  </div>
+  <hr class="screen-divider">
+  <div class="screen-body">
+    <div class="detail-block">
+      <div class="detail-label">Key UI Elements</div>
+      <ul class="elements-list">
+        <li>Step progress dots (3 steps)</li>
+        <li>Step 1: Name input (large, centered, 32px)</li>
+        <li>Step 2: Age tiles (3 / 4 / 5 / 6)</li>
+        <li>Step 3: Color picker (5 BapMini swatches)</li>
+        <li>Bắp mascot (120–140px) reacts to selection</li>
+        <li>Sky background</li>
+      </ul>
+    </div>
+    <div class="detail-block">
+      <div class="detail-label">Primary CTA</div>
+      <div class="detail-primary">Next (steps 1–2) · Let's Go! (step 3)</div>
+      <div class="detail-label" style="margin-top:10px">Secondary CTA</div>
+      <div class="detail-secondary">‹ Back (steps 2–3)</div>
+      <div class="detail-label" style="margin-top:12px">States</div>
+      <div class="states-row">
+        <span class="state-pill">Step 1 — Name</span>
+        <span class="state-pill">Step 2 — Age</span>
+        <span class="state-pill">Step 3 — Color</span>
+        <span class="state-pill">Keyboard open</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 1.4 First Day Intro -->
+<div class="screen-card">
+  <div class="screen-header">
+    <div>
+      <div class="screen-id">1.4</div>
+      <div class="screen-name">First Day Intro (World Intro)</div>
+      <div class="screen-purpose">One-time animated intro to World 1 — Number Forest. Sets expectations for gameplay. Shown only on first session.</div>
+    </div>
+    <div class="screen-badges"><span class="badge badge-child">CHILD</span><span class="badge badge-v2">V2</span></div>
+  </div>
+  <hr class="screen-divider">
+  <div class="screen-body">
+    <div class="detail-block">
+      <div class="detail-label">Key UI Elements</div>
+      <ul class="elements-list">
+        <li>Bắp mascot in celebration mood</li>
+        <li>World illustration (Number Forest)</li>
+        <li>3-frame mini story (swipeable)</li>
+        <li>Skip button (top right)</li>
+      </ul>
+    </div>
+    <div class="detail-block">
+      <div class="detail-label">Primary CTA</div>
+      <div class="detail-primary">Let's go! → Home</div>
+      <div class="detail-label" style="margin-top:10px">Secondary CTA</div>
+      <div class="detail-secondary">Skip → Home</div>
+      <div class="detail-label" style="margin-top:12px">States</div>
+      <div class="states-row">
+        <span class="state-pill">Frame 1</span>
+        <span class="state-pill">Frame 2</span>
+        <span class="state-pill">Frame 3</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ -->
+<!-- AREA 2: CHILD HOME -->
+<!-- ═══════════════════════════════ -->
+<h2 id="area2">Feature Area 2 · Child Home</h2>
+<div class="area-header" style="background:var(--c2-bg); color:var(--c2-ink);">
+  <div class="area-num">02</div>
+  <div>
+    <div class="area-title">Child Home</div>
+    <div class="area-sub">The child's daily hub — daily mission, quick navigation, weekly progress</div>
+  </div>
+</div>
+
+<!-- 2.1 Home -->
+<div class="screen-card">
+  <div class="screen-header">
+    <div>
+      <div class="screen-id">2.1</div>
+      <div class="screen-name">Home Screen</div>
+      <div class="screen-purpose">Main hub. Shows daily adventure, streak, quick tiles to World Map and Sticker Book, weekly progress grid.</div>
+    </div>
+    <div class="screen-badges"><span class="badge badge-child">CHILD</span><span class="badge badge-mvp">MVP</span></div>
+  </div>
+  <hr class="screen-divider">
+  <div class="screen-body">
+    <div class="detail-block">
+      <div class="detail-label">Key UI Elements</div>
+      <ul class="elements-list">
+        <li>Avatar + name + greeting</li>
+        <li>Streak badge (🔥 N days)</li>
+        <li>Parent access button (👤)</li>
+        <li>Today's Adventure card (world name, game count, duration)</li>
+        <li>Bắp mascot (88px, celebrate mood)</li>
+        <li>World Map quick tile</li>
+        <li>Stickers quick tile (count shown)</li>
+        <li>Weekly progress grid (M–S dots)</li>
+      </ul>
+    </div>
+    <div class="detail-block">
+      <div class="detail-label">Primary CTA</div>
+      <div class="detail-primary">▶ Play → Level List</div>
+      <div class="detail-label" style="margin-top:10px">Secondary CTAs</div>
+      <div class="detail-secondary">World Map tile · Stickers tile · 👤 Parent gate</div>
+      <div class="detail-label" style="margin-top:12px">States</div>
+      <div class="states-row">
+        <span class="state-pill">Fresh (no play today)</span>
+        <span class="state-pill">Daily done</span>
+        <span class="state-pill">Streak active</span>
+        <span class="state-pill">No streak</span>
+        <span class="state-pill">New sticker available</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 2.2 Streak Screen -->
+<div class="screen-card">
+  <div class="screen-header">
+    <div>
+      <div class="screen-id">2.2</div>
+      <div class="screen-name">Streak Screen</div>
+      <div class="screen-purpose">Celebrates consecutive play days. Shows the 7-day grid and streak count. Motivates without pressuring.</div>
+    </div>
+    <div class="screen-badges"><span class="badge badge-child">CHILD</span><span class="badge badge-mvp">MVP</span></div>
+  </div>
+  <hr class="screen-divider">
+  <div class="screen-body">
+    <div class="detail-block">
+      <div class="detail-label">Key UI Elements</div>
+      <ul class="elements-list">
+        <li>🔥 icon (large, pulse animation)</li>
+        <li>Streak count (large number, 58px)</li>
+        <li>"N days in a row!" label</li>
+        <li>7-day grid (M–S, filled = star earned)</li>
+        <li>Sun background gradient</li>
+      </ul>
+    </div>
+    <div class="detail-block">
+      <div class="detail-label">Primary CTA</div>
+      <div class="detail-primary">Keep going! → Home</div>
+      <div class="detail-label" style="margin-top:10px">Secondary CTA</div>
+      <div class="detail-secondary">‹ Back</div>
+      <div class="detail-label" style="margin-top:12px">States</div>
+      <div class="states-row">
+        <span class="state-pill">Active streak</span>
+        <span class="state-pill">Streak = 1 (new)</span>
+        <span class="state-pill">Long streak (7+)</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 2.3 Daily Goal Complete -->
+<div class="screen-card">
+  <div class="screen-header">
+    <div>
+      <div class="screen-id">2.3</div>
+      <div class="screen-name">Daily Goal Complete</div>
+      <div class="screen-purpose">Shown after the daily session target is met. Celebrates completion and gently ends the session.</div>
+    </div>
+    <div class="screen-badges"><span class="badge badge-child">CHILD</span><span class="badge badge-mvp">MVP</span></div>
+  </div>
+  <hr class="screen-divider">
+  <div class="screen-body">
+    <div class="detail-block">
+      <div class="detail-label">Key UI Elements</div>
+      <ul class="elements-list">
+        <li>Bắp (sleep mood, large)</li>
+        <li>"Today's goal done!" heading</li>
+        <li>Stars earned today</li>
+        <li>Streak update (if applicable)</li>
+        <li>Soft confetti or sparkles</li>
+      </ul>
+    </div>
+    <div class="detail-block">
+      <div class="detail-label">Primary CTA</div>
+      <div class="detail-primary">Bye bye! → App closes / goes to Home</div>
+      <div class="detail-label" style="margin-top:10px">Secondary CTA</div>
+      <div class="detail-secondary">Go to Sticker Book</div>
+      <div class="detail-label" style="margin-top:12px">States</div>
+      <div class="states-row">
+        <span class="state-pill">Goal met</span>
+        <span class="state-pill">Time limit hit (parent-set)</span>
+        <span class="state-pill">New sticker earned today</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ -->
+<!-- AREA 3: WORLD MAP / LEVELS -->
+<!-- ═══════════════════════════════ -->
+<h2 id="area3">Feature Area 3 · World Map / Levels</h2>
+<div class="area-header" style="background:var(--c3-bg); color:var(--c3-ink);">
+  <div class="area-num">03</div>
+  <div>
+    <div class="area-title">World Map / Levels</div>
+    <div class="area-sub">Navigation through worlds and individual levels</div>
+  </div>
+</div>
+
+<!-- 3.1 World Map -->
+<div class="screen-card">
+  <div class="screen-header">
+    <div>
+      <div class="screen-id">3.1</div>
+      <div class="screen-name">World Map</div>
+      <div class="screen-purpose">Shows all 5 worlds as stacked island cards. Locked/unlocked state per world. Entry point to each world's levels.</div>
+    </div>
+    <div class="screen-badges"><span class="badge badge-child">CHILD</span><span class="badge badge-mvp">MVP</span></div>
+  </div>
+  <hr class="screen-divider">
+  <div class="screen-body">
+    <div class="detail-block">
+      <div class="detail-label">Key UI Elements</div>
+      <ul class="elements-list">
+        <li>Back button (‹)</li>
+        <li>"World Map" heading</li>
+        <li>5 World cards (alternating left/right offset)</li>
+        <li>Each card: world emoji, name, subtitle, star progress bar, star count</li>
+        <li>Locked worlds: greyed, 🔒 icon, no progress bar</li>
+        <li>Sky background with sparkles</li>
+      </ul>
+    </div>
+    <div class="detail-block">
+      <div class="detail-label">Primary CTA</div>
+      <div class="detail-primary">Tap world card → Level List</div>
+      <div class="detail-label" style="margin-top:10px">Secondary CTA</div>
+      <div class="detail-secondary">‹ Back → Home</div>
+      <div class="detail-label" style="margin-top:12px">States</div>
+      <div class="states-row">
+        <span class="state-pill">World unlocked</span>
+        <span class="state-pill">World locked</span>
+        <span class="state-pill">World complete</span>
+        <span class="state-pill">New world unlocked</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 3.2 Level List -->
+<div class="screen-card">
+  <div class="screen-header">
+    <div>
+      <div class="screen-id">3.2</div>
+      <div class="screen-name">Level List</div>
+      <div class="screen-purpose">9-level winding path within a world. Each level node shows stars earned. Boss level at end.</div>
+    </div>
+    <div class="screen-badges"><span class="badge badge-child">CHILD</span><span class="badge badge-mvp">MVP</span></div>
+  </div>
+  <hr class="screen-divider">
+  <div class="screen-body">
+    <div class="detail-block">
+      <div class="detail-label">Key UI Elements</div>
+      <ul class="elements-list">
+        <li>Back button (‹)</li>
+        <li>World name + world number label</li>
+        <li>Total stars counter (⭐ N/27)</li>
+        <li>9 level nodes on winding path</li>
+        <li>Each node: level number or 👑 (boss), 3 star slots below</li>
+        <li>Locked levels: grey circle, 🔒</li>
+        <li>World-colored background</li>
+      </ul>
+    </div>
+    <div class="detail-block">
+      <div class="detail-label">Primary CTA</div>
+      <div class="detail-primary">Tap level node → Game</div>
+      <div class="detail-label" style="margin-top:10px">Secondary CTA</div>
+      <div class="detail-secondary">‹ Back → World Map</div>
+      <div class="detail-label" style="margin-top:12px">States</div>
+      <div class="states-row">
+        <span class="state-pill">Level locked</span>
+        <span class="state-pill">Level available</span>
+        <span class="state-pill">1 star earned</span>
+        <span class="state-pill">2 stars earned</span>
+        <span class="state-pill">3 stars earned</span>
+        <span class="state-pill">Boss level</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 3.3 World Unlock Celebration -->
+<div class="screen-card">
+  <div class="screen-header">
+    <div>
+      <div class="screen-id">3.3</div>
+      <div class="screen-name">World Unlock Celebration</div>
+      <div class="screen-purpose">Interstitial screen when a new world becomes available. Shown once per unlock event.</div>
+    </div>
+    <div class="screen-badges"><span class="badge badge-child">CHILD</span><span class="badge badge-v2">V2</span></div>
+  </div>
+  <hr class="screen-divider">
+  <div class="screen-body">
+    <div class="detail-block">
+      <div class="detail-label">Key UI Elements</div>
+      <ul class="elements-list">
+        <li>New world illustration/emoji (large)</li>
+        <li>"New world open!" heading</li>
+        <li>World name and number</li>
+        <li>Confetti burst</li>
+      </ul>
+    </div>
+    <div class="detail-block">
+      <div class="detail-label">Primary CTA</div>
+      <div class="detail-primary">Explore! → World Map</div>
+      <div class="detail-label" style="margin-top:12px">States</div>
+      <div class="states-row">
+        <span class="state-pill">Single unlock</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ -->
+<!-- AREA 4: MINI-GAMES -->
+<!-- ═══════════════════════════════ -->
+<h2 id="area4">Feature Area 4 · Mini-Games</h2>
+<div class="area-header" style="background:var(--c4-bg); color:var(--c4-ink);">
+  <div class="area-num">04</div>
+  <div>
+    <div class="area-title">Mini-Games</div>
+    <div class="area-sub">5 game types — each with its own interaction model, HUD, and feedback loop</div>
+  </div>
+</div>
+
+<!-- 4.1 Hear & Tap -->
+<div class="screen-card">
+  <div class="screen-header">
+    <div>
+      <div class="screen-id">4.1</div>
+      <div class="screen-name">Hear & Tap</div>
+      <div class="screen-purpose">Listens to an audio number prompt, taps the matching tile from 4 options. Builds number-sound-symbol connection.</div>
+    </div>
+    <div class="screen-badges"><span class="badge badge-child">CHILD</span><span class="badge badge-mvp">MVP</span></div>
+  </div>
+  <hr class="screen-divider">
+  <div class="screen-body">
+    <div class="detail-block">
+      <div class="detail-label">Key UI Elements</div>
+      <ul class="elements-list">
+        <li>Game HUD (close ✕, progress bar, ❤️ hearts)</li>
+        <li>"TAP WHAT YOU HEAR" instruction</li>
+        <li>Speaker button (160px circle, pulse animation)</li>
+        <li>2×2 grid of NumTile answer options</li>
+        <li>Sage green background + sparkles</li>
+        <li>5 rounds per session</li>
+      </ul>
+    </div>
+    <div class="detail-block">
+      <div class="detail-label">Primary CTA</div>
+      <div class="detail-primary">Tap speaker → play audio</div>
+      <div class="detail-label" style="margin-top:10px">Secondary CTA</div>
+      <div class="detail-secondary">✕ Exit → Level List</div>
+      <div class="detail-label" style="margin-top:12px">States</div>
+      <div class="states-row">
+        <span class="state-pill">Idle (pre-listen)</span>
+        <span class="state-pill">Audio playing</span>
+        <span class="state-pill">Correct pick</span>
+        <span class="state-pill">Wrong pick (wiggle)</span>
+        <span class="state-pill">Round complete</span>
+        <span class="state-pill">0 hearts left</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 4.2 Build the Number -->
+<div class="screen-card">
+  <div class="screen-header">
+    <div>
+      <div class="screen-id">4.2</div>
+      <div class="screen-name">Build the Number</div>
+      <div class="screen-purpose">Child builds a target number using tens (sticks) and ones (dots). Teaches place value through physical manipulation.</div>
+    </div>
+    <div class="screen-badges"><span class="badge badge-child">CHILD</span><span class="badge badge-mvp">MVP</span></div>
+  </div>
+  <hr class="screen-divider">
+  <div class="screen-body">
+    <div class="detail-block">
+      <div class="detail-label">Key UI Elements</div>
+      <ul class="elements-list">
+        <li>Game HUD</li>
+        <li>Target number tile (140×96px, sun yellow)</li>
+        <li>"Make this number" label</li>
+        <li>"YOUR NUMBER" workspace (live updating)</li>
+        <li>Tens column: + / − controls, visual sticks</li>
+        <li>Ones column: + / − controls, visual dots</li>
+        <li>Check / Yay! submit button</li>
+        <li>Sky background</li>
+        <li>4 rounds per session</li>
+      </ul>
+    </div>
+    <div class="detail-block">
+      <div class="detail-label">Primary CTA</div>
+      <div class="detail-primary">Check → validate answer</div>
+      <div class="detail-label" style="margin-top:10px">Secondary CTA</div>
+      <div class="detail-secondary">✕ Exit</div>
+      <div class="detail-label" style="margin-top:12px">States</div>
+      <div class="states-row">
+        <span class="state-pill">Empty workspace</span>
+        <span class="state-pill">Building (count > 0)</span>
+        <span class="state-pill">Match found</span>
+        <span class="state-pill">Wrong → heart lost</span>
+        <span class="state-pill">Tens at max (9)</span>
+        <span class="state-pill">Ones at max (9)</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 4.3 Even/Odd -->
+<div class="screen-card">
+  <div class="screen-header">
+    <div>
+      <div class="screen-id">4.3</div>
+      <div class="screen-name">Even or Odd</div>
+      <div class="screen-purpose">A number is shown with a dot array. Child sorts it into the Even or Odd basket. Teaches odd/even through visual pairing.</div>
+    </div>
+    <div class="screen-badges"><span class="badge badge-child">CHILD</span><span class="badge badge-mvp">MVP</span></div>
+  </div>
+  <hr class="screen-divider">
+  <div class="screen-body">
+    <div class="detail-block">
+      <div class="detail-label">Key UI Elements</div>
+      <ul class="elements-list">
+        <li>Game HUD</li>
+        <li>"EVEN or ODD?" instruction</li>
+        <li>Number card with dot array (alternating coral/sky dots)</li>
+        <li>EVEN basket (sage, 🍎🍎 icon, "pairs" hint)</li>
+        <li>ODD basket (coral, 🍎 icon, "one left over" hint)</li>
+        <li>Lavender background</li>
+        <li>5 rounds per session</li>
+      </ul>
+    </div>
+    <div class="detail-block">
+      <div class="detail-label">Primary CTA</div>
+      <div class="detail-primary">Tap EVEN or ODD basket</div>
+      <div class="detail-label" style="margin-top:10px">Secondary CTA</div>
+      <div class="detail-secondary">✕ Exit</div>
+      <div class="detail-label" style="margin-top:12px">States</div>
+      <div class="states-row">
+        <span class="state-pill">Idle</span>
+        <span class="state-pill">Correct (basket grows)</span>
+        <span class="state-pill">Wrong (wiggle + heart lost)</span>
+        <span class="state-pill">Round transition</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 4.4 Number Order -->
+<div class="screen-card">
+  <div class="screen-header">
+    <div>
+      <div class="screen-id">4.4</div>
+      <div class="screen-name">Number Order</div>
+      <div class="screen-purpose">A sequence of 5 numbers with one missing. Child picks the correct number from 3 options. Builds number sequence understanding.</div>
+    </div>
+    <div class="screen-badges"><span class="badge badge-child">CHILD</span><span class="badge badge-mvp">MVP</span></div>
+  </div>
+  <hr class="screen-divider">
+  <div class="screen-body">
+    <div class="detail-block">
+      <div class="detail-label">Key UI Elements</div>
+      <ul class="elements-list">
+        <li>Game HUD</li>
+        <li>"WHAT COMES NEXT?" instruction</li>
+        <li>5-card number sequence (1 blank slot, pulsing)</li>
+        <li>3 answer NumTile options</li>
+        <li>Sun/warm yellow background</li>
+        <li>4 rounds per session</li>
+      </ul>
+    </div>
+    <div class="detail-block">
+      <div class="detail-label">Primary CTA</div>
+      <div class="detail-primary">Tap answer tile</div>
+      <div class="detail-label" style="margin-top:10px">Secondary CTA</div>
+      <div class="detail-secondary">✕ Exit</div>
+      <div class="detail-label" style="margin-top:12px">States</div>
+      <div class="states-row">
+        <span class="state-pill">Idle</span>
+        <span class="state-pill">Correct</span>
+        <span class="state-pill">Wrong</span>
+        <span class="state-pill">Sequence fills</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 4.5 Add / Take Away -->
+<div class="screen-card">
+  <div class="screen-header">
+    <div>
+      <div class="screen-id">4.5</div>
+      <div class="screen-name">Add / Take Away</div>
+      <div class="screen-purpose">Visual addition or subtraction using apple objects. Child picks the answer from 4 options. Introduces basic arithmetic.</div>
+    </div>
+    <div class="screen-badges"><span class="badge badge-child">CHILD</span><span class="badge badge-mvp">MVP</span></div>
+  </div>
+  <hr class="screen-divider">
+  <div class="screen-body">
+    <div class="detail-block">
+      <div class="detail-label">Key UI Elements</div>
+      <ul class="elements-list">
+        <li>Game HUD</li>
+        <li>Instruction ("HOW MANY TOGETHER?" or "HOW MANY LEFT?")</li>
+        <li>Visual object panel (apple emoji × N, crossed apples for subtraction)</li>
+        <li>Equation display (A + B = ? or A − B = ?)</li>
+        <li>4-option answer grid (NumTiles)</li>
+        <li>Cream background</li>
+        <li>4 rounds per session</li>
+      </ul>
+    </div>
+    <div class="detail-block">
+      <div class="detail-label">Primary CTA</div>
+      <div class="detail-primary">Tap answer tile</div>
+      <div class="detail-label" style="margin-top:10px">Secondary CTA</div>
+      <div class="detail-secondary">✕ Exit</div>
+      <div class="detail-label" style="margin-top:12px">States</div>
+      <div class="states-row">
+        <span class="state-pill">Addition mode</span>
+        <span class="state-pill">Subtraction mode</span>
+        <span class="state-pill">Correct</span>
+        <span class="state-pill">Wrong</span>
+        <span class="state-pill">Zero hearts</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ -->
+<!-- AREA 5: REWARDS -->
+<!-- ═══════════════════════════════ -->
+<h2 id="area5">Feature Area 5 · Rewards</h2>
+<div class="area-header" style="background:var(--c5-bg); color:var(--c5-ink);">
+  <div class="area-num">05</div>
+  <div>
+    <div class="area-title">Rewards</div>
+    <div class="area-sub">Post-game celebration — stars, coins, stickers, and session summary</div>
+  </div>
+</div>
+
+<!-- 5.1 Game Reward -->
+<div class="screen-card">
+  <div class="screen-header">
+    <div>
+      <div class="screen-id">5.1</div>
+      <div class="screen-name">Game Reward Screen</div>
+      <div class="screen-purpose">Shown after each game session completes. Celebrates performance with stars, correct count, coins, and optional sticker earn.</div>
+    </div>
+    <div class="screen-badges"><span class="badge badge-child">CHILD</span><span class="badge badge-mvp">MVP</span></div>
+  </div>
+  <hr class="screen-divider">
+  <div class="screen-body">
+    <div class="detail-block">
+      <div class="detail-label">Key UI Elements</div>
+      <ul class="elements-list">
+        <li>"{N} stars, {name}!" heading (dynamic by stars)</li>
+        <li>Bắp mascot (140px, celebrate mood, bobble)</li>
+        <li>Star row (1–3 stars, staggered pop-in)</li>
+        <li>Stats card: Correct count + Coins earned</li>
+        <li>New sticker card (if earned — pop-in at 0.5s delay)</li>
+        <li>Confetti burst (40 / 20 / 0 pieces by stars)</li>
+        <li>Sparkles (14 / 8 / 6 by stars)</li>
+        <li>Sun/gold background</li>
+      </ul>
+    </div>
+    <div class="detail-block">
+      <div class="detail-label">Primary CTA</div>
+      <div class="detail-primary">▶ Next → Level List</div>
+      <div class="detail-label" style="margin-top:10px">Secondary CTA</div>
+      <div class="detail-secondary">—</div>
+      <div class="detail-label" style="margin-top:12px">States</div>
+      <div class="states-row">
+        <span class="state-pill">3 stars (Amazing)</span>
+        <span class="state-pill">2 stars (Great job)</span>
+        <span class="state-pill">1 star (Good try)</span>
+        <span class="state-pill">Sticker earned</span>
+        <span class="state-pill">No sticker</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 5.2 Sticker Earn Modal -->
+<div class="screen-card">
+  <div class="screen-header">
+    <div>
+      <div class="screen-id">5.2</div>
+      <div class="screen-name">Sticker Earn Moment</div>
+      <div class="screen-purpose">Inline card within Reward Screen highlighting the new sticker. Not a separate screen — a card that pops in.</div>
+    </div>
+    <div class="screen-badges"><span class="badge badge-child">CHILD</span><span class="badge badge-mvp">MVP</span></div>
+  </div>
+  <hr class="screen-divider">
+  <div class="screen-body">
+    <div class="detail-block">
+      <div class="detail-label">Key UI Elements</div>
+      <ul class="elements-list">
+        <li>Lavender card with border</li>
+        <li>Sticker emoji (38px)</li>
+        <li>"NEW STICKER!" label</li>
+        <li>Sticker name</li>
+        <li>Pop-in animation (0.5s delay after reward loads)</li>
+      </ul>
+    </div>
+    <div class="detail-block">
+      <div class="detail-label">Primary CTA</div>
+      <div class="detail-primary">Part of reward screen — same Next CTA</div>
+      <div class="detail-label" style="margin-top:12px">States</div>
+      <div class="states-row">
+        <span class="state-pill">Visible (sticker earned)</span>
+        <span class="state-pill">Hidden (not earned)</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 5.3 Session Complete -->
+<div class="screen-card">
+  <div class="screen-header">
+    <div>
+      <div class="screen-id">5.3</div>
+      <div class="screen-name">Session Complete / Time Limit</div>
+      <div class="screen-purpose">Shown when the parent-set daily time limit is reached. Warm end-of-session screen — not punitive.</div>
+    </div>
+    <div class="screen-badges"><span class="badge badge-child">CHILD</span><span class="badge badge-mvp">MVP</span></div>
+  </div>
+  <hr class="screen-divider">
+  <div class="screen-body">
+    <div class="detail-block">
+      <div class="detail-label">Key UI Elements</div>
+      <ul class="elements-list">
+        <li>Bắp (sleep mood)</li>
+        <li>"Time to rest!" heading</li>
+        <li>"You played so well today. See you tomorrow!"</li>
+        <li>Stars earned today summary</li>
+        <li>Soft background — no confetti</li>
+      </ul>
+    </div>
+    <div class="detail-block">
+      <div class="detail-label">Primary CTA</div>
+      <div class="detail-primary">Bye bye! → Home (locked for session)</div>
+      <div class="detail-label" style="margin-top:12px">States</div>
+      <div class="states-row">
+        <span class="state-pill">Time limit reached</span>
+        <span class="state-pill">Manual session end</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ -->
+<!-- AREA 6: COLLECTIONS -->
+<!-- ═══════════════════════════════ -->
+<h2 id="area6">Feature Area 6 · Collections</h2>
+<div class="area-header" style="background:var(--c6-bg); color:var(--c6-ink);">
+  <div class="area-num">06</div>
+  <div>
+    <div class="area-title">Collections</div>
+    <div class="area-sub">Sticker book and collectibles — intrinsic motivation layer</div>
+  </div>
+</div>
+
+<!-- 6.1 Sticker Book -->
+<div class="screen-card">
+  <div class="screen-header">
+    <div>
+      <div class="screen-id">6.1</div>
+      <div class="screen-name">Sticker Book</div>
+      <div class="screen-purpose">4-column grid of all 40 stickers. Locked stickers shown as dashed boxes. Progress bar at top. Collection motivator.</div>
+    </div>
+    <div class="screen-badges"><span class="badge badge-child">CHILD</span><span class="badge badge-mvp">MVP</span></div>
+  </div>
+  <hr class="screen-divider">
+  <div class="screen-body">
+    <div class="detail-block">
+      <div class="detail-label">Key UI Elements</div>
+      <ul class="elements-list">
+        <li>Back button (‹)</li>
+        <li>"Sticker Book" heading</li>
+        <li>"N of 40 collected" subtitle</li>
+        <li>Progress bar (full width)</li>
+        <li>4-column sticker grid (40 slots)</li>
+        <li>Earned: cream card, emoji, staggered pop-in</li>
+        <li>Locked: dashed border, "?" center</li>
+        <li>Lavender background</li>
+      </ul>
+    </div>
+    <div class="detail-block">
+      <div class="detail-label">Primary CTA</div>
+      <div class="detail-primary">‹ Back → Home</div>
+      <div class="detail-label" style="margin-top:10px">Secondary CTA</div>
+      <div class="detail-secondary">Tap sticker → Sticker Detail (v2)</div>
+      <div class="detail-label" style="margin-top:12px">States</div>
+      <div class="states-row">
+        <span class="state-pill">0 collected</span>
+        <span class="state-pill">Some collected</span>
+        <span class="state-pill">All collected</span>
+        <span class="state-pill">New sticker (highlight)</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 6.2 Sticker Detail -->
+<div class="screen-card">
+  <div class="screen-header">
+    <div>
+      <div class="screen-id">6.2</div>
+      <div class="screen-name">Sticker Detail</div>
+      <div class="screen-purpose">Full-screen focus on a single sticker — name, world origin, earn date. Deepens emotional connection to collection.</div>
+    </div>
+    <div class="screen-badges"><span class="badge badge-child">CHILD</span><span class="badge badge-v2">V2</span></div>
+  </div>
+  <hr class="screen-divider">
+  <div class="screen-body">
+    <div class="detail-block">
+      <div class="detail-label">Key UI Elements</div>
+      <ul class="elements-list">
+        <li>Large sticker illustration (120px)</li>
+        <li>Sticker name</li>
+        <li>World of origin</li>
+        <li>Date earned</li>
+        <li>Close button</li>
+      </ul>
+    </div>
+    <div class="detail-block">
+      <div class="detail-label">Primary CTA</div>
+      <div class="detail-primary">✕ Close → Sticker Book</div>
+      <div class="detail-label" style="margin-top:12px">States</div>
+      <div class="states-row">
+        <span class="state-pill">Earned</span>
+        <span class="state-pill">Locked (not viewable)</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ -->
+<!-- AREA 7: PARENT GATE -->
+<!-- ═══════════════════════════════ -->
+<h2 id="area7">Feature Area 7 · Parent Gate</h2>
+<div class="area-header" style="background:var(--c7-bg); color:var(--c7-ink);">
+  <div class="area-num">07</div>
+  <div>
+    <div class="area-title">Parent Gate</div>
+    <div class="area-sub">Transition from child mode to parent mode — math challenge prevents accidental access</div>
+  </div>
+</div>
+
+<!-- 7.1 Parent Gate -->
+<div class="screen-card">
+  <div class="screen-header">
+    <div>
+      <div class="screen-id">7.1</div>
+      <div class="screen-name">Parent Gate</div>
+      <div class="screen-purpose">Bottom sheet overlay. Parent solves a simple addition to prove adult comprehension. Random equation each time. Blocks child accidental access to parent mode.</div>
+    </div>
+    <div class="screen-badges"><span class="badge badge-both">BOTH</span><span class="badge badge-mvp">MVP</span></div>
+  </div>
+  <hr class="screen-divider">
+  <div class="screen-body">
+    <div class="detail-block">
+      <div class="detail-label">Key UI Elements</div>
+      <ul class="elements-list">
+        <li>Blurred backdrop (child screen dimmed behind)</li>
+        <li>Bottom sheet (slide-up animation)</li>
+        <li>Drag handle</li>
+        <li>"CỔNG PHỤ HUYNH / PARENT GATE" label</li>
+        <li>"For grown-ups only" heading</li>
+        <li>"Solve the math to continue" subtext</li>
+        <li>Large equation (e.g. 7 + 3 = ?)</li>
+        <li>2×2 answer grid</li>
+        <li>Cancel text button</li>
+      </ul>
+    </div>
+    <div class="detail-block">
+      <div class="detail-label">Primary CTA</div>
+      <div class="detail-primary">Tap correct answer → Parent Dashboard</div>
+      <div class="detail-label" style="margin-top:10px">Secondary CTA</div>
+      <div class="detail-secondary">Cancel → dismiss sheet</div>
+      <div class="detail-label" style="margin-top:12px">States</div>
+      <div class="states-row">
+        <span class="state-pill">Idle</span>
+        <span class="state-pill">Wrong answer (flash red)</span>
+        <span class="state-pill">Correct answer (fade to dashboard)</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ -->
+<!-- AREA 8: PARENT DASHBOARD -->
+<!-- ═══════════════════════════════ -->
+<h2 id="area8">Feature Area 8 · Parent Dashboard</h2>
+<div class="area-header" style="background:var(--c8-bg); color:var(--c8-ink);">
+  <div class="area-num">08</div>
+  <div>
+    <div class="area-title">Parent Dashboard</div>
+    <div class="area-sub">Analytics, skills overview, and quick navigation to settings and detailed reports</div>
+  </div>
+</div>
+
+<!-- 8.1 Parent Dashboard -->
+<div class="screen-card">
+  <div class="screen-header">
+    <div>
+      <div class="screen-id">8.1</div>
+      <div class="screen-name">Parent Dashboard (Main)</div>
+      <div class="screen-purpose">Overview of child's learning — today's time, streak, accuracy, stars, weekly activity chart, skills breakdown, and menu to settings/report.</div>
+    </div>
+    <div class="screen-badges"><span class="badge badge-parent">PARENT</span><span class="badge badge-mvp">MVP</span></div>
+  </div>
+  <hr class="screen-divider">
+  <div class="screen-body">
+    <div class="detail-block">
+      <div class="detail-label">Key UI Elements</div>
+      <ul class="elements-list">
+        <li>✕ Close + "CHA MẸ" mode label</li>
+        <li>"Bảng điều khiển" title</li>
+        <li>Child profile card (avatar, name, age, status)</li>
+        <li>2×2 metric cards: Today / Streak / Accuracy / Stars</li>
+        <li>Weekly activity bar chart (7-day)</li>
+        <li>Skills section (4 skills, progress bars, badges)</li>
+        <li>Menu rows: Report / Time limit / Language / Settings</li>
+        <li>Font: Be Vietnam Pro (parent mode)</li>
+      </ul>
+    </div>
+    <div class="detail-block">
+      <div class="detail-label">Primary CTA</div>
+      <div class="detail-primary">✕ Exit → Home (child mode)</div>
+      <div class="detail-label" style="margin-top:10px">Secondary CTAs</div>
+      <div class="detail-secondary">Menu rows → sub-screens</div>
+      <div class="detail-label" style="margin-top:12px">States</div>
+      <div class="states-row">
+        <span class="state-pill">Day with play data</span>
+        <span class="state-pill">No play today</span>
+        <span class="state-pill">First-ever session</span>
+        <span class="state-pill">Streak broken</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 8.2 Progress Report -->
+<div class="screen-card">
+  <div class="screen-header">
+    <div>
+      <div class="screen-id">8.2</div>
+      <div class="screen-name">Progress Report</div>
+      <div class="screen-purpose">Detailed weekly breakdown: summary copy, 7-day play time chart, per-game accuracy table, and actionable tips for parents.</div>
+    </div>
+    <div class="screen-badges"><span class="badge badge-parent">PARENT</span><span class="badge badge-mvp">MVP</span></div>
+  </div>
+  <hr class="screen-divider">
+  <div class="screen-body">
+    <div class="detail-block">
+      <div class="detail-label">Key UI Elements</div>
+      <ul class="elements-list">
+        <li>‹ Back + "{name}'s report" heading</li>
+        <li>Week summary card (highlighted text copy)</li>
+        <li>7-day play time bar chart (minutes)</li>
+        <li>Per-game breakdown table (game name, play count, accuracy %)</li>
+        <li>Tips/recommendations card (3 bullet points)</li>
+      </ul>
+    </div>
+    <div class="detail-block">
+      <div class="detail-label">Primary CTA</div>
+      <div class="detail-primary">‹ Back → Parent Dashboard</div>
+      <div class="detail-label" style="margin-top:12px">States</div>
+      <div class="states-row">
+        <span class="state-pill">Full week data</span>
+        <span class="state-pill">Partial week</span>
+        <span class="state-pill">First week (minimal data)</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 8.3 Onboarding/Overview (parent) -->
+<div class="screen-card">
+  <div class="screen-header">
+    <div>
+      <div class="screen-id">8.3</div>
+      <div class="screen-name">Parent Onboarding</div>
+      <div class="screen-purpose">First-time parent dashboard view. Brief explanation of what the dashboard shows and how to set goals. Shown once.</div>
+    </div>
+    <div class="screen-badges"><span class="badge badge-parent">PARENT</span><span class="badge badge-v2">V2</span></div>
+  </div>
+  <hr class="screen-divider">
+  <div class="screen-body">
+    <div class="detail-block">
+      <div class="detail-label">Key UI Elements</div>
+      <ul class="elements-list">
+        <li>3-step tooltip walkthrough overlay</li>
+        <li>Highlights: daily time, skills, report</li>
+        <li>Skip option</li>
+      </ul>
+    </div>
+    <div class="detail-block">
+      <div class="detail-label">Primary CTA</div>
+      <div class="detail-primary">Got it! → Dashboard</div>
+      <div class="detail-label" style="margin-top:12px">States</div>
+      <div class="states-row"><span class="state-pill">Step 1–3</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ -->
+<!-- AREA 9: PARENT SETTINGS -->
+<!-- ═══════════════════════════════ -->
+<h2 id="area9">Feature Area 9 · Parent Settings</h2>
+<div class="area-header" style="background:var(--c9-bg); color:var(--c9-ink);">
+  <div class="area-num">09</div>
+  <div>
+    <div class="area-title">Parent Settings</div>
+    <div class="area-sub">Time limits, language, audio, and difficulty controls</div>
+  </div>
+</div>
+
+<!-- 9.1 Settings Root -->
+<div class="screen-card">
+  <div class="screen-header">
+    <div>
+      <div class="screen-id">9.1</div>
+      <div class="screen-name">Settings — Time Tab</div>
+      <div class="screen-purpose">Controls daily session time limit, quiet hours (schedule), and difficulty level. Most-used parent controls.</div>
+    </div>
+    <div class="screen-badges"><span class="badge badge-parent">PARENT</span><span class="badge badge-mvp">MVP</span></div>
+  </div>
+  <hr class="screen-divider">
+  <div class="screen-body">
+    <div class="detail-block">
+      <div class="detail-label">Key UI Elements</div>
+      <ul class="elements-list">
+        <li>Tab bar: ⏱ Thời gian / 🌏 Ngôn ngữ / 🔊 Âm thanh</li>
+        <li>Daily limit panel: 5/10/15/20/30 min chips</li>
+        <li>Quiet hours panel: time range + toggle</li>
+        <li>Difficulty panel: Dễ / Vừa / Khó</li>
+        <li>Explanation text below each control</li>
+      </ul>
+    </div>
+    <div class="detail-block">
+      <div class="detail-label">Primary CTA</div>
+      <div class="detail-primary">‹ Back → Parent Dashboard</div>
+      <div class="detail-label" style="margin-top:10px">Secondary CTA</div>
+      <div class="detail-secondary">Switch tabs inline</div>
+      <div class="detail-label" style="margin-top:12px">States</div>
+      <div class="states-row">
+        <span class="state-pill">Time tab</span>
+        <span class="state-pill">Language tab</span>
+        <span class="state-pill">Audio tab</span>
+        <span class="state-pill">Quiet hours ON</span>
+        <span class="state-pill">Quiet hours OFF</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 9.2 Language Tab -->
+<div class="screen-card">
+  <div class="screen-header">
+    <div>
+      <div class="screen-id">9.2</div>
+      <div class="screen-name">Settings — Language Tab</div>
+      <div class="screen-purpose">Sets the audio language for the child's game screens, and the UI language for parent screens.</div>
+    </div>
+    <div class="screen-badges"><span class="badge badge-parent">PARENT</span><span class="badge badge-mvp">MVP</span></div>
+  </div>
+  <hr class="screen-divider">
+  <div class="screen-body">
+    <div class="detail-block">
+      <div class="detail-label">Key UI Elements</div>
+      <ul class="elements-list">
+        <li>Child screen panel: EN / VI / Bilingual radio options</li>
+        <li>Parent screen panel: VI / EN radio options</li>
+        <li>Each option: label, hint subtitle, radio indicator</li>
+      </ul>
+    </div>
+    <div class="detail-block">
+      <div class="detail-label">Primary CTA</div>
+      <div class="detail-primary">‹ Back (auto-saves)</div>
+      <div class="detail-label" style="margin-top:12px">States</div>
+      <div class="states-row">
+        <span class="state-pill">EN selected</span>
+        <span class="state-pill">VI selected</span>
+        <span class="state-pill">Bilingual selected</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 9.3 Audio Tab -->
+<div class="screen-card">
+  <div class="screen-header">
+    <div>
+      <div class="screen-id">9.3</div>
+      <div class="screen-name">Settings — Audio Tab</div>
+      <div class="screen-purpose">Controls SFX, background music, voice guidance, and number-reading voice style.</div>
+    </div>
+    <div class="screen-badges"><span class="badge badge-parent">PARENT</span><span class="badge badge-mvp">MVP</span></div>
+  </div>
+  <hr class="screen-divider">
+  <div class="screen-body">
+    <div class="detail-block">
+      <div class="detail-label">Key UI Elements</div>
+      <ul class="elements-list">
+        <li>Toggle: Sound effects (ON/OFF)</li>
+        <li>Toggle: Soft background music</li>
+        <li>Toggle: Voice guidance</li>
+        <li>Voice style: Friendly / Slow / Adult (3-chip selector)</li>
+      </ul>
+    </div>
+    <div class="detail-block">
+      <div class="detail-label">Primary CTA</div>
+      <div class="detail-primary">‹ Back (auto-saves)</div>
+      <div class="detail-label" style="margin-top:12px">States</div>
+      <div class="states-row">
+        <span class="state-pill">All ON</span>
+        <span class="state-pill">Music OFF</span>
+        <span class="state-pill">All OFF</span>
+        <span class="state-pill">Voice style selected</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 9.4 Profile Settings -->
+<div class="screen-card">
+  <div class="screen-header">
+    <div>
+      <div class="screen-id">9.4</div>
+      <div class="screen-name">Settings — Profile & Security</div>
+      <div class="screen-purpose">Edit child's name/age/color. Reset all progress (with confirmation modal). Future: multi-profile support.</div>
+    </div>
+    <div class="screen-badges"><span class="badge badge-parent">PARENT</span><span class="badge badge-mvp">MVP</span></div>
+  </div>
+  <hr class="screen-divider">
+  <div class="screen-body">
+    <div class="detail-block">
+      <div class="detail-label">Key UI Elements</div>
+      <ul class="elements-list">
+        <li>Child profile card (editable)</li>
+        <li>Edit name / age / mascot color</li>
+        <li>Reset all progress (destructive, red)</li>
+        <li>App version</li>
+      </ul>
+    </div>
+    <div class="detail-block">
+      <div class="detail-label">Primary CTA</div>
+      <div class="detail-primary">‹ Back (auto-saves)</div>
+      <div class="detail-label" style="margin-top:10px">Secondary CTA</div>
+      <div class="detail-secondary">Reset progress → Confirmation modal</div>
+      <div class="detail-label" style="margin-top:12px">States</div>
+      <div class="states-row">
+        <span class="state-pill">View mode</span>
+        <span class="state-pill">Edit mode</span>
+        <span class="state-pill">Reset confirmation</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ -->
+<!-- AREA 10: UTILITY STATES -->
+<!-- ═══════════════════════════════ -->
+<h2 id="area10">Feature Area 10 · Utility States</h2>
+<div class="area-header" style="background:var(--c10-bg); color:var(--c10-ink);">
+  <div class="area-num">10</div>
+  <div>
+    <div class="area-title">Utility States</div>
+    <div class="area-sub">Modals, empty states, errors, and edge-case screens</div>
+  </div>
+</div>
+
+<!-- 10.1 Exit Game Modal -->
+<div class="screen-card">
+  <div class="screen-header">
+    <div>
+      <div class="screen-id">10.1</div>
+      <div class="screen-name">Exit Game Confirmation Modal</div>
+      <div class="screen-purpose">Shown when child taps ✕ mid-game. Warns that round progress won't be saved. Prevents accidental exit.</div>
+    </div>
+    <div class="screen-badges"><span class="badge badge-child">CHILD</span><span class="badge badge-mvp">MVP</span></div>
+  </div>
+  <hr class="screen-divider">
+  <div class="screen-body">
+    <div class="detail-block">
+      <div class="detail-label">Key UI Elements</div>
+      <ul class="elements-list">
+        <li>Bottom sheet or center modal</li>
+        <li>"Leave this game?" heading</li>
+        <li>"Progress for this round won't be saved."</li>
+        <li>Leave button (muted)</li>
+        <li>Keep playing button (primary)</li>
+      </ul>
+    </div>
+    <div class="detail-block">
+      <div class="detail-label">Primary CTA</div>
+      <div class="detail-primary">Keep playing → dismiss modal</div>
+      <div class="detail-label" style="margin-top:10px">Secondary CTA</div>
+      <div class="detail-secondary">Leave → Level List</div>
+      <div class="detail-label" style="margin-top:12px">States</div>
+      <div class="states-row">
+        <span class="state-pill">Open</span>
+        <span class="state-pill">Dismissed</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 10.2 Reset Progress Modal -->
+<div class="screen-card">
+  <div class="screen-header">
+    <div>
+      <div class="screen-id">10.2</div>
+      <div class="screen-name">Reset Progress Confirmation</div>
+      <div class="screen-purpose">Destructive action warning in Parent Settings. Lists what will be lost. Requires explicit confirmation.</div>
+    </div>
+    <div class="screen-badges"><span class="badge badge-parent">PARENT</span><span class="badge badge-mvp">MVP</span></div>
+  </div>
+  <hr class="screen-divider">
+  <div class="screen-body">
+    <div class="detail-block">
+      <div class="detail-label">Key UI Elements</div>
+      <ul class="elements-list">
+        <li>"Reset all progress?" heading</li>
+        <li>"Stars, stickers, and streak will be cleared."</li>
+        <li>"This can't be undone."</li>
+        <li>Reset button (red/destructive)</li>
+        <li>Keep data button (primary)</li>
+      </ul>
+    </div>
+    <div class="detail-block">
+      <div class="detail-label">Primary CTA</div>
+      <div class="detail-primary">Keep data → dismiss</div>
+      <div class="detail-label" style="margin-top:10px">Secondary CTA</div>
+      <div class="detail-secondary">Reset → clears all data, reloads</div>
+    </div>
+  </div>
+</div>
+
+<!-- 10.3 Offline / No Connection -->
+<div class="screen-card">
+  <div class="screen-header">
+    <div>
+      <div class="screen-id">10.3</div>
+      <div class="screen-name">Offline / No Connection State</div>
+      <div class="screen-purpose">Inline banner or screen shown when device goes offline. All gameplay works offline; sync resumes when back.</div>
+    </div>
+    <div class="screen-badges"><span class="badge badge-both">BOTH</span><span class="badge badge-mvp">MVP</span></div>
+  </div>
+  <hr class="screen-divider">
+  <div class="screen-body">
+    <div class="detail-block">
+      <div class="detail-label">Key UI Elements</div>
+      <ul class="elements-list">
+        <li>Small top banner (non-blocking)</li>
+        <li>"Playing offline" indicator</li>
+        <li>Data saves locally, syncs when reconnected</li>
+      </ul>
+    </div>
+    <div class="detail-block">
+      <div class="detail-label">Primary CTA</div>
+      <div class="detail-primary">—  (auto-dismisses on reconnect)</div>
+      <div class="detail-label" style="margin-top:12px">States</div>
+      <div class="states-row">
+        <span class="state-pill">Offline</span>
+        <span class="state-pill">Reconnecting</span>
+        <span class="state-pill">Synced</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 10.4 Empty State — No Progress Yet -->
+<div class="screen-card">
+  <div class="screen-header">
+    <div>
+      <div class="screen-id">10.4</div>
+      <div class="screen-name">Empty State — Parent Dashboard (New User)</div>
+      <div class="screen-purpose">Shown on first parent dashboard visit before any games have been played. Encouraging, not data-empty.</div>
+    </div>
+    <div class="screen-badges"><span class="badge badge-parent">PARENT</span><span class="badge badge-mvp">MVP</span></div>
+  </div>
+  <hr class="screen-divider">
+  <div class="screen-body">
+    <div class="detail-block">
+      <div class="detail-label">Key UI Elements</div>
+      <ul class="elements-list">
+        <li>Bắp mini avatar (large, happy)</li>
+        <li>"Ready to start the adventure!" heading</li>
+        <li>Prompt: "Let {name} play their first game to see progress here."</li>
+        <li>Placeholder skill bars (empty)</li>
+      </ul>
+    </div>
+    <div class="detail-block">
+      <div class="detail-label">Primary CTA</div>
+      <div class="detail-primary">✕ Back to game → Home</div>
+    </div>
+  </div>
+</div>
+
+<!-- 10.5 Notification Permission -->
+<div class="screen-card">
+  <div class="screen-header">
+    <div>
+      <div class="screen-id">10.5</div>
+      <div class="screen-name">Notification Permission Request</div>
+      <div class="screen-purpose">Asks parent for permission to send daily play reminders. Shown after first successful parent gate pass.</div>
+    </div>
+    <div class="screen-badges"><span class="badge badge-parent">PARENT</span><span class="badge badge-v2">V2</span></div>
+  </div>
+  <hr class="screen-divider">
+  <div class="screen-body">
+    <div class="detail-block">
+      <div class="detail-label">Key UI Elements</div>
+      <ul class="elements-list">
+        <li>Small illustration or icon (bell)</li>
+        <li>"Stay on streak!" heading</li>
+        <li>"We'll remind you when it's time to play."</li>
+        <li>Allow / Not now buttons</li>
+      </ul>
+    </div>
+    <div class="detail-block">
+      <div class="detail-label">Primary CTA</div>
+      <div class="detail-primary">Allow → system permission prompt</div>
+      <div class="detail-label" style="margin-top:10px">Secondary CTA</div>
+      <div class="detail-secondary">Not now → dismiss (ask later)</div>
+    </div>
+  </div>
+</div>
+
+<div style="text-align:center; padding: 48px 0 24px; font-size: 12px; color: var(--ink-faint);">
+  Bắp Number Adventure · MVP Screen List · 33 screens · v1.0 · April 2026
+</div>
+</main>
+</div>
+</body>
+</html>

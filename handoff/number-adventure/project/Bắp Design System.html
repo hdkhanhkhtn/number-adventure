@@ -1,0 +1,958 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bắp Number Adventure — Design System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Baloo+2:wght@500;600;700;800&family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body { font-family: 'Fredoka', ui-rounded, sans-serif; background: #E8E0D3; -webkit-font-smoothing: antialiased; overflow: hidden; }
+button { cursor: pointer; font-family: inherit; border: none; background: none; }
+@keyframes bobble { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-5px)} }
+@keyframes pop-in { 0%{transform:scale(0.6);opacity:0} 60%{transform:scale(1.07);opacity:1} 100%{transform:scale(1)} }
+@keyframes wiggle { 0%,100%{transform:rotate(0)} 25%{transform:rotate(-4deg)} 75%{transform:rotate(4deg)} }
+@keyframes pulse-soft { 0%,100%{transform:scale(1)} 50%{transform:scale(1.04)} }
+@keyframes sparkle { 0%,100%{transform:scale(.6) rotate(0);opacity:.4} 50%{transform:scale(1.2) rotate(180deg);opacity:1} }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script type="text/babel" src="design-canvas.jsx"></script>
+
+<script type="text/babel">
+const { useState, useEffect } = React;
+
+/* ─── TOKENS ──────────────────────────────────────────────── */
+const T = {
+  // Palette
+  cream:     '#FFF8EC', cream2: '#FFEFD3', parchment: '#FDE9C2',
+  sage:      '#A8D5A2', sageInk: '#3E7B4A', forest: '#2E5A3A',
+  sky:       '#B8DEEF', skyInk: '#2E6F93',
+  lavender:  '#D9C7F0', lavInk: '#6B4FA0',
+  sun:       '#FFD36E', sunInk: '#B87C0E',
+  coral:     '#FFA48C', coralInk: '#C14A2A',
+  berry:     '#E6779E', berryInk: '#A23665',
+  ink:       '#2D3A2E', inkSoft: '#6B7A6C', inkFaint: '#A9B4A8',
+  surface:   '#FFFDF7', card: '#FFFFFF',
+  correct:   '#5FB36A', correctBg: '#EAF7EA',
+  miss:      '#F2A97A', missBg:  '#FFF0E6',
+  error:     '#E85D5D', errorBg: '#FEECEC',
+  // Radii
+  rSm: 12, rMd: 20, rLg: 28, rXl: 36,
+  // Spacing
+  sp4: 4, sp8: 8, sp12: 12, sp16: 16, sp20: 20, sp24: 24, sp32: 32, sp48: 48,
+};
+
+const KID   = "'Fredoka', 'Baloo 2', ui-rounded, sans-serif";
+const PARENT = "'Be Vietnam Pro', system-ui, sans-serif";
+
+/* ─── MINI MASCOT ──────────────────────────────────────────── */
+function Bap({ size=80, mood='happy', color='sun' }) {
+  const body={ sun:'#FFD36E', sage:'#A8D5A2', coral:'#FFA48C', lavender:'#D9C7F0', sky:'#B8DEEF' }[color]||'#FFD36E';
+  const dark={ sun:'#E8B23F', sage:'#7FB983', coral:'#E2815E', lavender:'#B39DD1', sky:'#88BED4' }[color]||'#E8B23F';
+  const eye = {
+    happy: <><ellipse cx="0" cy="0" rx="5.5" ry="6.5" fill="#2D3A2E"/><ellipse cx="-1.5" cy="-2" rx="1.8" ry="2.2" fill="#fff"/></>,
+    wink:  <path d="M-5 0 Q0-4 5 0" stroke="#2D3A2E" strokeWidth="2.5" fill="none" strokeLinecap="round"/>,
+    celebrate:<path d="M-5 2 Q0-5 5 2" stroke="#2D3A2E" strokeWidth="2.5" fill="none" strokeLinecap="round"/>,
+    think: <ellipse cx="0" cy="0" rx="4.5" ry="4.5" fill="#2D3A2E"/>,
+    sleep: <path d="M-5 0 Q0 4 5 0" stroke="#2D3A2E" strokeWidth="2.5" fill="none" strokeLinecap="round"/>,
+    worried: <ellipse cx="0" cy="1" rx="4.5" ry="4" fill="#2D3A2E"/>,
+  };
+  const mouth = {
+    happy: <path d="M35 82 Q50 96 65 82" stroke="#2D3A2E" strokeWidth="3" fill="#C14A2A" strokeLinecap="round"/>,
+    wink: <path d="M40 83 Q50 90 60 83" stroke="#2D3A2E" strokeWidth="3" fill="#C14A2A" strokeLinecap="round"/>,
+    celebrate: <path d="M32 79 Q50 102 68 79 Q50 93 32 79" fill="#C14A2A" stroke="#2D3A2E" strokeWidth="2.5"/>,
+    think: <ellipse cx="50" cy="87" rx="4" ry="2.5" fill="#2D3A2E"/>,
+    sleep: <path d="M42 87 Q50 91 58 87" stroke="#2D3A2E" strokeWidth="2.5" fill="none" strokeLinecap="round"/>,
+    worried: <path d="M38 89 Q50 81 62 89" stroke="#2D3A2E" strokeWidth="3" fill="none" strokeLinecap="round"/>,
+  };
+  return (
+    <svg viewBox="0 0 120 140" width={size} height={size*140/120}>
+      <ellipse cx="38" cy="17" rx="13" ry="19" fill="#7FB983" transform="rotate(-30 38 17)"/>
+      <ellipse cx="38" cy="17" rx="6" ry="15" fill="#A8D5A2" transform="rotate(-30 38 17)"/>
+      <ellipse cx="76" cy="13" rx="15" ry="21" fill="#5FA36A" transform="rotate(25 76 13)"/>
+      <ellipse cx="76" cy="13" rx="7" ry="17" fill="#A8D5A2" transform="rotate(25 76 13)"/>
+      <ellipse cx="60" cy="126" rx="36" ry="5.5" fill="rgba(46,90,58,0.15)"/>
+      <path d="M60 28 C92 28 100 56 100 82 C100 110 82 126 60 126 C38 126 20 110 20 82 C20 56 28 28 60 28Z" fill={body} stroke="#2D3A2E" strokeWidth="3"/>
+      <g opacity=".3" stroke={dark} strokeWidth="1.8" fill="none" strokeLinecap="round">
+        <path d="M30 60 Q60 54 90 60"/><path d="M28 78 Q60 72 92 78"/><path d="M30 96 Q60 102 90 96"/>
+      </g>
+      <circle cx="30" cy="80" r="7" fill="#FFA48C" opacity=".7"/>
+      <circle cx="90" cy="80" r="7" fill="#FFA48C" opacity=".7"/>
+      <g transform="translate(42 64)">{eye[mood]||eye.happy}</g>
+      <g transform="translate(78 64)">{eye[mood]||eye.happy}</g>
+      {mouth[mood]||mouth.happy}
+    </svg>
+  );
+}
+
+/* ─── SHARED DS COMPONENTS ─────────────────────────────────── */
+function Swatch({ color, name, hex, dark=false }) {
+  return (
+    <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:6 }}>
+      <div style={{
+        width:72, height:72, borderRadius:20, background:color,
+        border:'3px solid #2D3A2E', boxShadow:'0 4px 0 rgba(46,90,58,0.2)',
+      }}/>
+      <div style={{ fontSize:12, fontWeight:700, color:'#2D3A2E', textAlign:'center' }}>{name}</div>
+      <div style={{ fontSize:10, color:T.inkSoft, fontFamily:'monospace' }}>{hex}</div>
+    </div>
+  );
+}
+
+function DSButton({ children, color='sage', size='lg', icon, disabled, outline }) {
+  const colors = {
+    sage:    { bg:'#7FC089', sh:'#4D8B58', ink:'#1F4A28' },
+    sun:     { bg:'#FFC94A', sh:'#C89220', ink:'#5E3A00' },
+    coral:   { bg:'#FF8F74', sh:'#C8614A', ink:'#6B1F0A' },
+    sky:     { bg:'#8AC4DE', sh:'#5A96B1', ink:'#1F4A61' },
+    lavender:{ bg:'#B9A4E0', sh:'#8872B4', ink:'#3D256D' },
+    cream:   { bg:'#FFF4DE', sh:'#D9C38A', ink:'#4A3B1D' },
+  };
+  const c = colors[color];
+  const sizes = { sm:{h:44,fs:15,px:16,r:14}, md:{h:52,fs:18,px:20,r:18}, lg:{h:64,fs:22,px:26,r:22}, xl:{h:76,fs:26,px:32,r:26} };
+  const s = sizes[size];
+  return (
+    <div style={{
+      height:s.h, padding:`0 ${s.px}px`, borderRadius:s.r,
+      background: disabled ? '#E0D9CC' : outline ? 'transparent' : c.bg,
+      color: disabled ? T.inkFaint : c.ink,
+      border: outline ? `3px solid ${c.bg}` : '3px solid #2D3A2E',
+      boxShadow: disabled ? 'none' : outline ? 'none' : `0 4px 0 ${c.sh}`,
+      display:'inline-flex', alignItems:'center', justifyContent:'center', gap:8,
+      fontFamily:KID, fontWeight:700, fontSize:s.fs,
+      opacity: disabled ? 0.55 : 1,
+      userSelect:'none',
+    }}>
+      {icon && <span style={{fontSize:s.fs}}>{icon}</span>}
+      {children}
+    </div>
+  );
+}
+
+function DSNumTile({ n, state='idle', size='md', color='cream' }) {
+  const sizes = { sm:{w:56,h:64,fs:30,r:16}, md:{w:80,h:92,fs:46,r:22}, lg:{w:108,h:122,fs:62,r:28} };
+  const colors = {
+    cream:    { bg:'#FFF8EC', ink:'#3A2D15', sh:'#D9C38A' },
+    sun:      { bg:'#FFD36E', ink:'#7A4E0E', sh:'#C79528' },
+    sage:     { bg:'#A8D5A2', ink:'#2F6A3C', sh:'#6FA876' },
+    sky:      { bg:'#B8DEEF', ink:'#2E6F93', sh:'#7DB0C8' },
+    lavender: { bg:'#D9C7F0', ink:'#5D3F94', sh:'#A58AD0' },
+    coral:    { bg:'#FFA48C', ink:'#A33A1D', sh:'#D67560' },
+  };
+  const stateStyle = {
+    idle: {},
+    correct: { background:'#C4EBB9', boxShadow:'0 4px 0 #6FB05F' },
+    wrong:   { background:'#FFD6C6', boxShadow:'0 2px 0 #E88866' },
+    disabled:{ opacity:0.35 },
+    selected:{ background:'#FFD36E', boxShadow:'0 4px 0 #C79528', border:'3px solid #C79528' },
+  };
+  const c = colors[color];
+  const s = sizes[size];
+  return (
+    <div style={{
+      width:s.w, height:s.h, borderRadius:s.r,
+      background:c.bg, color:c.ink,
+      border:'3px solid #2D3A2E',
+      boxShadow:`0 4px 0 ${c.sh}, 0 8px 14px rgba(46,90,58,0.1)`,
+      display:'flex', alignItems:'center', justifyContent:'center',
+      fontFamily:KID, fontWeight:700, fontSize:s.fs, lineHeight:1,
+      ...stateStyle[state],
+    }}>{n}</div>
+  );
+}
+
+function DSProgressBar({ value=0.6, color='#7FC089', height=14, label }) {
+  return (
+    <div>
+      {label && <div style={{fontSize:12,fontWeight:700,color:T.inkSoft,marginBottom:5}}>{label}</div>}
+      <div style={{height,borderRadius:height,background:'rgba(46,90,58,0.12)',border:'2px solid #2D3A2E',overflow:'hidden'}}>
+        <div style={{
+          height:'100%', width:`${value*100}%`, borderRadius:height,
+          background:`linear-gradient(180deg,${color} 0%,${color} 55%,rgba(0,0,0,0.08) 100%)`,
+          boxShadow:'inset 0 -2px 0 rgba(0,0,0,0.1),inset 0 2px 0 rgba(255,255,255,0.35)',
+        }}/>
+      </div>
+    </div>
+  );
+}
+
+function StarBadge({ stars=3, size=26 }) {
+  return (
+    <div style={{display:'flex',gap:4}}>
+      {[0,1,2].map(i=>(
+        <span key={i} style={{fontSize:size,filter:i<stars?'drop-shadow(0 2px 0 #B87C0E)':'none',opacity:i<stars?1:0.22}}>
+          {i<stars?'⭐':'☆'}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+function DSCard({ children, style={}, color='#FFFFFF', shadow=true }) {
+  return (
+    <div style={{
+      background:color, borderRadius:24, border:'2px solid rgba(46,90,58,0.12)',
+      boxShadow:shadow?'0 2px 0 rgba(46,90,58,0.08),0 10px 24px rgba(46,90,58,0.10)':'none',
+      padding:16, ...style,
+    }}>{children}</div>
+  );
+}
+
+function Chip({ label, color='sun' }) {
+  const bg = { sun:'#FFE6A8', sage:'#C4E5BE', sky:'#D2E9F3', coral:'#FFCBBA', lavender:'#EAE0F8' }[color];
+  const ink = { sun:'#7A4E0E', sage:'#2F6A3C', sky:'#2E6F93', coral:'#A33A1D', lavender:'#5D3F94' }[color];
+  return (
+    <div style={{ display:'inline-flex', alignItems:'center', padding:'5px 12px', borderRadius:999, background:bg, color:ink, fontWeight:700, fontSize:13, border:'1.5px solid rgba(46,90,58,0.15)' }}>{label}</div>
+  );
+}
+
+function IconCircle({ icon, color='cream', size=52 }) {
+  const bg = { cream:'#FFF8EC', sage:'#A8D5A2', sun:'#FFD36E', coral:'#FFA48C', sky:'#B8DEEF', lavender:'#D9C7F0' }[color];
+  const sh = { cream:'#D9C38A', sage:'#6FA876', sun:'#C79528', coral:'#D67560', sky:'#7DB0C8', lavender:'#A58AD0' }[color];
+  return (
+    <div style={{
+      width:size, height:size, borderRadius:'50%', background:bg,
+      border:'3px solid #2D3A2E', boxShadow:`0 4px 0 ${sh}`,
+      display:'flex', alignItems:'center', justifyContent:'center', fontSize:size*0.42,
+    }}>{icon}</div>
+  );
+}
+
+function SpeechBubble({ children, direction='bottom', color='#FFF8EC', style={} }) {
+  const tailBottom = direction==='bottom';
+  return (
+    <div style={{ position:'relative', display:'inline-block', ...style }}>
+      <div style={{
+        background:color, borderRadius:20, border:'2.5px solid #2D3A2E',
+        boxShadow:'0 4px 0 rgba(46,90,58,0.2)', padding:'10px 16px',
+        fontFamily:KID, fontSize:15, fontWeight:600, color:'#2D3A2E', lineHeight:1.4,
+      }}>{children}</div>
+      {tailBottom && (
+        <div style={{
+          position:'absolute', bottom:-14, left:'50%', transform:'translateX(-50%)',
+          width:0, height:0,
+          borderLeft:'10px solid transparent', borderRight:'10px solid transparent',
+          borderTop:'14px solid #2D3A2E',
+        }}/>
+      )}
+      {tailBottom && (
+        <div style={{
+          position:'absolute', bottom:-10, left:'50%', transform:'translateX(-50%)',
+          width:0, height:0,
+          borderLeft:'8px solid transparent', borderRight:'8px solid transparent',
+          borderTop:`12px solid ${color}`,
+        }}/>
+      )}
+    </div>
+  );
+}
+
+/* ─── ARTBOARD CONTENT BLOCKS ──────────────────────────────── */
+// 1. BRAND COLORS
+function ABColors() {
+  const palette = [
+    { color:T.sun, name:'Sun', hex:'#FFD36E' },
+    { color:T.sage, name:'Sage', hex:'#A8D5A2' },
+    { color:T.sky, name:'Sky', hex:'#B8DEEF' },
+    { color:T.lavender, name:'Lavender', hex:'#D9C7F0' },
+    { color:T.coral, name:'Coral', hex:'#FFA48C' },
+    { color:T.berry, name:'Berry', hex:'#E6779E' },
+    { color:T.cream, name:'Cream', hex:'#FFF8EC' },
+    { color:T.forest, name:'Forest', hex:'#2E5A3A' },
+  ];
+  return (
+    <div style={{ padding:24, background:'#FFFDF7', minHeight:200 }}>
+      <Label>Brand Palette</Label>
+      <div style={{ display:'flex', flexWrap:'wrap', gap:16, marginTop:14 }}>
+        {palette.map(s=><Swatch key={s.name} {...s}/>)}
+      </div>
+    </div>
+  );
+}
+
+function ABFeedback() {
+  return (
+    <div style={{ padding:24, background:'#FFFDF7' }}>
+      <Label>Feedback Colors</Label>
+      <div style={{ display:'flex', gap:12, marginTop:14, flexWrap:'wrap' }}>
+        {[
+          {c:T.correct,b:T.correctBg,n:'Correct',h:'#5FB36A'},
+          {c:T.miss,b:T.missBg,n:'Try Again',h:'#F2A97A'},
+          {c:T.error,b:T.errorBg,n:'Error',h:'#E85D5D'},
+          {c:'#A8D5A2',b:'#F0F8EE',n:'Neutral',h:'#A8D5A2'},
+          {c:'#C4C0B3',b:'#EEECE5',n:'Disabled',h:'#C4C0B3'},
+        ].map(f=>(
+          <div key={f.n} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:8 }}>
+            <div style={{ width:56,height:56,borderRadius:16,background:f.b,border:`3px solid ${f.c}`,display:'flex',alignItems:'center',justifyContent:'center' }}>
+              <div style={{ width:22,height:22,borderRadius:'50%',background:f.c }}/>
+            </div>
+            <div style={{ fontSize:12,fontWeight:700,color:'#2D3A2E' }}>{f.n}</div>
+            <div style={{ fontSize:10,color:T.inkSoft,fontFamily:'monospace' }}>{f.h}</div>
+          </div>
+        ))}
+      </div>
+      <div style={{ marginTop:20, display:'flex', flexDirection:'column', gap:8 }}>
+        <Label sub>Background tokens</Label>
+        {[
+          { name:'surface', val:'#FFFDF7' },
+          { name:'card', val:'#FFFFFF' },
+          { name:'cream-2', val:'#FFEFD3' },
+          { name:'parchment', val:'#FDE9C2' },
+        ].map(t=>(
+          <div key={t.name} style={{ display:'flex', alignItems:'center', gap:10 }}>
+            <div style={{ width:28,height:28,borderRadius:8,background:t.val,border:'2px solid rgba(46,90,58,0.18)' }}/>
+            <div style={{ fontFamily:'monospace',fontSize:12,color:T.inkSoft }}>{t.name}</div>
+            <div style={{ fontFamily:'monospace',fontSize:12,color:T.inkFaint }}>{t.val}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// 2. TYPOGRAPHY
+function ABType() {
+  return (
+    <div style={{ padding:24, background:'#FFFDF7', display:'flex', flexDirection:'column', gap:16 }}>
+      <Label>Kid Typography — Fredoka</Label>
+      {[
+        { label:'Game Title / Reward', size:48, weight:700, text:'You did it!' },
+        { label:'Screen Heading', size:32, weight:700, text:'Number Forest' },
+        { label:'Instruction', size:22, weight:600, text:'Tap what you hear' },
+        { label:'Button Label', size:20, weight:700, text:'Play Now' },
+        { label:'Number (main)', size:64, weight:700, text:'42' },
+        { label:'Number (secondary)', size:32, weight:700, text:'100' },
+        { label:'Score / count', size:16, weight:700, text:'⭐ 18 / 40' },
+      ].map(t=>(
+        <div key={t.label} style={{ display:'flex', alignItems:'baseline', gap:14, borderBottom:'1px solid rgba(46,90,58,0.07)', paddingBottom:10 }}>
+          <div style={{ fontFamily:KID, fontWeight:t.weight, fontSize:t.size, color:'#2D3A2E', lineHeight:1.1, minWidth:180 }}>{t.text}</div>
+          <div style={{ fontSize:11, color:T.inkSoft, fontFamily:'monospace', flexShrink:0 }}>{t.size}px / {t.weight} / Fredoka</div>
+          <div style={{ fontSize:11, color:T.inkFaint, fontStyle:'italic' }}>{t.label}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function ABParentType() {
+  return (
+    <div style={{ padding:24, background:'#F5F3ED', fontFamily:PARENT, display:'flex', flexDirection:'column', gap:14 }}>
+      <div style={{ fontFamily:KID, fontWeight:700, fontSize:13, color:T.inkSoft, letterSpacing:.5, marginBottom:4 }}>PARENT TYPOGRAPHY — BE VIETNAM PRO</div>
+      {[
+        { label:'Dashboard title', size:22, weight:700, text:'Bảng điều khiển' },
+        { label:'Section heading', size:17, weight:700, text:'Hoạt động tuần này' },
+        { label:'Body', size:15, weight:400, text:'Bé đã tiến bộ rõ ở nhận biết số 1–20' },
+        { label:'Label / caption', size:13, weight:600, text:'Thời gian chơi · Accuracy' },
+        { label:'Micro / tag', size:11, weight:700, text:'ĐANG HỌC · IN PROGRESS' },
+      ].map(t=>(
+        <div key={t.label} style={{ borderBottom:'1px solid rgba(0,0,0,0.06)', paddingBottom:10 }}>
+          <div style={{ fontSize:t.size, fontWeight:t.weight, color:'#1F2A1F', lineHeight:1.3 }}>{t.text}</div>
+          <div style={{ fontSize:11, color:'#9AA69A', marginTop:4, fontFamily:'monospace' }}>{t.size}px / {t.weight} / Be Vietnam Pro · {t.label}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// 3. MASCOT
+function ABMascotMoods() {
+  const moods = [
+    { m:'happy', label:'Default / Guide', sub:'Home screen, level intro' },
+    { m:'celebrate', label:'Celebrate', sub:'Correct answer, reward' },
+    { m:'wink', label:'Encourage', sub:'Start game, hints' },
+    { m:'think', label:'Thinking', sub:'Loading, between rounds' },
+    { m:'sleep', label:'Rest', sub:'Time limit reached' },
+    { m:'worried', label:'Gentle miss', sub:'Wrong answer (never punishing)' },
+  ];
+  return (
+    <div style={{ padding:24, background:'#FFFDF7' }}>
+      <Label>Mascot Moods</Label>
+      <div style={{ display:'flex', flexWrap:'wrap', gap:20, marginTop:14 }}>
+        {moods.map(({ m, label, sub })=>(
+          <div key={m} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:6, width:100 }}>
+            <Bap size={80} mood={m}/>
+            <div style={{ fontSize:13, fontWeight:700, color:'#2D3A2E', textAlign:'center' }}>{label}</div>
+            <div style={{ fontSize:11, color:T.inkSoft, textAlign:'center', lineHeight:1.3 }}>{sub}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ABMascotColors() {
+  const colors = ['sun','sage','coral','lavender','sky'];
+  return (
+    <div style={{ padding:24, background:'#FFFDF7' }}>
+      <Label>Mascot Color Variants</Label>
+      <div style={{ display:'flex', gap:16, marginTop:14 }}>
+        {colors.map(c=>(
+          <div key={c} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:6 }}>
+            <Bap size={72} mood="happy" color={c}/>
+            <div style={{ fontSize:12, fontWeight:700, color:'#2D3A2E', textTransform:'capitalize' }}>{c}</div>
+          </div>
+        ))}
+      </div>
+      <div style={{ marginTop:20 }}>
+        <Label sub>Speech Bubble</Label>
+        <div style={{ marginTop:10, display:'flex', alignItems:'flex-end', gap:16 }}>
+          <Bap size={70} mood="wink"/>
+          <div style={{ marginBottom:16 }}>
+            <SpeechBubble>Great job! 🌟 Tap the number you hear!</SpeechBubble>
+          </div>
+        </div>
+      </div>
+      <div style={{ marginTop:18, padding:12, borderRadius:16, background:T.cream2, border:'2px dashed rgba(46,90,58,0.18)' }}>
+        <div style={{ fontSize:12, fontWeight:700, color:T.sageInk, marginBottom:8 }}>📐 Placement rules</div>
+        {['Positioned bottom-right on home screen, bobbing gently','Centered above instruction text during gameplay','Full-screen celebrate pose on reward screen','Small avatar (36px) in navbar / parent gate chips','Never covers main interaction area during games'].map(r=>(
+          <div key={r} style={{ display:'flex', gap:8, fontSize:12, color:T.ink, marginBottom:4 }}>
+            <span style={{ color:T.sageInk }}>▸</span> {r}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// 4. BUTTONS
+function ABButtons() {
+  return (
+    <div style={{ padding:24, background:'#FFFDF7', display:'flex', flexDirection:'column', gap:20 }}>
+      <Label>Buttons</Label>
+      <div>
+        <Label sub>Primary — action forward</Label>
+        <div style={{ display:'flex', gap:12, marginTop:10, flexWrap:'wrap' }}>
+          <DSButton color="sage" size="xl" icon="▶">Play!</DSButton>
+          <DSButton color="sage" size="lg" icon="▶">Play</DSButton>
+          <DSButton color="sage" size="md">Next</DSButton>
+          <DSButton color="sage" size="sm">Go</DSButton>
+        </div>
+      </div>
+      <div>
+        <Label sub>Color variants</Label>
+        <div style={{ display:'flex', gap:10, marginTop:10, flexWrap:'wrap' }}>
+          {['sage','sun','coral','sky','lavender'].map(c=>(
+            <DSButton key={c} color={c} size="md">{c.charAt(0).toUpperCase()+c.slice(1)}</DSButton>
+          ))}
+        </div>
+      </div>
+      <div>
+        <Label sub>States</Label>
+        <div style={{ display:'flex', gap:10, marginTop:10 }}>
+          <DSButton color="sage" size="md">Default</DSButton>
+          <DSButton color="sage" size="md" outline>Outline</DSButton>
+          <DSButton color="sage" size="md" disabled>Disabled</DSButton>
+        </div>
+      </div>
+      <div>
+        <Label sub>Icon buttons (round)</Label>
+        <div style={{ display:'flex', gap:12, marginTop:10 }}>
+          {[['🔊','sky'],['‹','cream'],['▶','sage'],['✕','coral'],['👤','cream'],['⭐','sun']].map(([i,c])=>(
+            <IconCircle key={i} icon={i} color={c} size={52}/>
+          ))}
+        </div>
+      </div>
+      <div>
+        <Label sub>Touch target minimum: 44px (kids: 64px recommended)</Label>
+        <div style={{ display:'flex', gap:8, marginTop:8, alignItems:'center' }}>
+          <div style={{ width:44, height:44, borderRadius:12, background:T.sky, border:'2px dashed rgba(46,90,58,0.4)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:10, color:T.skyInk, fontWeight:700 }}>44px</div>
+          <div style={{ width:64, height:64, borderRadius:16, background:T.sage, border:'2px dashed rgba(46,90,58,0.4)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:10, color:T.sageInk, fontWeight:700 }}>64px<br/>Kids</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// 5. NUM TILES
+function ABTiles() {
+  return (
+    <div style={{ padding:24, background:'#FFFDF7', display:'flex', flexDirection:'column', gap:20 }}>
+      <Label>Number Tiles</Label>
+      <div>
+        <Label sub>Sizes</Label>
+        <div style={{ display:'flex', gap:14, marginTop:10, alignItems:'flex-end' }}>
+          {[['sm',56],['md',80],['lg',108]].map(([s,h])=>(
+            <div key={s} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:6 }}>
+              <DSNumTile n="7" size={s} color="sun"/>
+              <div style={{ fontSize:11, color:T.inkSoft, fontFamily:'monospace' }}>{s} / {h}px</div>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div>
+        <Label sub>Color variants</Label>
+        <div style={{ display:'flex', gap:10, marginTop:10, flexWrap:'wrap' }}>
+          {['cream','sun','sage','sky','lavender','coral'].map(c=>(
+            <DSNumTile key={c} n="3" size="sm" color={c}/>
+          ))}
+        </div>
+      </div>
+      <div>
+        <Label sub>Answer states</Label>
+        <div style={{ display:'flex', gap:12, marginTop:10 }}>
+          <div style={{ textAlign:'center' }}><DSNumTile n="8" size="md" color="cream" state="idle"/><div style={{ fontSize:11,color:T.inkSoft,marginTop:6 }}>idle</div></div>
+          <div style={{ textAlign:'center' }}><DSNumTile n="8" size="md" state="selected"/><div style={{ fontSize:11,color:T.inkSoft,marginTop:6 }}>selected</div></div>
+          <div style={{ textAlign:'center' }}><DSNumTile n="8" size="md" state="correct"/><div style={{ fontSize:11,color:T.inkSoft,marginTop:6 }}>correct ✓</div></div>
+          <div style={{ textAlign:'center' }}><DSNumTile n="8" size="md" state="wrong"/><div style={{ fontSize:11,color:T.inkSoft,marginTop:6 }}>wrong ✗</div></div>
+          <div style={{ textAlign:'center' }}><DSNumTile n="8" size="md" state="disabled"/><div style={{ fontSize:11,color:T.inkSoft,marginTop:6 }}>disabled</div></div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// 6. PROGRESS + REWARDS
+function ABProgress() {
+  return (
+    <div style={{ padding:24, background:'#FFFDF7', display:'flex', flexDirection:'column', gap:18 }}>
+      <Label>Progress Bars</Label>
+      <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
+        <DSProgressBar value={0.9} color="#7FC089" label="Nhận biết số 1–20 · 90%"/>
+        <DSProgressBar value={0.55} color="#FFC94A" label="Số chục và trăm · 55%"/>
+        <DSProgressBar value={0.25} color="#8AC4DE" label="Số chẵn / lẻ · 25%"/>
+        <DSProgressBar value={0.1} color="#D9C7F0" label="Cộng / Trừ cơ bản · 10%" height={8}/>
+      </div>
+      <Label>Star / Badge System</Label>
+      <div style={{ display:'flex', gap:16, marginTop:10 }}>
+        {[1,2,3].map(v=>(
+          <div key={v} style={{ textAlign:'center' }}>
+            <StarBadge stars={v} size={28}/>
+            <div style={{ fontSize:12, color:T.inkSoft, marginTop:6 }}>{v} star{v>1?'s':''}</div>
+          </div>
+        ))}
+      </div>
+      <Label>Reward Badge</Label>
+      <div style={{ display:'flex', gap:10, marginTop:8 }}>
+        {[['🌟','First Star!','sun'],['🌈','3 Days!','sky'],['🦋','Bug Catcher','lavender'],['🏆','World 1!','sun'],['🔥','3 Streak','coral']].map(([e,n,c])=>(
+          <div key={n} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:6 }}>
+            <div style={{
+              width:62, height:62, borderRadius:20, background:`var(--${c},${T.sun})`,
+              border:'3px solid #2D3A2E', boxShadow:'0 4px 0 rgba(46,90,58,0.2)',
+              display:'flex', alignItems:'center', justifyContent:'center', fontSize:32,
+            }}>{e}</div>
+            <div style={{ fontSize:11, fontWeight:700, color:'#2D3A2E', textAlign:'center', maxWidth:60, lineHeight:1.2 }}>{n}</div>
+          </div>
+        ))}
+      </div>
+      <Label>Streak Card</Label>
+      <div style={{ background:T.sun, borderRadius:20, border:'3px solid #2D3A2E', padding:'12px 16px', boxShadow:`0 4px 0 ${T.sunInk}`, display:'flex', alignItems:'center', gap:12, marginTop:8 }}>
+        <div style={{ fontSize:40 }}>🔥</div>
+        <div>
+          <div style={{ fontFamily:KID, fontSize:28, fontWeight:700, color:'#5E3A00', lineHeight:1 }}>3 ngày</div>
+          <div style={{ fontSize:13, color:'#7A4E0E', fontWeight:600 }}>liên tiếp! · keep it up!</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// 7. CARDS
+function ABCards() {
+  return (
+    <div style={{ padding:24, background:'#FFFDF7', display:'flex', flexDirection:'column', gap:16 }}>
+      <Label>Cards</Label>
+      <div>
+        <Label sub>World card</Label>
+        <div style={{ marginTop:8, background:'#B9E2B2', borderRadius:28, border:'3px solid #2D3A2E', boxShadow:'0 5px 0 rgba(46,90,58,0.25)', padding:'16px 18px', display:'flex', gap:14 }}>
+          <div style={{ width:60,height:60,borderRadius:18,background:'rgba(255,255,255,0.6)',border:'2px solid rgba(46,90,58,0.2)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:34 }}>🌳</div>
+          <div style={{ flex:1 }}>
+            <div style={{ fontSize:11,fontWeight:700,color:'rgba(46,90,58,0.7)',letterSpacing:.5 }}>WORLD 1</div>
+            <div style={{ fontFamily:KID,fontSize:18,fontWeight:700,color:'#2D3A2E' }}>Number Forest</div>
+            <div style={{ fontSize:12,color:'rgba(46,90,58,0.75)',fontWeight:600 }}>1–20</div>
+            <div style={{ marginTop:6 }}><DSProgressBar value={0.5} color="#5FB36A" height={7}/></div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <Label sub>Lesson node (unlocked / locked)</Label>
+        <div style={{ display:'flex', gap:12, marginTop:8 }}>
+          {[{ n:1,stars:3,locked:false,boss:false },{ n:2,stars:1,locked:false,boss:false },{ n:3,stars:0,locked:false,boss:false },{ n:4,stars:0,locked:true,boss:false },{ n:9,stars:0,locked:false,boss:true }].map(lv=>(
+            <div key={lv.n} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:8 }}>
+              <div style={{
+                width:72,height:72,borderRadius:'50%',
+                background:lv.locked ? '#E8DFCE' : lv.boss ? T.sun : '#7FC089',
+                border:'3px solid #2D3A2E',
+                boxShadow:lv.locked ? '0 3px 0 rgba(46,90,58,0.15)' : `0 4px 0 ${lv.boss ? T.sunInk : '#4D8B58'}`,
+                display:'flex',alignItems:'center',justifyContent:'center',
+                fontSize:lv.boss?32:26,fontWeight:700,color:'#2D3A2E',fontFamily:KID,
+              }}>{lv.locked ? '🔒' : lv.boss ? '👑' : lv.n}</div>
+              {!lv.locked && <StarBadge stars={lv.stars} size={14}/>}
+            </div>
+          ))}
+        </div>
+      </div>
+      <div>
+        <Label sub>Sticker card (collected / locked)</Label>
+        <div style={{ display:'flex', gap:8, marginTop:8 }}>
+          {[['🌷',true],['🦋',true],['?',false],['?',false]].map(([e,got],i)=>(
+            <div key={i} style={{
+              width:64,height:64,borderRadius:18,
+              background:got ? T.cream : 'rgba(200,190,180,0.3)',
+              border:`2px ${got?'solid rgba(46,90,58,0.12)':'dashed rgba(46,90,58,0.25)'}`,
+              display:'flex',alignItems:'center',justifyContent:'center',
+              fontSize:got?36:22,color:got?'inherit':'rgba(46,90,58,0.3)',
+              boxShadow:got?'0 3px 0 rgba(46,90,58,0.1)':'none',
+            }}>{e}</div>
+          ))}
+        </div>
+      </div>
+      <div>
+        <Label sub>Stat card (Parent dashboard)</Label>
+        <div style={{ display:'flex', gap:10, marginTop:8 }}>
+          {[['Hôm nay','12 phút','#5FB36A'],['Chuỗi ngày','3 ngày 🔥','#C14A2A'],['Độ chính xác','82%','#2E6F93']].map(([l,v,a])=>(
+            <div key={l} style={{ flex:1,padding:'10px 12px',borderRadius:16,background:'#fff',border:'1px solid rgba(0,0,0,0.07)',fontFamily:PARENT }}>
+              <div style={{ fontSize:10,fontWeight:700,color:'#6B7A6C' }}>{l}</div>
+              <div style={{ fontSize:18,fontWeight:700,color:a,marginTop:3 }}>{v}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// 8. DRAG & DROP SLOTS
+function ABDragDrop() {
+  return (
+    <div style={{ padding:24, background:'#FFFDF7', display:'flex', flexDirection:'column', gap:18 }}>
+      <Label>Drag & Drop Components</Label>
+      <div>
+        <Label sub>Draggable item</Label>
+        <div style={{ display:'flex', gap:12, marginTop:10 }}>
+          {[
+            { n:'7', grabbed:false, color:'sun' },
+            { n:'7', grabbed:true, color:'sun' },
+          ].map(({ n, grabbed, color }, i)=>(
+            <div key={i} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:6 }}>
+              <div style={{
+                width:80,height:92,borderRadius:22,
+                background:grabbed ? '#FFE6A8' : T.sun,
+                border:`3px solid ${grabbed ? T.sunInk : '#2D3A2E'}`,
+                boxShadow:grabbed ? '0 12px 20px rgba(46,90,58,0.25)' : `0 4px 0 ${T.sunInk}`,
+                display:'flex',alignItems:'center',justifyContent:'center',
+                fontFamily:KID,fontWeight:700,fontSize:46,color:'#7A4E0E',
+                transform:grabbed ? 'rotate(-4deg) scale(1.08)' : '',
+                cursor:'grab',
+              }}>{n}</div>
+              <div style={{ fontSize:11,color:T.inkSoft }}>{grabbed ? 'grabbed' : 'default'}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div>
+        <Label sub>Drop zone — empty / hover / filled</Label>
+        <div style={{ display:'flex', gap:12, marginTop:10 }}>
+          {[
+            { label:'empty', border:'dashed', bg:'rgba(255,255,255,0.4)', glow:false, filled:null },
+            { label:'hover', border:'dashed', bg:'rgba(255,211,110,0.2)', glow:true, filled:null },
+            { label:'filled', border:'solid', bg:'#FFF8EC', glow:false, filled:'7' },
+          ].map(({ label, border, bg, glow, filled })=>(
+            <div key={label} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:6 }}>
+              <div style={{
+                width:80,height:92,borderRadius:22,background:bg,
+                border:`3px ${border} ${glow ? T.sunInk : 'rgba(46,90,58,0.35)'}`,
+                boxShadow:glow ? `0 0 0 4px rgba(255,211,110,0.35)` : 'none',
+                display:'flex',alignItems:'center',justifyContent:'center',
+                fontFamily:KID,fontWeight:700,fontSize:46,color:'#7A4E0E',
+              }}>{filled || <span style={{ fontSize:20, color:'rgba(46,90,58,0.3)' }}>?</span>}</div>
+              <div style={{ fontSize:11,color:T.inkSoft }}>{label}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div>
+        <Label sub>Ten-stick & one-dot (Build the Number)</Label>
+        <div style={{ display:'flex', gap:16, alignItems:'flex-end', marginTop:10 }}>
+          {[1,2,3].map(n=>(
+            <div key={n} style={{ display:'flex', gap:4 }}>
+              {Array.from({length:n}).map((_, i)=>(
+                <div key={i} style={{ width:14,height:40,borderRadius:4,background:'#8AC4DE',border:'2px solid #2D3A2E',boxShadow:'inset 0 -2px 0 rgba(0,0,0,0.12)' }}/>
+              ))}
+            </div>
+          ))}
+          <div style={{ width:1, height:40, background:'rgba(46,90,58,0.2)' }}/>
+          {[1,2,4].map(n=>(
+            <div key={n} style={{ display:'grid', gridTemplateColumns:'repeat(3,14px)', gap:3 }}>
+              {Array.from({length:n}).map((_,i)=>(
+                <div key={i} style={{ width:14,height:14,borderRadius:'50%',background:T.sun,border:'2px solid #2D3A2E',boxShadow:`0 2px 0 ${T.sunInk}` }}/>
+              ))}
+            </div>
+          ))}
+        </div>
+      </div>
+      <div>
+        <Label sub>Sort baskets (Even / Odd)</Label>
+        <div style={{ display:'flex', gap:12, marginTop:10 }}>
+          {[{ l:'EVEN', e:'🍎🍎', c:'#7FC089', sh:'#4D8B58' },{ l:'ODD', e:'🍎', c:'#FF8F74', sh:'#C8614A' }].map(b=>(
+            <div key={b.l} style={{
+              flex:1,padding:'14px',borderRadius:22,background:b.c,
+              border:'3px solid #2D3A2E',boxShadow:`0 4px 0 ${b.sh}`,
+              display:'flex',flexDirection:'column',alignItems:'center',gap:6,
+            }}>
+              <div style={{ fontSize:32 }}>{b.e}</div>
+              <div style={{ fontFamily:KID,fontSize:18,fontWeight:700,color:'#2D3A2E' }}>{b.l}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// 9. FEEDBACK STATES (game)
+function ABFeedbackStates() {
+  return (
+    <div style={{ padding:24, background:'#FFFDF7', display:'flex', flexDirection:'column', gap:18 }}>
+      <Label>Feedback States</Label>
+      <div style={{ display:'flex', flexDirection:'column', gap:12 }}>
+        {[
+          { label:'✅ Correct', bg:T.correctBg, border:T.correct, icon:'🎉', msg:"Yes! That's 12!", mascotMood:'celebrate' },
+          { label:'🔄 Try again', bg:T.missBg, border:T.miss, icon:'💛', msg:'Almost! Try once more!', mascotMood:'wink' },
+          { label:'❌ Wrong (hearts −1)', bg:T.errorBg, border:T.error, icon:'💙', msg:"Don't worry, let's try!", mascotMood:'worried' },
+        ].map(s=>(
+          <div key={s.label} style={{ borderRadius:20, border:`3px solid ${s.border}`, background:s.bg, padding:'12px 16px', display:'flex', gap:12, alignItems:'center' }}>
+            <div style={{ fontSize:28 }}>{s.icon}</div>
+            <div style={{ flex:1 }}>
+              <div style={{ fontSize:13, fontWeight:700, color:'#2D3A2E', marginBottom:2 }}>{s.label}</div>
+              <div style={{ fontFamily:KID, fontSize:16, fontWeight:600, color:'#2D3A2E' }}>"{s.msg}"</div>
+            </div>
+            <Bap size={52} mood={s.mascotMood}/>
+          </div>
+        ))}
+      </div>
+      <Label>Session summary card</Label>
+      <div style={{ marginTop:8, background:'#FFF8EC', borderRadius:24, border:'3px solid #2D3A2E', padding:16, boxShadow:'0 4px 0 rgba(46,90,58,0.2)' }}>
+        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:12 }}>
+          <div style={{ fontFamily:KID, fontSize:22, fontWeight:700, color:'#2D3A2E' }}>Amazing, Bắp!</div>
+          <StarBadge stars={3} size={24}/>
+        </div>
+        <div style={{ display:'flex', gap:12 }}>
+          {[['✅ Correct','4/5','#2F6A3C'],['🪙 Coins','+9','#B87C0E'],['⏱ Time','1m 12s','#2E6F93']].map(([l,v,a])=>(
+            <div key={l} style={{ flex:1, textAlign:'center', padding:'8px 0', borderRadius:14, background:'rgba(255,255,255,0.8)', border:'1.5px solid rgba(46,90,58,0.12)' }}>
+              <div style={{ fontFamily:PARENT, fontSize:11, color:T.inkSoft }}>{l}</div>
+              <div style={{ fontFamily:KID, fontSize:22, fontWeight:700, color:a, marginTop:2 }}>{v}</div>
+            </div>
+          ))}
+        </div>
+        <div style={{ marginTop:12, display:'flex', justifyContent:'center' }}>
+          <div className="bobble" style={{ display:'inline-block' }}><Bap size={72} mood="celebrate"/></div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// 10. NAVIGATION + LAYOUT
+function ABNav() {
+  return (
+    <div style={{ padding:24, background:'#FFFDF7', display:'flex', flexDirection:'column', gap:18 }}>
+      <Label>Game HUD (top bar)</Label>
+      <div style={{ marginTop:8, background:'#FFFDF7', borderRadius:16, padding:'12px 14px', border:'2px solid rgba(46,90,58,0.12)', display:'flex', alignItems:'center', gap:10 }}>
+        <IconCircle icon="✕" color="cream" size={44}/>
+        <div style={{ flex:1 }}>
+          <DSProgressBar value={0.4} color="#FFD36E" height={14}/>
+        </div>
+        <div style={{ padding:'6px 12px', borderRadius:999, background:'#FFDDE2', border:'2px solid #2D3A2E', fontSize:14, fontWeight:700, color:'#A33A1D' }}>❤️ 3</div>
+      </div>
+
+      <Label>Bottom navigation (parent / complex)</Label>
+      <div style={{ marginTop:8, background:'#FFFFFF', borderRadius:20, border:'2px solid rgba(0,0,0,0.06)', padding:'10px 0', display:'flex', boxShadow:'0 -4px 12px rgba(0,0,0,0.06)' }}>
+        {[['🏠','Home',true],['🗺️','Map',false],['⭐','Stickers',false],['👤','Parent',false]].map(([icon,label,active])=>(
+          <div key={label} style={{ flex:1, display:'flex', flexDirection:'column', alignItems:'center', gap:3, padding:'6px 0' }}>
+            <div style={{ fontSize:22, lineHeight:1, opacity:active?1:0.5 }}>{icon}</div>
+            <div style={{ fontSize:11, fontWeight:700, color:active?T.sageInk:T.inkFaint }}>{label}</div>
+            {active && <div style={{ width:20,height:3,borderRadius:2,background:T.sageInk }}/>}
+          </div>
+        ))}
+      </div>
+
+      <Label>Modal / dialog</Label>
+      <div style={{ position:'relative', marginTop:8 }}>
+        <div style={{ background:'rgba(46,90,58,0.3)', borderRadius:16, padding:8 }}>
+          <div style={{ background:'#FFF8EC', borderRadius:20, border:'3px solid #2D3A2E', padding:'18px 16px', boxShadow:'0 20px 40px rgba(0,0,0,0.2)' }}>
+            <div style={{ width:36,height:4,borderRadius:2,background:'rgba(46,90,58,0.2)',margin:'0 auto 14px' }}/>
+            <div style={{ fontFamily:KID,fontSize:20,fontWeight:700,textAlign:'center',color:'#2D3A2E',marginBottom:6 }}>Dừng lại một chút? 🌿</div>
+            <div style={{ fontSize:13,color:T.inkSoft,textAlign:'center',marginBottom:14 }}>Bé đã chơi 15 phút rồi nhé!</div>
+            <div style={{ display:'flex', gap:8 }}>
+              <DSButton color="cream" size="md" style={{ flex:1 }}>← Tiếp tục</DSButton>
+              <DSButton color="sage" size="md" style={{ flex:1 }}>✓ OK</DSButton>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <Label>Chips / Tags</Label>
+      <div style={{ display:'flex', gap:8, marginTop:8, flexWrap:'wrap' }}>
+        {[['World 1 🌳','sun'],['Even/Odd','lavender'],['Tens 🏘️','sky'],['Streak 🔥','coral'],['New!','sage']].map(([l,c])=>(
+          <Chip key={l} label={l} color={c}/>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// 11. ICONOGRAPHY
+function ABIcons() {
+  const icons = [
+    ['🏠','Home'],['🔊','Audio'],['⭐','Star/Reward'],['🗺️','World Map'],
+    ['👤','Profile'],['🔒','Lock'],['✕','Close'],['‹','Back'],
+    ['▶','Play'],['✓','Confirm'],['🔥','Streak'],['📊','Progress'],
+    ['⚙️','Settings'],['💛','Heart/Try'],['🪙','Coin'],['🎁','Reward'],
+    ['🌟','Sticker'],['🏆','Trophy'],['👑','Boss'],['💡','Hint'],
+  ];
+  return (
+    <div style={{ padding:24, background:'#FFFDF7' }}>
+      <Label>Iconography</Label>
+      <div style={{ fontSize:12, color:T.inkSoft, marginTop:4, marginBottom:14, lineHeight:1.5 }}>
+        Icons are emoji + simple SVG — rounded, high-contrast, ≥24px. Always paired with color context.
+      </div>
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(5,1fr)', gap:10 }}>
+        {icons.map(([icon,name])=>(
+          <div key={name} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:5, padding:'10px 6px', borderRadius:14, background:'#fff', border:'1.5px solid rgba(46,90,58,0.1)' }}>
+            <div style={{ fontSize:28, lineHeight:1 }}>{icon}</div>
+            <div style={{ fontSize:10, color:T.inkSoft, textAlign:'center', lineHeight:1.2 }}>{name}</div>
+          </div>
+        ))}
+      </div>
+      <div style={{ marginTop:16 }}>
+        <Label sub>Icon on colored circles (audio-first contexts)</Label>
+        <div style={{ display:'flex', gap:8, marginTop:10 }}>
+          {[['🔊','sky','Audio prompt'],['▶','sage','Play'],['💡','sun','Hint']].map(([i,c,l])=>(
+            <div key={l} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:6 }}>
+              <IconCircle icon={i} color={c} size={58}/>
+              <div style={{ fontSize:11, color:T.inkSoft }}>{l}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// 12. SPACING + TOKENS
+function ABTokens() {
+  return (
+    <div style={{ padding:24, background:'#FFFDF7', display:'flex', flexDirection:'column', gap:16 }}>
+      <Label>Spacing Scale</Label>
+      <div style={{ display:'flex', flexDirection:'column', gap:8, marginTop:8 }}>
+        {[4,8,12,16,20,24,32,48].map(v=>(
+          <div key={v} style={{ display:'flex', alignItems:'center', gap:12 }}>
+            <div style={{ width:v,height:v,borderRadius:4,background:T.sage,border:'1.5px solid rgba(46,90,58,0.4)',flexShrink:0 }}/>
+            <div style={{ fontFamily:'monospace',fontSize:12,color:T.inkSoft }}>{v}px</div>
+            <div style={{ fontFamily:'monospace',fontSize:11,color:T.inkFaint }}>--sp{v}</div>
+          </div>
+        ))}
+      </div>
+      <Label>Border Radii</Label>
+      <div style={{ display:'flex', gap:12, marginTop:8, flexWrap:'wrap' }}>
+        {[['sm',12],['md',20],['lg',28],['xl',36],['pill',999]].map(([n,r])=>(
+          <div key={n} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:6 }}>
+            <div style={{ width:52,height:52,borderRadius:r,background:T.sky,border:'2.5px solid #2D3A2E' }}/>
+            <div style={{ fontFamily:'monospace',fontSize:11,color:T.inkSoft }}>{n} / {r === 999 ? '∞' : r+'px'}</div>
+          </div>
+        ))}
+      </div>
+      <Label>Elevation</Label>
+      <div style={{ display:'flex', gap:12, marginTop:8 }}>
+        {[
+          { label:'card', sh:'0 2px 0 rgba(46,90,58,0.08),0 10px 24px rgba(46,90,58,0.10)' },
+          { label:'pop', sh:'0 4px 0 rgba(46,90,58,0.18),0 18px 32px rgba(46,90,58,0.14)' },
+          { label:'tile', sh:'0 4px 0 rgba(46,90,58,0.14)' },
+          { label:'modal', sh:'0 20px 40px rgba(0,0,0,0.18)' },
+        ].map(e=>(
+          <div key={e.label} style={{ width:52,height:52,borderRadius:16,background:'#fff',boxShadow:e.sh,display:'flex',alignItems:'center',justifyContent:'center' }}>
+            <div style={{ fontSize:10,fontWeight:700,color:T.inkSoft,textAlign:'center' }}>{e.label}</div>
+          </div>
+        ))}
+      </div>
+      <Label>Tablet adaptation notes</Label>
+      <div style={{ background:T.cream2, borderRadius:16, padding:'10px 14px', border:'1.5px solid rgba(46,90,58,0.12)', fontSize:12, color:T.ink, lineHeight:1.6 }}>
+        <b>Tablet (768px+):</b> Max content width 540px centered. Font scale +10%. Grid 3-col for tiles. Bottom nav converts to left rail 60px wide. Mascot size ×1.4. Touch targets stay 64px+.
+      </div>
+    </div>
+  );
+}
+
+/* ─── LABEL HELPER ──────────────────────────────────────── */
+function Label({ children, sub }) {
+  if (sub) return <div style={{ fontFamily:KID, fontWeight:600, fontSize:12, color:T.inkSoft, letterSpacing:0.3, marginBottom:2 }}>{children}</div>;
+  return <div style={{ fontFamily:KID, fontWeight:700, fontSize:14, color:T.inkSoft, letterSpacing:0.5, textTransform:'uppercase', marginBottom:2 }}>{children}</div>;
+}
+
+/* ─── MAIN CANVAS ──────────────────────────────────────── */
+function DesignSystem() {
+  return (
+    <DesignCanvas title="Bắp Number Adventure — Design System">
+      <DCSection id="foundation" title="🎨 Brand Foundation">
+        <DCArtboard id="colors-main" label="Brand Palette" width={760} height={220}>
+          <ABColors/>
+        </DCArtboard>
+        <DCArtboard id="colors-feedback" label="Feedback Colors + BG Tokens" width={560} height={280}>
+          <ABFeedback/>
+        </DCArtboard>
+        <DCArtboard id="type-kid" label="Kid Typography — Fredoka" width={680} height={380}>
+          <ABType/>
+        </DCArtboard>
+        <DCArtboard id="type-parent" label="Parent Typography — Be Vietnam Pro" width={480} height={300}>
+          <ABParentType/>
+        </DCArtboard>
+        <DCArtboard id="spacing" label="Spacing · Radii · Elevation · Tablet" width={560} height={480}>
+          <ABTokens/>
+        </DCArtboard>
+      </DCSection>
+
+      <DCSection id="mascot" title="🌱 Mascot System">
+        <DCArtboard id="mascot-moods" label="Bắp — 6 Mood States" width={720} height={300}>
+          <ABMascotMoods/>
+        </DCArtboard>
+        <DCArtboard id="mascot-colors" label="Color Variants + Placement Rules" width={640} height={480}>
+          <ABMascotColors/>
+        </DCArtboard>
+      </DCSection>
+
+      <DCSection id="components" title="🧩 Components">
+        <DCArtboard id="buttons" label="Buttons + Icon Buttons + Touch Targets" width={540} height={520}>
+          <ABButtons/>
+        </DCArtboard>
+        <DCArtboard id="tiles" label="Number Tiles — Sizes + Colors + States" width={600} height={420}>
+          <ABTiles/>
+        </DCArtboard>
+        <DCArtboard id="progress" label="Progress Bars · Stars · Badges · Streak" width={560} height={540}>
+          <ABProgress/>
+        </DCArtboard>
+        <DCArtboard id="cards" label="Cards — World · Level · Sticker · Stat" width={600} height={560}>
+          <ABCards/>
+        </DCArtboard>
+        <DCArtboard id="drag-drop" label="Drag & Drop — Items · Zones · Baskets" width={620} height={560}>
+          <ABDragDrop/>
+        </DCArtboard>
+        <DCArtboard id="icons" label="Iconography Direction" width={560} height={520}>
+          <ABIcons/>
+        </DCArtboard>
+      </DCSection>
+
+      <DCSection id="patterns" title="🎮 UI Patterns + States">
+        <DCArtboard id="feedback-states" label="Feedback States + Session Summary" width={580} height={680}>
+          <ABFeedbackStates/>
+        </DCArtboard>
+        <DCArtboard id="navigation" label="Game HUD · Nav · Modal · Chips" width={580} height={660}>
+          <ABNav/>
+        </DCArtboard>
+      </DCSection>
+    </DesignCanvas>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<DesignSystem/>);
+</script>
+</body>
+</html>

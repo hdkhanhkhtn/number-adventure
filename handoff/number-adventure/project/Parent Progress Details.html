@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Progress Details — Bắp Number Adventure</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  background: #C0B8A8; min-height: 100vh;
+  display: flex; align-items: flex-start; justify-content: center;
+  font-family: 'Be Vietnam Pro', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  padding: 24px 0;
+}
+:root {
+  --ink:       #1F2A1F;
+  --ink-soft:  #6B7A6C;
+  --ink-faint: #A9B4A8;
+  --surface:   #F5F3ED;
+  --card:      #FFFFFF;
+  --ol:        rgba(46,90,58,0.10);
+  --ol-md:     rgba(46,90,58,0.18);
+  --sage:      #5FB36A; --sage-pale: #EDF7EC; --sage-mid: #A8D5A2;
+  --sun:       #FFD36E; --sun-ink:   #7A4E0E; --sun-pale: #FFF8EC;
+  --sky:       #8AC4DE; --sky-pale:  #E4F2FA; --sky-ink:  #1F4A61;
+  --lav:       #B9A4E0; --lav-pale:  #F0EBFA; --lav-ink:  #5D3F94;
+  --coral:     #FFA48C; --coral-pale:#FFF0EA; --coral-ink:#7A2B15;
+  --berry:     #E6779E; --berry-pale:#FEF0F5;
+  --correct:   #5FB36A; --miss: #FFA48C;
+}
+button { font-family: inherit; border: none; background: none; cursor: pointer; color: inherit; }
+.scroll { overflow-y: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+.scroll::-webkit-scrollbar { display: none; }
+@keyframes pop-in   { 0%{transform:scale(0.5);opacity:0} 65%{transform:scale(1.06)} 100%{transform:scale(1);opacity:1} }
+@keyframes slide-up { from{transform:translateY(16px);opacity:0} to{transform:translateY(0);opacity:1} }
+@keyframes fill-bar { from{width:0%} to{width:var(--w)} }
+@keyframes fade-in  { from{opacity:0} to{opacity:1} }
+.pop-in  { animation: pop-in  0.35s cubic-bezier(0.34,1.56,0.64,1) both; }
+.fade-in { animation: fade-in 0.25s ease both; }
+
+/* Tweaks */
+#tweaks-panel {
+  display:none; position:fixed; bottom:24px; right:24px; z-index:9999;
+  background:#fff; border-radius:20px; border:1.5px solid rgba(0,0,0,0.08);
+  box-shadow:0 8px 32px rgba(0,0,0,0.14); padding:18px 20px; width:230px;
+  font-family:'Be Vietnam Pro',sans-serif; font-size:13px;
+}
+#tweaks-panel.open { display:block; }
+#tweaks-panel h3 { font-size:13px; font-weight:700; color:#1F2A1F; margin-bottom:14px; letter-spacing:0.5px; }
+.tweak-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:11px; }
+.tweak-row label { color:#6B7A6C; font-weight:500; font-size:12px; }
+.tweak-toggle { width:38px; height:22px; border-radius:999px; border:none; cursor:pointer; display:flex; align-items:center; padding:2px; transition:background 0.2s; }
+.tweak-toggle.on  { background:#5FB36A; justify-content:flex-end; }
+.tweak-toggle.off { background:#D8D2C0; justify-content:flex-start; }
+.tweak-knob { width:18px; height:18px; border-radius:50%; background:#fff; box-shadow:0 1px 3px rgba(0,0,0,0.2); }
+.tweak-select { padding:4px 8px; border-radius:8px; border:1.5px solid rgba(0,0,0,0.1); font-family:inherit; font-size:12px; background:#fff; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script type="text/babel">
+const { useState, useEffect, useRef, useMemo } = React;
+
+// ── TWEAK DEFAULTS ────────────────────────────────────────────
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "childName": "Bắp",
+  "lang": "en",
+  "weekFilter": "week"
+}/*EDITMODE-END*/;
+
+// ── DATA ──────────────────────────────────────────────────────
+const SKILLS = [
+  { id:'recog',   icon:'👁️',  label:'Number Recognition', sub:'Identify numbers 1–20',    pct:0.92, sessions:28, trend:+8, game:'Hear & Tap',       color:'var(--sage)',  paleBg:'var(--sage-pale)',  tier:'mastered'   },
+  { id:'listen',  icon:'👂',  label:'Listening & Matching',sub:'Hear a number, find it',   pct:0.85, sessions:22, trend:+5, game:'Hear & Tap',       color:'var(--sage)',  paleBg:'var(--sage-pale)',  tier:'mastered'   },
+  { id:'count',   icon:'🔢',  label:'Counting Sequence',   sub:'Order 1–20 correctly',     pct:0.78, sessions:18, trend:+3, game:'Number Order',     color:'var(--sage)',  paleBg:'var(--sage-pale)',  tier:'practicing' },
+  { id:'tens',    icon:'🧱',  label:'Tens & Ones',         sub:'Place value up to 99',     pct:0.55, sessions:14, trend:+2, game:'Build the Number', color:'var(--sun)',   paleBg:'var(--sun-pale)',   tier:'practicing' },
+  { id:'hundreds',icon:'💯',  label:'Hundreds Awareness',  sub:'Intro to 100–999',         pct:0.18, sessions: 4, trend: 0, game:'Build the Number', color:'var(--sky)',   paleBg:'var(--sky-pale)',   tier:'emerging'   },
+  { id:'evenodd', icon:'🏠',  label:'Even & Odd',          sub:'Sort numbers by type',     pct:0.32, sessions: 7, trend:+1, game:'Even/Odd House',   color:'var(--sky)',   paleBg:'var(--sky-pale)',   tier:'emerging'   },
+  { id:'add',     icon:'➕',  label:'Basic Addition',       sub:'Sums up to 10',            pct:0.12, sessions: 3, trend: 0, game:'Add & Take Away',  color:'var(--lav)',   paleBg:'var(--lav-pale)',   tier:'emerging'   },
+  { id:'sub',     icon:'➖',  label:'Basic Subtraction',    sub:'Differences up to 10',     pct:0.05, sessions: 1, trend: 0, game:'Add & Take Away',  color:'var(--lav)',   paleBg:'var(--lav-pale)',   tier:'locked'     },
+];
+
+const SESSIONS_ALL = [
+  { id:1,  date:'Today',       time:'4:22 PM', game:'Hear & Tap',        mins:12, stars:7, acc:88, skills:['recog','listen'] },
+  { id:2,  date:'Today',       time:'11:05 AM',game:'Number Order',       mins: 8, stars:5, acc:75, skills:['count'] },
+  { id:3,  date:'Yesterday',   time:'5:10 PM', game:'Build the Number',   mins:15, stars:9, acc:68, skills:['tens'] },
+  { id:4,  date:'Yesterday',   time:'10:33 AM',game:'Hear & Tap',         mins:10, stars:6, acc:90, skills:['recog','listen'] },
+  { id:5,  date:'2 days ago',  time:'3:48 PM', game:'Even/Odd House',     mins: 7, stars:4, acc:45, skills:['evenodd'] },
+  { id:6,  date:'3 days ago',  time:'4:00 PM', game:'Number Order',       mins:14, stars:8, acc:80, skills:['count'] },
+  { id:7,  date:'4 days ago',  time:'5:20 PM', game:'Build the Number',   mins:11, stars:6, acc:62, skills:['tens'] },
+  { id:8,  date:'5 days ago',  time:'3:55 PM', game:'Hear & Tap',         mins:13, stars:8, acc:91, skills:['recog','listen'] },
+  { id:9,  date:'6 days ago',  time:'4:10 PM', game:'Even/Odd House',     mins: 6, stars:3, acc:40, skills:['evenodd'] },
+  { id:10, date:'8 days ago',  time:'4:30 PM', game:'Add & Take Away',    mins: 5, stars:2, acc:30, skills:['add'] },
+  { id:11, date:'9 days ago',  time:'3:00 PM', game:'Build the Number',   mins:15, stars:9, acc:71, skills:['tens'] },
+  { id:12, date:'12 days ago', time:'5:00 PM', game:'Hear & Tap',         mins:10, stars:6, acc:85, skills:['recog'] },
+];
+
+const MILESTONES = [
+  { id:1,  earned:true,  date:'Apr 18',   icon:'🌟', title:'First 5-Day Streak',         sub:'Played 5 days in a row',           color:'#FFD36E', shadow:'#C79528' },
+  { id:2,  earned:true,  date:'Apr 15',   icon:'🔢', title:'Number Master 1–10',         sub:'90%+ accuracy on numbers 1–10',    color:'#A8D5A2', shadow:'#5FB36A' },
+  { id:3,  earned:true,  date:'Apr 10',   icon:'👂', title:'Sharp Ears',                 sub:'Completed 20 Hear & Tap sessions', color:'#B8DEEF', shadow:'#5A96B1' },
+  { id:4,  earned:true,  date:'Apr 5',    icon:'🗺️', title:'World 1 Complete',           sub:'Finished the Garden of Numbers',   color:'#D9C7F0', shadow:'#A58AD0' },
+  { id:5,  earned:true,  date:'Mar 28',   icon:'🎉', title:'First Game',                 sub:'Played for the first time',        color:'#FFA48C', shadow:'#D67560' },
+  { id:6,  earned:false, date:null,       icon:'🧱', title:'Place Value Explorer',       sub:'Reach 70% on Tens & Ones',         color:'#E8E2D4', shadow:'#C4BCA8', pct:0.55, goal:0.70 },
+  { id:7,  earned:false, date:null,       icon:'🏠', title:'Even/Odd Expert',            sub:'Reach 75% on Even & Odd',          color:'#E8E2D4', shadow:'#C4BCA8', pct:0.32, goal:0.75 },
+  { id:8,  earned:false, date:null,       icon:'🔥', title:'10-Day Streak',              sub:'Play 10 days in a row',            color:'#E8E2D4', shadow:'#C4BCA8', pct:0.50, goal:1.0 },
+];
+
+// accuracy trend for sparkline (14 days)
+const ACC_TREND = [72,68,75,80,71,83,79,85,77,88,82,86,90,84];
+// weekly mins
+const WEEK_MINS = [10,14,0,15,8,12,0];
+const WEEK_DAYS = ['M','T','W','T','F','S','S'];
+
+// ── SMALL PRIMITIVES ──────────────────────────────────────────
+function Sec({ children }) {
+  return <div style={{ fontSize:10, fontWeight:700, color:'var(--ink-faint)', letterSpacing:1.2, textTransform:'uppercase', marginBottom:10 }}>{children}</div>;
+}
+function Card({ children, style={}, onClick }) {
+  return (
+    <div onClick={onClick} style={{
+      background:'var(--card)', borderRadius:20,
+      border:'1px solid var(--ol)',
+      boxShadow:'0 1px 4px rgba(46,90,58,0.04)',
+      overflow:'hidden',
+      cursor: onClick ? 'pointer' : 'default',
+      ...style,
+    }}>{children}</div>
+  );
+}
+function Divider() {
+  return <div style={{ height:1, background:'var(--ol)', margin:'0 16px' }}/>;
+}
+
+// ── SPARKLINE ─────────────────────────────────────────────────
+function Sparkline({ data, width=200, height=48, color='#5FB36A' }) {
+  const min = Math.min(...data), max = Math.max(...data);
+  const range = max - min || 1;
+  const pts = data.map((v, i) => {
+    const x = (i / (data.length - 1)) * width;
+    const y = height - ((v - min) / range) * (height - 6) - 3;
+    return `${x},${y}`;
+  }).join(' ');
+  const area = `M0,${height} L` + data.map((v,i) => {
+    const x = (i/(data.length-1))*width;
+    const y = height - ((v-min)/range)*(height-6) - 3;
+    return `${x},${y}`;
+  }).join(' L') + ` L${width},${height} Z`;
+  return (
+    <svg viewBox={`0 0 ${width} ${height}`} width={width} height={height} style={{overflow:'visible'}}>
+      <defs>
+        <linearGradient id="sparkGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={color} stopOpacity="0.2"/>
+          <stop offset="100%" stopColor={color} stopOpacity="0"/>
+        </linearGradient>
+      </defs>
+      <path d={area} fill="url(#sparkGrad)"/>
+      <polyline points={pts} fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      {/* last dot */}
+      <circle cx={(data.length-1)/(data.length-1)*width} cy={height-((data[data.length-1]-min)/range)*(height-6)-3}
+        r="4" fill={color} stroke="#fff" strokeWidth="2"/>
+    </svg>
+  );
+}
+
+// ── TIER CHIP ─────────────────────────────────────────────────
+function TierChip({ tier }) {
+  const cfg = {
+    mastered:  { bg:'#EDF7EC', color:'#2F6A3C', border:'#A8D5A2', label:'Mastered'   },
+    practicing:{ bg:'#FFFAE8', color:'#7A4E0E', border:'#FFD36E', label:'Practicing' },
+    emerging:  { bg:'#E4F2FA', color:'#1F4A61', border:'#8AC4DE', label:'Emerging'   },
+    locked:    { bg:'#F5F3ED', color:'#A9B4A8', border:'#D8D2C0', label:'Not Started'},
+  }[tier] || {};
+  return (
+    <div style={{
+      fontSize:10, fontWeight:700, letterSpacing:0.6, padding:'2px 8px',
+      borderRadius:999, whiteSpace:'nowrap',
+      background:cfg.bg, color:cfg.color, border:`1px solid ${cfg.border}`,
+    }}>{cfg.label}</div>
+  );
+}
+
+// ── CONFIDENCE DOT ────────────────────────────────────────────
+function ConfidenceDots({ pct }) {
+  const filled = Math.round((pct / 0.25));  // 0–4
+  return (
+    <div style={{ display:'flex', gap:3, alignItems:'center' }}>
+      {[0,1,2,3].map(i => (
+        <div key={i} style={{
+          width:8, height:8, borderRadius:'50%',
+          background: i < filled ? 'var(--sage)' : 'rgba(46,90,58,0.12)',
+        }}/>
+      ))}
+    </div>
+  );
+}
+
+// ── MINI BAR CHART ────────────────────────────────────────────
+function MiniWeekChart({ data, days }) {
+  const max = Math.max(...data, 15, 1);
+  return (
+    <div style={{ display:'flex', alignItems:'flex-end', gap:6, height:56 }}>
+      {data.map((v,i) => {
+        const h = Math.max(2, Math.round((v/max)*44));
+        return (
+          <div key={i} style={{ flex:1, display:'flex', flexDirection:'column', alignItems:'center', gap:3 }}>
+            <div style={{ width:'100%', height:h, borderRadius:4,
+              background: v===0 ? 'rgba(46,90,58,0.08)' : v>=15 ? 'var(--sage)' : 'var(--sun)' }}/>
+            <div style={{ fontSize:9, fontWeight:600, color:'var(--ink-faint)' }}>{days[i]}</div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ── RADIAL PROGRESS ───────────────────────────────────────────
+function Radial({ pct, size=88, stroke=8, color='var(--sage)', label, sublabel }) {
+  const r = (size - stroke*2)/2;
+  const c = 2*Math.PI*r;
+  return (
+    <div style={{ position:'relative', width:size, height:size, flexShrink:0 }}>
+      <svg width={size} height={size} style={{transform:'rotate(-90deg)',position:'absolute',inset:0}}>
+        <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="rgba(46,90,58,0.08)" strokeWidth={stroke}/>
+        <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={color}
+          strokeWidth={stroke} strokeLinecap="round"
+          strokeDasharray={c} strokeDashoffset={c*(1-pct)}
+          style={{transition:'stroke-dashoffset 0.9s ease'}}/>
+      </svg>
+      <div style={{ position:'absolute', inset:0, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:0 }}>
+        <div style={{ fontSize:18, fontWeight:700, color:'var(--ink)', lineHeight:1 }}>{Math.round(pct*100)}%</div>
+        {sublabel && <div style={{ fontSize:9, color:'var(--ink-faint)', fontWeight:600, marginTop:2 }}>{sublabel}</div>}
+      </div>
+    </div>
+  );
+}
+
+// ════════════════════════════════════════════════════════════
+// TAB 1 — OVERVIEW
+// ════════════════════════════════════════════════════════════
+function OverviewTab({ name }) {
+  const needsReview = SKILLS.filter(s => s.tier === 'emerging' || (s.tier === 'practicing' && s.pct < 0.6));
+  const overallPct = SKILLS.reduce((a,s) => a + s.pct, 0) / SKILLS.length;
+  const avgAcc = Math.round(ACC_TREND.slice(-7).reduce((a,b)=>a+b,0)/7);
+
+  return (
+    <div className="fade-in" style={{ display:'flex', flexDirection:'column', gap:18 }}>
+
+      {/* Summary hero */}
+      <Card style={{ padding:'18px' }}>
+        <div style={{ display:'flex', gap:16, alignItems:'center' }}>
+          <Radial pct={overallPct} size={88} stroke={8} color="var(--sage)" sublabel="OVERALL"/>
+          <div style={{ flex:1 }}>
+            <div style={{ fontSize:15, fontWeight:700, color:'var(--ink)', marginBottom:4 }}>
+              {name} is making great progress!
+            </div>
+            <div style={{ fontSize:13, color:'var(--ink-soft)', lineHeight:1.5 }}>
+              Strongest in number recognition. Tens & Ones is the current growth area.
+            </div>
+            <div style={{ marginTop:10, display:'flex', gap:8 }}>
+              <div style={{ fontSize:12, fontWeight:600, color:'var(--sage)', background:'var(--sage-pale)', padding:'3px 10px', borderRadius:999, border:'1px solid var(--sage-mid)' }}>3 Mastered</div>
+              <div style={{ fontSize:12, fontWeight:600, color:'var(--sun-ink)', background:'var(--sun-pale)', padding:'3px 10px', borderRadius:999, border:'1px solid #FFD36E' }}>2 Practicing</div>
+            </div>
+          </div>
+        </div>
+      </Card>
+
+      {/* Accuracy trend */}
+      <Card style={{ padding:'16px' }}>
+        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'baseline', marginBottom:14 }}>
+          <div style={{ fontSize:14, fontWeight:700, color:'var(--ink)' }}>Accuracy Trend</div>
+          <div style={{ fontSize:13, fontWeight:700, color:'var(--sage)' }}>{avgAcc}% avg</div>
+        </div>
+        <Sparkline data={ACC_TREND} width={318} height={56} color="#5FB36A"/>
+        <div style={{ display:'flex', justifyContent:'space-between', marginTop:6 }}>
+          <div style={{ fontSize:10, color:'var(--ink-faint)' }}>14 days ago</div>
+          <div style={{ fontSize:10, color:'var(--ink-faint)' }}>Today</div>
+        </div>
+        <div style={{ marginTop:10, padding:'8px 12px', borderRadius:12, background:'var(--sage-pale)', border:'1px solid var(--sage-mid)' }}>
+          <div style={{ fontSize:12, color:'#2F6A3C', fontWeight:600 }}>↑ Improving steadily — up 12 pts over 2 weeks</div>
+        </div>
+      </Card>
+
+      {/* Weekly time */}
+      <Card style={{ padding:'16px' }}>
+        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'baseline', marginBottom:12 }}>
+          <div style={{ fontSize:14, fontWeight:700, color:'var(--ink)' }}>This Week</div>
+          <div style={{ fontSize:11, color:'var(--ink-faint)' }}>goal 15 min/day</div>
+        </div>
+        <MiniWeekChart data={WEEK_MINS} days={WEEK_DAYS}/>
+        <div style={{ marginTop:10, display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:8 }}>
+          <div style={{ textAlign:'center' }}>
+            <div style={{ fontSize:18, fontWeight:700, color:'var(--ink)' }}>59</div>
+            <div style={{ fontSize:10, color:'var(--ink-faint)', fontWeight:600 }}>TOTAL MINS</div>
+          </div>
+          <div style={{ textAlign:'center', borderLeft:'1px solid var(--ol)', borderRight:'1px solid var(--ol)' }}>
+            <div style={{ fontSize:18, fontWeight:700, color:'var(--sage)' }}>5/7</div>
+            <div style={{ fontSize:10, color:'var(--ink-faint)', fontWeight:600 }}>DAYS ACTIVE</div>
+          </div>
+          <div style={{ textAlign:'center' }}>
+            <div style={{ fontSize:18, fontWeight:700, color:'#C14A2A' }}>5 🔥</div>
+            <div style={{ fontSize:10, color:'var(--ink-faint)', fontWeight:600 }}>DAY STREAK</div>
+          </div>
+        </div>
+      </Card>
+
+      {/* Needs review */}
+      <div>
+        <Sec>Needs More Practice</Sec>
+        <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+          {needsReview.map(s => (
+            <div key={s.id} style={{
+              display:'flex', alignItems:'center', gap:12, padding:'12px 14px',
+              background:'var(--card)', borderRadius:16, border:'1px solid var(--ol)',
+              borderLeft:`4px solid ${s.color}`,
+            }}>
+              <div style={{ fontSize:22, width:32, textAlign:'center', flexShrink:0 }}>{s.icon}</div>
+              <div style={{ flex:1 }}>
+                <div style={{ fontSize:13, fontWeight:600, color:'var(--ink)' }}>{s.label}</div>
+                <div style={{ fontSize:11, color:'var(--ink-faint)', marginTop:2 }}>{Math.round(s.pct*100)}% mastery · Try: {s.game}</div>
+              </div>
+              <div style={{ fontSize:13, color:'var(--ink-faint)' }}>›</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Suggested next */}
+      <div style={{
+        borderRadius:20, padding:'16px',
+        background:'linear-gradient(135deg,#EDF7EC,#FFF8EC)',
+        border:'1.5px solid var(--sage-mid)',
+      }}>
+        <div style={{ fontSize:11, fontWeight:700, color:'#2F6A3C', letterSpacing:1, marginBottom:10 }}>💡 SUGGESTED NEXT</div>
+        {[
+          { icon:'🧱', text:'3 sessions of Build the Number to boost Tens & Ones to 70%' },
+          { icon:'🏠', text:'Play Even/Odd House daily this week — it\'s close to a breakthrough' },
+        ].map((r,i) => (
+          <div key={i} style={{ display:'flex', gap:10, alignItems:'flex-start', marginBottom: i===0?10:0 }}>
+            <div style={{ fontSize:18, flexShrink:0, marginTop:1 }}>{r.icon}</div>
+            <div style={{ fontSize:13, color:'var(--ink-soft)', lineHeight:1.5 }}>{r.text}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ════════════════════════════════════════════════════════════
+// TAB 2 — SKILLS
+// ════════════════════════════════════════════════════════════
+function SkillsTab() {
+  const [expanded, setExpanded] = useState(null);
+
+  return (
+    <div className="fade-in" style={{ display:'flex', flexDirection:'column', gap:10 }}>
+      {SKILLS.map(s => {
+        const isOpen = expanded === s.id;
+        return (
+          <div key={s.id} style={{
+            background:'var(--card)', borderRadius:18, border:'1px solid var(--ol)',
+            overflow:'hidden', transition:'box-shadow 0.2s',
+            boxShadow: isOpen ? '0 4px 16px rgba(46,90,58,0.08)' : 'none',
+          }}>
+            {/* Header row */}
+            <button
+              onClick={() => setExpanded(isOpen ? null : s.id)}
+              style={{
+                width:'100%', padding:'14px 16px', textAlign:'left',
+                display:'flex', alignItems:'center', gap:12,
+                background: isOpen ? s.paleBg : 'transparent',
+                transition:'background 0.2s',
+              }}>
+              <div style={{ fontSize:22, width:32, textAlign:'center', flexShrink:0 }}>{s.icon}</div>
+              <div style={{ flex:1, minWidth:0 }}>
+                <div style={{ display:'flex', alignItems:'center', gap:8, flexWrap:'wrap' }}>
+                  <div style={{ fontSize:14, fontWeight:700, color:'var(--ink)' }}>{s.label}</div>
+                  <TierChip tier={s.tier}/>
+                </div>
+                <div style={{ marginTop:6, height:6, borderRadius:6, background:'rgba(46,90,58,0.08)', overflow:'hidden', width:'100%' }}>
+                  <div style={{ height:'100%', width:`${s.pct*100}%`, borderRadius:6, background:s.color, transition:'width 0.7s ease' }}/>
+                </div>
+              </div>
+              <div style={{ display:'flex', flexDirection:'column', alignItems:'flex-end', gap:4, flexShrink:0 }}>
+                <div style={{ fontSize:14, fontWeight:700, color:'var(--ink)' }}>{Math.round(s.pct*100)}%</div>
+                <div style={{ fontSize:10, color: s.trend>0 ? 'var(--sage)' : 'var(--ink-faint)', fontWeight:600 }}>
+                  {s.trend>0 ? `↑ +${s.trend}%` : '—'}
+                </div>
+              </div>
+            </button>
+
+            {/* Expanded detail */}
+            {isOpen && (
+              <div style={{ padding:'0 16px 16px', borderTop:`1px solid var(--ol)`, animation:'slide-up 0.2s ease both' }}>
+                <div style={{ paddingTop:12, display:'flex', flexDirection:'column', gap:12 }}>
+                  <div style={{ fontSize:12, color:'var(--ink-soft)', lineHeight:1.5 }}>{s.sub}</div>
+
+                  {/* Stats row */}
+                  <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:8 }}>
+                    <StatBox label="Sessions" value={s.sessions} color="var(--ink)"/>
+                    <StatBox label="Mastery" value={`${Math.round(s.pct*100)}%`} color={s.tier==='mastered'?'#2F6A3C':s.tier==='practicing'?'#7A4E0E':'#1F4A61'}/>
+                    <StatBox label="Trend" value={s.trend>0?`+${s.trend}%`:s.trend===0?'Stable':'↓'} color={s.trend>0?'var(--sage)':'var(--ink-faint)'}/>
+                  </div>
+
+                  {/* Confidence dots */}
+                  <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+                    <div style={{ fontSize:12, color:'var(--ink-soft)', fontWeight:600 }}>Confidence level</div>
+                    <ConfidenceDots pct={s.pct}/>
+                  </div>
+
+                  {/* Suggested game */}
+                  {s.tier !== 'mastered' && (
+                    <div style={{
+                      display:'flex', alignItems:'center', gap:10, padding:'10px 12px',
+                      background:s.paleBg, borderRadius:14, border:`1px solid ${s.color}`,
+                    }}>
+                      <div style={{ fontSize:18 }}>🎮</div>
+                      <div style={{ flex:1 }}>
+                        <div style={{ fontSize:12, fontWeight:700, color:'var(--ink)' }}>Recommended game</div>
+                        <div style={{ fontSize:11, color:'var(--ink-soft)' }}>{s.game}</div>
+                      </div>
+                      <div style={{
+                        fontSize:11, fontWeight:700, color:'#fff',
+                        background:'var(--ink)', padding:'5px 12px', borderRadius:999,
+                      }}>Play ▶</div>
+                    </div>
+                  )}
+                  {s.tier === 'mastered' && (
+                    <div style={{
+                      padding:'10px 12px', borderRadius:14,
+                      background:'var(--sage-pale)', border:'1px solid var(--sage-mid)',
+                      fontSize:12, color:'#2F6A3C', fontWeight:600,
+                      display:'flex', alignItems:'center', gap:8,
+                    }}>
+                      <span>✅</span> This skill is mastered! Keep it warm with occasional play.
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      })}
+
+      <div style={{ fontSize:12, color:'var(--ink-faint)', textAlign:'center', padding:'4px 0' }}>
+        Tap any skill to see detail and recommended games
+      </div>
+    </div>
+  );
+}
+
+function StatBox({ label, value, color }) {
+  return (
+    <div style={{ background:'var(--surface)', borderRadius:12, padding:'10px', textAlign:'center', border:'1px solid var(--ol)' }}>
+      <div style={{ fontSize:16, fontWeight:700, color }}>{value}</div>
+      <div style={{ fontSize:10, color:'var(--ink-faint)', fontWeight:600, marginTop:2 }}>{label.toUpperCase()}</div>
+    </div>
+  );
+}
+
+// ════════════════════════════════════════════════════════════
+// TAB 3 — SESSIONS
+// ════════════════════════════════════════════════════════════
+const GAME_ICONS = {
+  'Hear & Tap':'👂', 'Number Order':'🔢', 'Build the Number':'🧱',
+  'Even/Odd House':'🏠', 'Add & Take Away':'➕',
+};
+const GAME_SKILL_COLORS = {
+  'recog':'var(--sage)', 'listen':'var(--sage)', 'count':'var(--sky)',
+  'tens':'var(--sun)', 'evenodd':'var(--sky)', 'add':'var(--lav)', 'sub':'var(--lav)',
+};
+
+function SessionsTab() {
+  const [filter, setFilter] = useState('week');
+  const filters = [
+    { id:'week',  label:'This Week' },
+    { id:'month', label:'Last 30 Days' },
+    { id:'all',   label:'All Time' },
+  ];
+  const visible = filter === 'week'
+    ? SESSIONS_ALL.slice(0,9)
+    : filter === 'month' ? SESSIONS_ALL : SESSIONS_ALL;
+
+  // Group by date label
+  const grouped = visible.reduce((acc, s) => {
+    acc[s.date] = acc[s.date] || [];
+    acc[s.date].push(s);
+    return acc;
+  }, {});
+
+  return (
+    <div className="fade-in" style={{ display:'flex', flexDirection:'column', gap:16 }}>
+
+      {/* Filter chips */}
+      <div style={{ display:'flex', gap:6 }}>
+        {filters.map(f => (
+          <button key={f.id} onClick={()=>setFilter(f.id)} style={{
+            padding:'7px 14px', borderRadius:999, fontSize:12, fontWeight:600,
+            background: filter===f.id ? 'var(--ink)' : 'var(--card)',
+            color: filter===f.id ? '#fff' : 'var(--ink-soft)',
+            border: filter===f.id ? 'none' : '1px solid var(--ol)',
+            transition:'all 0.15s',
+          }}>{f.label}</button>
+        ))}
+      </div>
+
+      {/* Summary strip */}
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:8 }}>
+        <StatBox label="Sessions"   value={visible.length}                      color="var(--ink)"/>
+        <StatBox label="Total Time" value={`${visible.reduce((a,s)=>a+s.mins,0)}m`} color="var(--sky-ink)"/>
+        <StatBox label="Avg Acc."   value={`${Math.round(visible.reduce((a,s)=>a+s.acc,0)/visible.length)}%`} color="var(--sage)"/>
+      </div>
+
+      {/* Timeline */}
+      {Object.entries(grouped).map(([date, sessions]) => (
+        <div key={date}>
+          <div style={{ fontSize:11, fontWeight:700, color:'var(--ink-faint)', letterSpacing:0.8, textTransform:'uppercase', marginBottom:8, paddingLeft:4 }}>{date}</div>
+          <Card>
+            {sessions.map((s, i) => (
+              <div key={s.id}>
+                <div style={{ padding:'12px 14px', display:'flex', alignItems:'center', gap:12 }}>
+                  {/* Icon */}
+                  <div style={{
+                    width:42, height:42, borderRadius:14, flexShrink:0,
+                    background:'var(--surface)', border:'1px solid var(--ol)',
+                    display:'flex', alignItems:'center', justifyContent:'center', fontSize:20,
+                  }}>{GAME_ICONS[s.game]||'🎮'}</div>
+
+                  {/* Info */}
+                  <div style={{ flex:1, minWidth:0 }}>
+                    <div style={{ fontSize:13, fontWeight:600, color:'var(--ink)', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{s.game}</div>
+                    <div style={{ display:'flex', gap:6, marginTop:4, alignItems:'center', flexWrap:'wrap' }}>
+                      <span style={{ fontSize:11, color:'var(--ink-faint)' }}>{s.time}</span>
+                      <span style={{ fontSize:11, color:'var(--ink-faint)' }}>·</span>
+                      <span style={{ fontSize:11, color:'var(--ink-faint)' }}>{s.mins} min</span>
+                      {s.skills.map(sk => (
+                        <div key={sk} style={{
+                          fontSize:9, fontWeight:700, letterSpacing:0.4,
+                          padding:'1px 6px', borderRadius:999,
+                          background:'var(--surface)', color:'var(--ink-soft)',
+                          border:'1px solid var(--ol)',
+                        }}>{SKILLS.find(x=>x.id===sk)?.label.split(' ')[0]}</div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Score */}
+                  <div style={{ textAlign:'right', flexShrink:0 }}>
+                    <div style={{ fontSize:14, fontWeight:700, color: s.acc>=80?'#2F6A3C':s.acc>=60?'#B87C0E':'#C14A2A' }}>{s.acc}%</div>
+                    <div style={{ fontSize:11, color:'#B87C0E', fontWeight:600 }}>{s.stars} ⭐</div>
+                  </div>
+                </div>
+                {i < sessions.length - 1 && <Divider/>}
+              </div>
+            ))}
+          </Card>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ════════════════════════════════════════════════════════════
+// TAB 4 — MILESTONES
+// ════════════════════════════════════════════════════════════
+function MilestonesTab() {
+  const earned   = MILESTONES.filter(m => m.earned);
+  const upcoming = MILESTONES.filter(m => !m.earned);
+
+  return (
+    <div className="fade-in" style={{ display:'flex', flexDirection:'column', gap:20 }}>
+
+      {/* Earned */}
+      <div>
+        <Sec>Earned · {earned.length} badges</Sec>
+        <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
+          {earned.map((m, i) => (
+            <div key={m.id} style={{
+              display:'flex', alignItems:'center', gap:12,
+              background:'var(--card)', borderRadius:18, padding:'14px',
+              border:'1px solid var(--ol)',
+              animation:`pop-in 0.35s ${i*0.06}s both`,
+            }}>
+              <div style={{
+                width:52, height:52, borderRadius:16, flexShrink:0,
+                background: m.color, border:`2px solid rgba(46,90,58,0.15)`,
+                boxShadow:`0 3px 0 ${m.shadow}`,
+                display:'flex', alignItems:'center', justifyContent:'center', fontSize:26,
+              }}>{m.icon}</div>
+              <div style={{ flex:1 }}>
+                <div style={{ fontSize:14, fontWeight:700, color:'var(--ink)' }}>{m.title}</div>
+                <div style={{ fontSize:12, color:'var(--ink-soft)', marginTop:2 }}>{m.sub}</div>
+              </div>
+              <div style={{ fontSize:11, color:'var(--ink-faint)', fontWeight:600, flexShrink:0, textAlign:'right' }}>{m.date}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Upcoming */}
+      <div>
+        <Sec>Upcoming · Almost there</Sec>
+        <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
+          {upcoming.map(m => (
+            <div key={m.id} style={{
+              display:'flex', alignItems:'center', gap:12,
+              background:'var(--card)', borderRadius:18, padding:'14px',
+              border:'1px solid var(--ol)',
+            }}>
+              <div style={{
+                width:52, height:52, borderRadius:16, flexShrink:0,
+                background:'#F0EADC', border:`2px solid rgba(46,90,58,0.10)`,
+                display:'flex', alignItems:'center', justifyContent:'center', fontSize:26,
+                filter:'grayscale(0.6)', opacity:0.7,
+              }}>{m.icon}</div>
+              <div style={{ flex:1 }}>
+                <div style={{ fontSize:14, fontWeight:700, color:'var(--ink)' }}>{m.title}</div>
+                <div style={{ fontSize:12, color:'var(--ink-soft)', marginTop:2, marginBottom:6 }}>{m.sub}</div>
+                {m.pct !== undefined && (
+                  <div>
+                    <div style={{ height:6, borderRadius:6, background:'rgba(46,90,58,0.08)', overflow:'hidden' }}>
+                      <div style={{ height:'100%', width:`${(m.pct/m.goal)*100}%`, borderRadius:6, background:'#C4C0B3', transition:'width 0.7s ease' }}/>
+                    </div>
+                    <div style={{ fontSize:10, color:'var(--ink-faint)', marginTop:3 }}>
+                      {Math.round(m.pct*100)}% of {Math.round(m.goal*100)}% needed
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ════════════════════════════════════════════════════════════
+// ROOT
+// ════════════════════════════════════════════════════════════
+function App() {
+  const [tweaks, setTweaks] = useState(TWEAK_DEFAULTS);
+  const [tweaksOpen, setTweaksOpen] = useState(false);
+  const [tab, setTab] = useState('overview');
+
+  useEffect(() => {
+    function onMsg(e) {
+      if (e.data?.type === '__activate_edit_mode')   setTweaksOpen(true);
+      if (e.data?.type === '__deactivate_edit_mode') setTweaksOpen(false);
+    }
+    window.addEventListener('message', onMsg);
+    window.parent.postMessage({ type: '__edit_mode_available' }, '*');
+    return () => window.removeEventListener('message', onMsg);
+  }, []);
+
+  useEffect(() => {
+    window.parent.postMessage({ type: '__edit_mode_set_keys', edits: tweaks }, '*');
+  }, [tweaks]);
+
+  const TABS = [
+    { id:'overview',   label:'Overview' },
+    { id:'skills',     label:'Skills'   },
+    { id:'sessions',   label:'Sessions' },
+    { id:'milestones', label:'Milestones' },
+  ];
+
+  return (
+    <>
+    <PhoneShell>
+      <div style={{ height:'100%', display:'flex', flexDirection:'column', background:'var(--surface)' }}>
+
+        {/* Header */}
+        <div style={{
+          padding:'52px 18px 0', background:'var(--card)',
+          borderBottom:'1px solid var(--ol)', flexShrink:0,
+        }}>
+          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:14 }}>
+            <button style={{ fontSize:13, fontWeight:600, color:'var(--ink-soft)', display:'flex', alignItems:'center', gap:4 }}>
+              <span style={{fontSize:18,lineHeight:1}}>‹</span> Dashboard
+            </button>
+            <div style={{ textAlign:'center' }}>
+              <div style={{ fontSize:10, fontWeight:700, color:'var(--ink-faint)', letterSpacing:1 }}>PARENT CORNER</div>
+              <div style={{ fontSize:17, fontWeight:700, color:'var(--ink)' }}>{tweaks.childName}'s Progress</div>
+            </div>
+            <div style={{ width:60 }}/>
+          </div>
+
+          {/* Tab bar */}
+          <div style={{ display:'flex', overflowX:'auto', scrollbarWidth:'none', gap:0 }}>
+            {TABS.map(t => (
+              <button key={t.id} onClick={() => setTab(t.id)} style={{
+                flex:'0 0 auto', padding:'10px 14px',
+                fontSize:13, fontWeight:600,
+                color: tab===t.id ? 'var(--ink)' : 'var(--ink-faint)',
+                borderBottom: tab===t.id ? '2.5px solid var(--ink)' : '2.5px solid transparent',
+                transition:'all 0.15s', whiteSpace:'nowrap',
+              }}>{t.label}</button>
+            ))}
+          </div>
+        </div>
+
+        {/* Scrollable content */}
+        <div className="scroll" style={{ flex:1, padding:'18px 16px 36px' }}>
+          {tab === 'overview'   && <OverviewTab name={tweaks.childName}/>}
+          {tab === 'skills'     && <SkillsTab/>}
+          {tab === 'sessions'   && <SessionsTab/>}
+          {tab === 'milestones' && <MilestonesTab/>}
+        </div>
+      </div>
+    </PhoneShell>
+
+    {/* Tweaks */}
+    <div id="tweaks-panel" className={tweaksOpen ? 'open' : ''}>
+      <h3>TWEAKS</h3>
+      <div className="tweak-row">
+        <label>Language</label>
+        <select className="tweak-select" value={tweaks.lang}
+          onChange={e=>setTweaks(t=>({...t,lang:e.target.value}))}>
+          <option value="en">English</option>
+          <option value="vi">Tiếng Việt</option>
+        </select>
+      </div>
+      <div className="tweak-row">
+        <label>Child name</label>
+        <input value={tweaks.childName} onChange={e=>setTweaks(t=>({...t,childName:e.target.value}))}
+          style={{width:80,padding:'4px 8px',borderRadius:8,border:'1.5px solid rgba(0,0,0,0.1)',fontFamily:'inherit',fontSize:12}}/>
+      </div>
+    </div>
+    </>
+  );
+}
+
+function PhoneShell({ children }) {
+  return (
+    <div style={{
+      width:390, minHeight:844, borderRadius:50, overflow:'hidden',
+      boxShadow:'0 0 0 10px #1a1a1a, 0 40px 80px rgba(0,0,0,0.45)',
+      position:'relative', background:'#000',
+    }}>
+      <div style={{ position:'absolute', top:0, left:'50%', transform:'translateX(-50%)', width:120, height:34, background:'#000', borderRadius:'0 0 20px 20px', zIndex:100 }}/>
+      <div style={{ position:'relative', overflow:'hidden', borderRadius:50 }}>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>

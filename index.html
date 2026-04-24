@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bắp Number Adventure</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Baloo+2:wght@500;600;700&family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="src/tokens.css">
+<style>
+  html, body { height: 100%; }
+  body { background: #EFE6D3; }
+  .stage {
+    position: fixed; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    padding: 20px;
+    background:
+      radial-gradient(ellipse 80% 60% at 30% 20%, #FFE8B8 0%, transparent 55%),
+      radial-gradient(ellipse 90% 60% at 80% 80%, #D9E8CE 0%, transparent 55%),
+      #EFE6D3;
+  }
+  .phone-shell {
+    width: 402px;
+    height: min(874px, calc(100vh - 40px));
+    position: relative;
+  }
+  @media (max-width: 500px) {
+    .stage { padding: 0; }
+    .phone-shell { width: 100vw; height: 100vh; border-radius: 0; }
+  }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<!-- React -->
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<!-- Components (load order matters: dependencies first) -->
+<script type="text/babel" src="src/ios-frame.jsx"></script>
+<script type="text/babel" src="src/mascot.jsx"></script>
+<script type="text/babel" src="src/ui.jsx"></script>
+<script type="text/babel" src="src/screens-intro.jsx"></script>
+<script type="text/babel" src="src/screens-home.jsx"></script>
+<script type="text/babel" src="src/games.jsx"></script>
+<script type="text/babel" src="src/screens-reward-parent.jsx"></script>
+<script type="text/babel" src="src/app.jsx"></script>
+
+<script type="text/babel" data-presets="react">
+const { useState, useEffect } = React;
+
+const TWEAK_DEFAULTS = {
+  "theme": "garden",
+  "mascotColor": "sun",
+  "difficulty": "easy",
+  "language": "en",
+  "devJump": true
+};
+
+function Root() {
+  const [tweaks, setTweaks] = useState(TWEAK_DEFAULTS);
+  const [editMode, setEditMode] = useState(false);
+
+  useEffect(() => {
+    const onMsg = (e) => {
+      const d = e.data || {};
+      if (d.type === '__activate_edit_mode') setEditMode(true);
+      if (d.type === '__deactivate_edit_mode') setEditMode(false);
+    };
+    window.addEventListener('message', onMsg);
+    window.parent.postMessage({ type: '__edit_mode_available' }, '*');
+    return () => window.removeEventListener('message', onMsg);
+  }, []);
+
+  const set = (patch) => {
+    setTweaks(t => ({ ...t, ...patch }));
+    window.parent.postMessage({ type: '__edit_mode_set_keys', edits: patch }, '*');
+  };
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', tweaks.theme || 'garden');
+  }, [tweaks.theme]);
+
+  return (
+    <div className="stage">
+      <div className="phone-shell">
+        <IOSDevice width={402} height={874}>
+          <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', background: '#FFFDF7' }}>
+            <App tweaks={tweaks}/>
+          </div>
+        </IOSDevice>
+      </div>
+      {editMode && <TweakPanel tweaks={tweaks} set={set}/>}
+    </div>
+  );
+}
+
+function TweakPanel({ tweaks, set }) {
+  return (
+    <div style={{
+      position: 'fixed', top: 16, right: 16, width: 260,
+      background: 'rgba(255,253,247,0.96)', backdropFilter: 'blur(12px)',
+      borderRadius: 20, padding: 16, zIndex: 1000,
+      boxShadow: '0 20px 40px rgba(0,0,0,0.15), 0 0 0 1px rgba(46,90,58,0.1)',
+      fontFamily: 'system-ui',
+    }}>
+      <div style={{ fontSize: 11, fontWeight: 700, color: '#6B7A6C', letterSpacing: 1, marginBottom: 10 }}>TWEAKS</div>
+
+      <TRow label="Palette">
+        <TOpts value={tweaks.theme} onChange={v => set({ theme: v })} options={[['garden','Garden'],['candy','Candy'],['sunny','Sunny']]}/>
+      </TRow>
+
+      <TRow label="Mascot color">
+        <div style={{ display: 'flex', gap: 6 }}>
+          {['sun','sage','coral','lavender','sky'].map(c => (
+            <button key={c} onClick={() => set({ mascotColor: c })} style={{
+              width: 32, height: 32, borderRadius: '50%',
+              background: { sun:'#FFD36E', sage:'#A8D5A2', coral:'#FFA48C', lavender:'#D9C7F0', sky:'#B8DEEF' }[c],
+              border: tweaks.mascotColor === c ? '2.5px solid #2D3A2E' : '1px solid rgba(0,0,0,0.15)',
+              boxShadow: tweaks.mascotColor === c ? '0 2px 0 rgba(46,90,58,0.2)' : 'none',
+            }}/>
+          ))}
+        </div>
+      </TRow>
+
+      <TRow label="Language">
+        <TOpts value={tweaks.language} onChange={v => set({ language: v })} options={[['en','EN'],['vi','VI'],['bi','BI']]}/>
+      </TRow>
+
+      <TRow label="Difficulty">
+        <TOpts value={tweaks.difficulty} onChange={v => set({ difficulty: v })} options={[['easy','Easy'],['medium','Med'],['hard','Hard']]}/>
+      </TRow>
+
+      <TRow label="Dev scene nav">
+        <button onClick={() => set({ devJump: !tweaks.devJump })} style={{
+          padding: '4px 10px', borderRadius: 999, fontSize: 11, fontWeight: 600,
+          background: tweaks.devJump ? '#2D3A2E' : '#EEE9DC',
+          color: tweaks.devJump ? '#fff' : '#2D3A2E',
+        }}>{tweaks.devJump ? 'ON' : 'OFF'}</button>
+      </TRow>
+    </div>
+  );
+}
+function TRow({ label, children }) {
+  return (
+    <div style={{ marginBottom: 12 }}>
+      <div style={{ fontSize: 11, color: '#6B7A6C', fontWeight: 600, marginBottom: 6 }}>{label}</div>
+      {children}
+    </div>
+  );
+}
+function TOpts({ value, onChange, options }) {
+  return (
+    <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+      {options.map(([v, l]) => (
+        <button key={v} onClick={() => onChange(v)} style={{
+          padding: '5px 10px', borderRadius: 999, fontSize: 11, fontWeight: 600,
+          background: value === v ? '#2D3A2E' : '#EEE9DC',
+          color: value === v ? '#fff' : '#2D3A2E',
+        }}>{l}</button>
+      ))}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<Root/>);
+</script>
+</body>
+</html>

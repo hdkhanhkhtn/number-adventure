@@ -1,0 +1,671 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bắp — Mini-Game Template System</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; font-family: 'Fredoka', ui-rounded, sans-serif; background: #E8E0D3; -webkit-font-smoothing: antialiased; overflow: hidden; }
+button { cursor: pointer; font-family: inherit; border: none; background: none; }
+@keyframes bobble { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
+@keyframes pop-in { 0%{transform:scale(0.6);opacity:0} 60%{transform:scale(1.1);opacity:1} 100%{transform:scale(1)} }
+@keyframes pulse-soft { 0%,100%{transform:scale(1)} 50%{transform:scale(1.05)} }
+@keyframes wiggle { 0%,100%{transform:rotate(0)} 25%{transform:rotate(-5deg)} 75%{transform:rotate(5deg)} }
+@keyframes sparkle { 0%,100%{transform:scale(.6) rotate(0);opacity:.3} 50%{transform:scale(1.2) rotate(180deg);opacity:1} }
+@keyframes correct-flash { 0%{background:#C4EBB9} 50%{background:#E5F7E0} 100%{background:#C4EBB9} }
+@keyframes shake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-6px)} 40%{transform:translateX(6px)} 60%{transform:translateX(-4px)} 80%{transform:translateX(4px)} }
+@keyframes float-up { from{transform:translateY(0);opacity:1} to{transform:translateY(-40px);opacity:0} }
+@keyframes ripple { 0%{transform:scale(.8);opacity:.8} 100%{transform:scale(2.2);opacity:0} }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script type="text/babel" src="design-canvas.jsx"></script>
+<script type="text/babel">
+const { useState, useRef } = React;
+
+// ─── TOKENS ──────────────────────────────────────────────────
+const C = {
+  ink:'#2D3A2E', soft:'#6B7A6C', faint:'#A9B4A8',
+  sun:'#FFD36E', sunSh:'#C79528', sunInk:'#5E3A00',
+  sage:'#7FC089', sageSh:'#4D8B58', sageInk:'#1F4A28', sagePale:'#C4EBB9',
+  sky:'#B8DEEF',  skySh:'#7DB0C8',  skyInk:'#1F4A61',
+  lav:'#D9C7F0',  lavSh:'#A58AD0',  lavInk:'#3D256D',
+  coral:'#FFA48C',coralSh:'#D67560',coralInk:'#7A2B15',
+  cream:'#FFF8EC', surface:'#FFFDF7',
+  correct:'#5FB36A', correctSh:'#3D8A4A', correctBg:'#EAF7E4',
+  wrong:'#F2795A',   wrongSh:'#C8614A',   wrongBg:'#FFE8DF',
+  hint:'#FFD36E',    hintBg:'#FFF4DE',
+};
+
+// ─── SHARED MASCOT ───────────────────────────────────────────
+function Bap({ size=60, mood='happy', color='sun' }) {
+  const body = {sun:'#FFD36E',sage:'#A8D5A2',coral:'#FFA48C',lavender:'#D9C7F0',sky:'#B8DEEF'}[color]||'#FFD36E';
+  const dark = {sun:'#E8B23F',sage:'#7FB983',coral:'#E2815E',lavender:'#B39DD1',sky:'#88BED4'}[color]||'#E8B23F';
+  const eye = {
+    happy:<><ellipse cx="0" cy="0" rx="6" ry="7" fill={C.ink}/><ellipse cx="-1.5" cy="-2" rx="2" ry="2.5" fill="#fff"/></>,
+    celebrate:<path d="M -6 2 Q 0 -6 6 2" stroke={C.ink} strokeWidth="3" fill="none" strokeLinecap="round"/>,
+    worry:<><ellipse cx="0" cy="1" rx="5" ry="5" fill={C.ink}/></>,
+    hint:<><ellipse cx="0" cy="0" rx="6" ry="6" fill={C.ink}/><ellipse cx="2" cy="-2" rx="2" ry="2.5" fill="#fff"/></>,
+  };
+  const mouth = {
+    happy:<path d="M 35 85 Q 50 98 65 85" stroke={C.ink} strokeWidth="3.5" fill="#C14A2A" strokeLinecap="round"/>,
+    celebrate:<path d="M 32 82 Q 50 105 68 82 Q 50 95 32 82" fill="#C14A2A" stroke={C.ink} strokeWidth="3"/>,
+    worry:<path d="M 38 89 Q 50 81 62 89" stroke={C.ink} strokeWidth="3" fill="none" strokeLinecap="round"/>,
+    hint:<path d="M 40 85 Q 50 91 60 85" stroke={C.ink} strokeWidth="3" fill="#C14A2A" strokeLinecap="round"/>,
+  };
+  return (
+    <svg viewBox="0 0 120 140" width={size} height={size*140/120} style={{display:'block'}}>
+      <g><ellipse cx="38" cy="18" rx="14" ry="20" fill="#7FB983" transform="rotate(-30 38 18)"/>
+      <ellipse cx="38" cy="18" rx="7" ry="16" fill="#A8D5A2" transform="rotate(-30 38 18)"/>
+      <ellipse cx="76" cy="14" rx="16" ry="22" fill="#5FA36A" transform="rotate(25 76 14)"/>
+      <ellipse cx="76" cy="14" rx="8" ry="18" fill="#A8D5A2" transform="rotate(25 76 14)"/></g>
+      <ellipse cx="60" cy="126" rx="38" ry="6" fill="rgba(46,90,58,0.15)"/>
+      <path d="M60 28 C92 28 100 56 100 82 C100 110 82 126 60 126 C38 126 20 110 20 82 C20 56 28 28 60 28Z" fill={body} stroke={C.ink} strokeWidth="3.5"/>
+      <g opacity=".3" stroke={dark} strokeWidth="2" fill="none" strokeLinecap="round">
+        <path d="M30 62 Q60 56 90 62"/><path d="M28 80 Q60 74 92 80"/><path d="M30 98 Q60 104 90 98"/>
+      </g>
+      <circle cx="30" cy="82" r="7" fill="#FFA48C" opacity=".7"/>
+      <circle cx="90" cy="82" r="7" fill="#FFA48C" opacity=".7"/>
+      <g transform="translate(42 66)">{eye[mood]||eye.happy}</g>
+      <g transform="translate(78 66)">{eye[mood]||eye.happy}</g>
+      {mouth[mood]||mouth.happy}
+    </svg>
+  );
+}
+
+// ─── SHARED HUD ───────────────────────────────────────────────
+function GameHUD({ hearts=3, progress=2, total=5, bg='#FFFDF7', variant='sage' }) {
+  const barColor = {sage:C.correct, sky:C.sky, sun:C.sun, lav:C.lav, coral:C.coral}[variant]||C.correct;
+  return (
+    <div style={{padding:'52px 16px 10px',display:'flex',alignItems:'center',gap:10,background:bg}}>
+      <button style={{width:44,height:44,borderRadius:'50%',background:C.cream,border:`3px solid ${C.ink}`,boxShadow:'0 3px 0 #D9C38A',display:'flex',alignItems:'center',justifyContent:'center',fontSize:20,color:C.soft}}>✕</button>
+      <div style={{flex:1}}>
+        <div style={{height:14,borderRadius:14,background:'rgba(46,90,58,0.1)',border:`2px solid ${C.ink}`,overflow:'hidden'}}>
+          <div style={{height:'100%',width:`${progress/total*100}%`,background:barColor,borderRadius:14,transition:'width .5s cubic-bezier(.34,1.56,.64,1)'}}/>
+        </div>
+      </div>
+      <button style={{width:44,height:44,borderRadius:'50%',background:C.sun,border:`3px solid ${C.ink}`,boxShadow:`0 3px 0 ${C.sunSh}`,display:'flex',alignItems:'center',justifyContent:'center',animation:'pulse-soft 2s ease-in-out infinite'}}>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M4 10v4a1 1 0 001 1h3l4 4a1 1 0 001.7-.7V5.7a1 1 0 00-1.7-.7l-4 4H5a1 1 0 00-1 1z" fill={C.sunInk}/><path d="M16 9Q19 12 16 15" stroke={C.sunInk} strokeWidth="2.5" fill="none" strokeLinecap="round"/></svg>
+      </button>
+      <div style={{display:'flex',alignItems:'center',gap:3,padding:'6px 12px',borderRadius:999,background:'#FFDDE2',border:`2px solid ${C.ink}`,fontSize:14,fontWeight:700,color:'#A33A1D'}}>
+        ❤️ {hearts}
+      </div>
+    </div>
+  );
+}
+
+// ─── MASCOT BUBBLE ────────────────────────────────────────────
+function MascotBubble({ text, mood='happy', color='sun', size=60 }) {
+  return (
+    <div style={{display:'flex',alignItems:'flex-end',gap:8,padding:'0 16px 8px'}}>
+      <div style={{animation:'bobble 2.4s ease-in-out infinite',flexShrink:0}}>
+        <Bap size={size} mood={mood} color={color}/>
+      </div>
+      <div style={{
+        flex:1,background:C.cream,borderRadius:'16px 16px 16px 4px',
+        border:`2px solid ${C.ink}`,boxShadow:'0 3px 0 #D9C38A',
+        padding:'10px 14px',fontSize:13,fontWeight:600,color:C.ink,
+        lineHeight:1.4,
+      }}>
+        {text}
+        <div style={{width:0,height:0,position:'absolute',borderTop:'6px solid transparent',borderRight:'8px solid #2D3A2E',bottom:-6,left:-1}}/>
+      </div>
+    </div>
+  );
+}
+
+// ─── NUM TILE ────────────────────────────────────────────────
+function NumTile({ n, state='idle', color='cream', size='md', style={} }) {
+  const sizes = { sm:{w:64,h:72,fs:30,r:16}, md:{w:88,h:100,fs:50,r:22}, lg:{w:110,h:126,fs:66,r:28} };
+  const s = sizes[size]||sizes.md;
+  const colors = {
+    sun:{bg:C.sun,sh:C.sunSh,ink:C.sunInk},
+    sage:{bg:C.sagePale,sh:C.sageSh,ink:C.sageInk},
+    sky:{bg:C.sky,sh:C.skySh,ink:C.skyInk},
+    cream:{bg:C.cream,sh:'#D9C38A',ink:C.ink},
+    coral:{bg:C.coral,sh:C.coralSh,ink:C.coralInk},
+  };
+  const c = colors[color]||colors.cream;
+  const stateStyle = {
+    correct:{background:C.correctBg,boxShadow:`0 4px 0 ${C.correctSh}`,border:`3px solid ${C.correct}`,animation:'pop-in .35s cubic-bezier(.34,1.56,.64,1)'},
+    wrong:{background:C.wrongBg,boxShadow:`0 2px 0 ${C.wrongSh}`,border:`3px solid ${C.wrong}`,animation:'shake .4s ease-in-out'},
+    idle:{background:c.bg,boxShadow:`0 5px 0 ${c.sh}`,border:`3px solid ${C.ink}`},
+    disabled:{background:'#E8DFCE',boxShadow:'0 3px 0 rgba(46,90,58,0.15)',border:'3px solid rgba(46,90,58,0.2)',opacity:.5},
+  }[state]||{};
+  return (
+    <div style={{
+      width:s.w,height:s.h,borderRadius:s.r,
+      display:'flex',alignItems:'center',justifyContent:'center',
+      fontFamily:'Fredoka',fontWeight:700,fontSize:s.fs,color:state==='correct'?C.correct:state==='wrong'?C.wrong:c.ink,
+      cursor:'pointer',userSelect:'none',position:'relative',
+      transition:'transform .1s',
+      ...stateStyle,...style,
+    }}>{n}</div>
+  );
+}
+
+// ─── GAME BACKGROUND ─────────────────────────────────────────
+function GameBg({ variant='sage', children }) {
+  const bgs = {
+    sage:'radial-gradient(ellipse 100% 60% at 50% 0%,#D6ECCE 0%,#E8F4E0 50%,#F4FAEE 100%)',
+    sky:'radial-gradient(ellipse 100% 60% at 50% 0%,#D4EAF5 0%,#E7F3FA 50%,#F5FAFD 100%)',
+    sun:'radial-gradient(ellipse 100% 60% at 50% 0%,#FFE6A8 0%,#FFF2CC 50%,#FFF9E6 100%)',
+    lav:'radial-gradient(ellipse 100% 60% at 50% 0%,#E3D2F4 0%,#EEE3F8 50%,#F7F1FC 100%)',
+    coral:'radial-gradient(ellipse 100% 60% at 50% 0%,#FFD6C6 0%,#FFE8DE 50%,#FFF4F0 100%)',
+  };
+  return <div style={{position:'absolute',inset:0,background:bgs[variant]||bgs.sage}}>{children}</div>;
+}
+
+// ══════════════════════════════════════════════════════════════
+// SCREEN 1 — TEMPLATE ANATOMY
+// ══════════════════════════════════════════════════════════════
+function TemplateAnatomy() {
+  const zones = [
+    { top:0,   h:96,  bg:'rgba(255,211,110,0.2)', border:C.sun,    label:'① HUD Zone',        desc:'Progress · Close · Audio · Hearts', icon:'📊' },
+    { top:96,  h:82,  bg:'rgba(168,213,162,0.2)', border:C.sage,   label:'② Mascot + Prompt', desc:'Mascot bubble · Audio cue · Instruction text', icon:'🐾' },
+    { top:178, h:160, bg:'rgba(184,222,239,0.2)', border:C.sky,    label:'③ Visual Aid Zone', desc:'Dot arrays · Objects · Number displays · Counters', icon:'🖼️' },
+    { top:338, h:220, bg:'rgba(217,199,240,0.2)', border:C.lav,    label:'④ Answer Zone',      desc:'Tap tiles · Drag slots · Counters · Blocks', icon:'✋' },
+    { top:558, h:80,  bg:'rgba(255,200,140,0.2)', border:C.coral,  label:'⑤ Feedback Zone',   desc:'Correct / Wrong / Hint / Float-up score', icon:'🎉' },
+    { top:638, h:50,  bg:'rgba(46,90,58,0.05)',   border:'rgba(46,90,58,0.15)', label:'⑥ Navigation', desc:'Back · Skip (parent) · Next →', icon:'🔀' },
+  ];
+  return (
+    <div style={{position:'absolute',inset:0,background:'#FFFDF7'}}>
+      {/* Status bar */}
+      <div style={{position:'absolute',top:0,left:0,right:0,height:48,background:'#F7F3EC',borderBottom:'1px solid rgba(46,90,58,0.08)',display:'flex',alignItems:'center',justifyContent:'space-between',padding:'8px 20px 0',zIndex:10}}>
+        <div style={{fontSize:13,fontWeight:700,color:C.ink}}>9:41</div>
+        <div style={{width:90,height:22,borderRadius:20,background:C.ink}}/>
+        <div style={{fontSize:11,fontWeight:700,color:C.ink}}>●●●</div>
+      </div>
+
+      {zones.map(z=>(
+        <div key={z.label} style={{
+          position:'absolute',left:0,right:0,top:z.top,height:z.h,
+          background:z.bg,borderTop:`2px dashed ${z.border}`,
+          display:'flex',alignItems:'center',
+          padding:'0 16px',gap:12,
+        }}>
+          <div style={{width:36,height:36,borderRadius:10,background:z.border,border:`2px solid ${C.ink}`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:18,flexShrink:0}}>{z.icon}</div>
+          <div>
+            <div style={{fontSize:13,fontWeight:700,color:C.ink}}>{z.label}</div>
+            <div style={{fontSize:11,color:C.soft,marginTop:1}}>{z.desc}</div>
+          </div>
+          <div style={{marginLeft:'auto',fontSize:11,fontWeight:700,color:z.border,opacity:.8}}>h:{z.h}px</div>
+        </div>
+      ))}
+
+      {/* Title */}
+      <div style={{position:'absolute',top:52,left:0,right:0,padding:'8px 16px',background:'rgba(255,253,247,0.95)',zIndex:5,textAlign:'center'}}>
+        <div style={{fontSize:12,fontWeight:700,color:C.soft,letterSpacing:.6}}>GAME SCREEN TEMPLATE — 375×688px</div>
+      </div>
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════
+// SCREEN 2 — MULTIPLE CHOICE TAP
+// ══════════════════════════════════════════════════════════════
+function MultipleChoiceGame({ feedbackState='idle' }) {
+  const [picked, setPicked] = useState(feedbackState !== 'idle' ? (feedbackState==='correct'?17:12) : null);
+  const target = 17;
+  const opts = [12, 17, 9, 24];
+  return (
+    <div style={{position:'absolute',inset:0}}>
+      <GameBg variant="sage"/>
+      <div style={{position:'relative',zIndex:1,height:'100%',display:'flex',flexDirection:'column'}}>
+        <GameHUD hearts={3} progress={2} total={5} variant="sage"/>
+
+        {/* Mascot + prompt */}
+        <MascotBubble text="Tap the number you hear! 🔊" mood={feedbackState==='wrong'?'worry':feedbackState==='correct'?'celebrate':'happy'} color="sun"/>
+
+        {/* Visual aid — big speaker button */}
+        <div style={{display:'flex',justifyContent:'center',padding:'12px 0 8px'}}>
+          <div style={{
+            width:130,height:130,borderRadius:'50%',
+            background:C.sun,border:`4px solid ${C.ink}`,
+            boxShadow:`0 6px 0 ${C.sunSh},0 14px 24px rgba(199,149,40,0.2)`,
+            display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:4,
+            animation:'pulse-soft 2s ease-in-out infinite',
+          }}>
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none">
+              <path d="M4 10v4a1 1 0 001 1h3l4 4a1 1 0 001.7-.7V5.7a1 1 0 00-1.7-.7l-4 4H5a1 1 0 00-1 1z" fill={C.sunInk}/>
+              <path d="M16 9Q19 12 16 15M18.5 6.5Q23 12 18.5 17.5" stroke={C.sunInk} strokeWidth="2.5" fill="none" strokeLinecap="round"/>
+            </svg>
+            <div style={{fontSize:11,fontWeight:700,color:C.sunInk,letterSpacing:.5}}>TAP TO HEAR</div>
+          </div>
+        </div>
+
+        {/* Answer tiles */}
+        <div style={{flex:1,padding:'8px 16px 12px',display:'flex',flexDirection:'column',justifyContent:'center',gap:12}}>
+          <div style={{textAlign:'center',fontSize:12,fontWeight:700,color:C.sageInk,letterSpacing:.5,opacity:.7}}>CHOOSE THE NUMBER</div>
+          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,justifyItems:'center'}}>
+            {opts.map(n=>{
+              const st = picked===n ? (n===target?'correct':'wrong') : picked&&n===target?'correct':'idle';
+              return <NumTile key={n} n={n} state={st} color={st==='idle'?'cream':st==='correct'?'sage':'cream'} size="lg" style={{width:'100%'}}/>;
+            })}
+          </div>
+        </div>
+
+        {/* Feedback strip */}
+        {feedbackState==='correct' && (
+          <div style={{margin:'0 16px 12px',padding:'12px 16px',borderRadius:18,background:C.correctBg,border:`2px solid ${C.correct}`,display:'flex',alignItems:'center',gap:10,animation:'pop-in .3s both'}}>
+            <span style={{fontSize:24}}>🎉</span>
+            <div style={{fontSize:16,fontWeight:700,color:C.sageInk}}>Yes! That's 17!</div>
+            <div style={{marginLeft:'auto',padding:'6px 14px',borderRadius:999,background:C.correct,color:'#fff',fontWeight:700,fontSize:14,border:`2px solid ${C.ink}`,boxShadow:'0 3px 0 #2F6A3C'}}>Next →</div>
+          </div>
+        )}
+        {feedbackState==='wrong' && (
+          <div style={{margin:'0 16px 12px',padding:'12px 16px',borderRadius:18,background:C.wrongBg,border:`2px solid ${C.wrong}`,display:'flex',alignItems:'center',gap:10,animation:'shake .4s both'}}>
+            <span style={{fontSize:24}}>💪</span>
+            <div style={{fontSize:15,fontWeight:700,color:C.coralInk}}>Try again! Listen again 🔊</div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════
+// SCREEN 3 — DRAG & DROP (Even/Odd Sort)
+// ══════════════════════════════════════════════════════════════
+function DragDropGame({ feedbackState='idle' }) {
+  const n = 8;
+  const isEven = n % 2 === 0;
+  const [dropped, setDropped] = useState(feedbackState==='correct' ? 'even' : feedbackState==='wrong' ? 'odd' : null);
+
+  return (
+    <div style={{position:'absolute',inset:0}}>
+      <GameBg variant="lav"/>
+      <div style={{position:'relative',zIndex:1,height:'100%',display:'flex',flexDirection:'column'}}>
+        <GameHUD hearts={2} progress={3} total={5} variant="lav"/>
+
+        <MascotBubble text="Is 8 even or odd? Drop it in!" mood={feedbackState==='correct'?'celebrate':feedbackState==='wrong'?'worry':'hint'} color="lavender"/>
+
+        {/* Number card to drag */}
+        <div style={{display:'flex',justifyContent:'center',padding:'10px 0 6px'}}>
+          <div style={{
+            width:120,height:120,borderRadius:28,
+            background: dropped ? (feedbackState==='correct'?C.correctBg:C.wrongBg) : '#fff',
+            border:`4px solid ${C.ink}`,
+            boxShadow: dropped ? 'none' : `0 6px 0 ${C.lavSh},0 14px 22px rgba(107,79,160,0.18)`,
+            display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:4,
+            cursor: dropped?'default':'grab',
+          }}>
+            <div style={{fontFamily:'Fredoka',fontWeight:700,fontSize:62,color:C.ink,lineHeight:1}}>{n}</div>
+            {/* Dots */}
+            <div style={{display:'flex',gap:3}}>
+              {Array.from({length:n}).map((_,i)=>(
+                <div key={i} style={{width:10,height:10,borderRadius:'50%',background:i%2===0?C.coral:C.sky,border:`1.5px solid ${C.ink}`}}/>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Drop zones */}
+        <div style={{flex:1,padding:'10px 14px 12px',display:'grid',gridTemplateColumns:'1fr 1fr',gap:12,alignItems:'stretch'}}>
+          {[{id:'even',label:'EVEN',hint:'pairs ✓',emoji:'🍎🍎',c:C.sage,sh:C.sageSh},{id:'odd',label:'ODD',hint:'one left over',emoji:'🍎',c:C.coral,sh:C.coralSh}].map(zone=>{
+            const isTarget = (zone.id==='even')===isEven;
+            const isDropped = dropped===zone.id;
+            const correct = isDropped && isTarget;
+            const wrong = isDropped && !isTarget;
+            return (
+              <button key={zone.id} onClick={()=>!dropped&&setDropped(zone.id)} style={{
+                borderRadius:28,border:`3px solid ${C.ink}`,
+                background: correct ? C.correctBg : wrong ? C.wrongBg : zone.c,
+                boxShadow: `0 5px 0 ${correct?C.correctSh:wrong?C.wrongSh:zone.sh}`,
+                display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:6,
+                padding:'16px 10px',
+                animation: wrong ? 'wiggle .4s ease-in-out' : correct ? 'pop-in .3s both' : 'none',
+              }}>
+                <div style={{fontSize:44,lineHeight:1}}>{zone.emoji}</div>
+                <div style={{fontSize:22,fontWeight:700,color:C.ink,letterSpacing:.5}}>{zone.label}</div>
+                <div style={{fontSize:12,fontWeight:600,color:C.soft}}>{zone.hint}</div>
+                {isDropped && <div style={{fontSize:28}}>{correct?'✅':'❌'}</div>}
+              </button>
+            );
+          })}
+        </div>
+
+        {feedbackState==='correct'&&<div style={{margin:'0 16px 12px',padding:'11px 16px',borderRadius:18,background:C.correctBg,border:`2px solid ${C.correct}`,display:'flex',alignItems:'center',gap:10,animation:'pop-in .3s both'}}><span style={{fontSize:22}}>🎉</span><div style={{fontSize:15,fontWeight:700,color:C.sageInk}}>8 is even — great sort!</div><div style={{marginLeft:'auto',padding:'6px 14px',borderRadius:999,background:C.correct,color:'#fff',fontWeight:700,fontSize:14,border:`2px solid ${C.ink}`,boxShadow:'0 3px 0 #2F6A3C'}}>Next →</div></div>}
+        {feedbackState==='wrong'&&<div style={{margin:'0 16px 12px',padding:'11px 16px',borderRadius:18,background:C.wrongBg,border:`2px solid ${C.wrong}`,display:'flex',alignItems:'center',gap:10}}><span style={{fontSize:22}}>💡</span><div style={{fontSize:14,fontWeight:700,color:C.coralInk}}>Count the dots — do they pair up?</div></div>}
+      </div>
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════
+// SCREEN 4 — SEQUENCE / ORDER GAME
+// ══════════════════════════════════════════════════════════════
+function SequenceGame({ feedbackState='idle' }) {
+  const seq = [14, 15, '?', 17, 18];
+  const target = 16;
+  const [picked, setPicked] = useState(feedbackState==='correct'?target:feedbackState==='wrong'?15:null);
+  const opts = [13, 16, 19];
+
+  return (
+    <div style={{position:'absolute',inset:0}}>
+      <GameBg variant="sun"/>
+      <div style={{position:'relative',zIndex:1,height:'100%',display:'flex',flexDirection:'column'}}>
+        <GameHUD hearts={3} progress={1} total={4} variant="sun"/>
+
+        <MascotBubble text="What number is hiding? 🔍" mood={feedbackState==='correct'?'celebrate':'hint'} color="sun"/>
+
+        {/* Sequence display */}
+        <div style={{padding:'10px 14px 0',display:'flex',flexDirection:'column',gap:8}}>
+          <div style={{textAlign:'center',fontSize:12,fontWeight:700,color:C.sunInk,letterSpacing:.5,opacity:.8}}>FILL IN THE MISSING NUMBER</div>
+          <div style={{display:'flex',justifyContent:'center',gap:8,alignItems:'center'}}>
+            {seq.map((n,i)=>(
+              <div key={i} style={{
+                width:n==='?'?68:56,height:n==='?'?80:66,
+                borderRadius:n==='?'?20:16,
+                background: n==='?'
+                  ? (picked ? (picked===target?C.correctBg:C.wrongBg) : 'rgba(255,255,255,0.6)')
+                  : '#fff',
+                border: n==='?'
+                  ? `3px ${picked?'solid':'dashed'} ${picked?(picked===target?C.correct:C.wrong):C.sunSh}`
+                  : `2px solid rgba(46,90,58,0.15)`,
+                boxShadow: n==='?'&&!picked ? `0 3px 0 ${C.sunSh}` : '0 2px 4px rgba(46,90,58,0.08)',
+                display:'flex',alignItems:'center',justifyContent:'center',
+                fontFamily:'Fredoka',fontWeight:700,
+                fontSize:n==='?'?36:28,
+                color:n==='?'?(picked?(picked===target?C.correct:C.wrong):C.sunInk):C.ink,
+                animation:n==='?'&&!picked?'pulse-soft 1.5s ease-in-out infinite':'none',
+              }}>
+                {n==='?' ? (picked||'?') : n}
+              </div>
+            ))}
+          </div>
+          {/* Arrow indicators */}
+          <div style={{display:'flex',justifyContent:'center',alignItems:'center',gap:6,opacity:.5}}>
+            {seq.map((_,i)=>i<seq.length-1&&<div key={i} style={{fontSize:14,color:C.sunInk}}>→</div>)}
+          </div>
+        </div>
+
+        {/* Options */}
+        <div style={{flex:1,padding:'14px 16px',display:'flex',flexDirection:'column',gap:10}}>
+          <div style={{textAlign:'center',fontSize:12,fontWeight:700,color:C.sunInk,letterSpacing:.5,opacity:.7}}>PICK THE ANSWER</div>
+          <div style={{display:'flex',justifyContent:'center',gap:16}}>
+            {opts.map(n=>{
+              const st = picked===n ? (n===target?'correct':'wrong') : 'idle';
+              return <NumTile key={n} n={n} state={st} color="cream" size="md"/>;
+            })}
+          </div>
+        </div>
+
+        {feedbackState==='correct'&&<div style={{margin:'0 16px 12px',padding:'11px 16px',borderRadius:18,background:C.correctBg,border:`2px solid ${C.correct}`,display:'flex',alignItems:'center',gap:10,animation:'pop-in .3s both'}}><span style={{fontSize:22}}>⭐</span><div style={{fontSize:15,fontWeight:700,color:C.sageInk}}>16 is right — great counting!</div><div style={{marginLeft:'auto',padding:'6px 14px',borderRadius:999,background:C.correct,color:'#fff',fontWeight:700,fontSize:14,border:`2px solid ${C.ink}`,boxShadow:'0 3px 0 #2F6A3C'}}>Next →</div></div>}
+        {feedbackState==='hint'&&<div style={{margin:'0 16px 12px',padding:'11px 16px',borderRadius:18,background:C.hintBg,border:`2px solid ${C.sun}`,display:'flex',alignItems:'center',gap:10}}><span style={{fontSize:22}}>💡</span><div style={{fontSize:14,fontWeight:700,color:C.sunInk}}>Count up from 15… what comes next?</div></div>}
+      </div>
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════
+// SCREEN 5 — BUILD THE NUMBER (Blocks)
+// ══════════════════════════════════════════════════════════════
+function BuildNumberGame({ feedbackState='idle' }) {
+  const target = 34;
+  const [tens, setTens] = useState(feedbackState==='correct'?3:2);
+  const [ones, setOnes] = useState(feedbackState==='correct'?4:feedbackState==='wrong'?7:4);
+  const current = tens*10+ones;
+  const match = current===target;
+
+  return (
+    <div style={{position:'absolute',inset:0}}>
+      <GameBg variant="sky"/>
+      <div style={{position:'relative',zIndex:1,height:'100%',display:'flex',flexDirection:'column'}}>
+        <GameHUD hearts={3} progress={2} total={4} variant="sky"/>
+
+        <MascotBubble text="Build the number! Use tens and ones 🧱" mood={match?'celebrate':'happy'} color="sky"/>
+
+        {/* Target */}
+        <div style={{display:'flex',justifyContent:'center',padding:'8px 0 4px'}}>
+          <div style={{padding:'10px 28px',borderRadius:22,background:C.sun,border:`3px solid ${C.ink}`,boxShadow:`0 5px 0 ${C.sunSh}`,display:'flex',flexDirection:'column',alignItems:'center',gap:2}}>
+            <div style={{fontSize:11,fontWeight:700,color:C.sunInk,letterSpacing:.5}}>MAKE THIS</div>
+            <div style={{fontFamily:'Fredoka',fontWeight:700,fontSize:56,color:C.sunInk,lineHeight:1}}>{target}</div>
+          </div>
+        </div>
+
+        {/* Builder */}
+        <div style={{flex:1,padding:'8px 14px 10px',display:'flex',flexDirection:'column',gap:10}}>
+          {/* Your number display */}
+          <div style={{
+            padding:'10px 16px',borderRadius:20,
+            background: match ? C.correctBg : 'rgba(255,255,255,0.5)',
+            border:`2px ${match?'solid':'dashed'} ${match?C.correct:'rgba(46,90,58,0.25)'}`,
+            display:'flex',justifyContent:'space-between',alignItems:'center',
+            animation: match ? 'pop-in .3s both' : 'none',
+          }}>
+            <div style={{fontSize:13,fontWeight:700,color:C.skyInk}}>YOUR NUMBER</div>
+            <div style={{fontFamily:'Fredoka',fontWeight:700,fontSize:42,color:match?C.correct:C.ink,lineHeight:1,transition:'color .2s'}}>{current}</div>
+            {match && <span style={{fontSize:28}}>✅</span>}
+          </div>
+
+          {/* Tens + Ones columns */}
+          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
+            {[{label:'Tens',sub:'× 10',count:tens,max:9,color:C.sky,sh:C.skySh,set:setTens,block:<div style={{width:14,height:44,borderRadius:5,background:C.sky,border:`2px solid ${C.ink}`,boxShadow:`inset 0 -3px 0 ${C.skySh}`}}/>},
+              {label:'Ones',sub:'× 1', count:ones,max:9,color:C.sun,sh:C.sunSh,set:setOnes,block:<div style={{width:18,height:18,borderRadius:'50%',background:C.sun,border:`2px solid ${C.ink}`,boxShadow:`0 2px 0 ${C.sunSh}`}}/>}
+            ].map(col=>(
+              <div key={col.label} style={{borderRadius:18,background:'rgba(255,255,255,0.7)',border:`2px solid rgba(46,90,58,0.12)`,padding:10,display:'flex',flexDirection:'column',gap:8}}>
+                <div>
+                  <div style={{fontSize:14,fontWeight:700,color:C.ink}}>{col.label}</div>
+                  <div style={{fontSize:11,color:C.soft}}>{col.sub}</div>
+                </div>
+                <div style={{minHeight:60,borderRadius:10,background:'rgba(255,255,255,0.6)',border:'1.5px dashed rgba(46,90,58,0.2)',display:'flex',flexWrap:'wrap',gap:3,padding:5,alignContent:'flex-end',justifyContent:'center'}}>
+                  {Array.from({length:col.count}).map((_,i)=><div key={i}>{col.block}</div>)}
+                </div>
+                <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+                  <button onClick={()=>col.count>0&&col.set(col.count-1)} style={{width:36,height:36,borderRadius:'50%',background:C.cream,border:`2.5px solid ${C.ink}`,boxShadow:'0 3px 0 #D9C38A',fontFamily:'Fredoka',fontWeight:700,fontSize:20,color:C.ink}}>−</button>
+                  <div style={{fontFamily:'Fredoka',fontWeight:700,fontSize:24,color:C.ink}}>{col.count}</div>
+                  <button onClick={()=>col.count<col.max&&col.set(col.count+1)} style={{width:36,height:36,borderRadius:'50%',background:col.color,border:`2.5px solid ${C.ink}`,boxShadow:`0 3px 0 ${col.sh}`,fontFamily:'Fredoka',fontWeight:700,fontSize:20,color:C.ink}}>+</button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Check button */}
+          <button style={{width:'100%',height:54,borderRadius:20,background:match?C.correct:C.sage,border:`3px solid ${C.ink}`,boxShadow:`0 5px 0 ${match?C.correctSh:C.sageSh}`,fontFamily:'Fredoka',fontWeight:700,fontSize:20,color:match?'#fff':C.sageInk}}>
+            {match ? '🎉 Correct! Next →' : 'Check ✓'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════
+// SCREEN 6 — ARITHMETIC VISUAL
+// ══════════════════════════════════════════════════════════════
+function ArithmeticGame({ feedbackState='idle' }) {
+  const [picked, setPicked] = useState(feedbackState==='correct'?7:feedbackState==='wrong'?5:null);
+  const a=4, b=3, op='+', target=7;
+  const opts = [5,7,8,6];
+
+  return (
+    <div style={{position:'absolute',inset:0}}>
+      <GameBg variant="coral"/>
+      <div style={{position:'relative',zIndex:1,height:'100%',display:'flex',flexDirection:'column'}}>
+        <GameHUD hearts={3} progress={4} total={4} variant="coral"/>
+
+        <MascotBubble text="How many apples altogether? 🍎" mood={feedbackState==='correct'?'celebrate':feedbackState==='wrong'?'worry':'happy'} color="coral"/>
+
+        {/* Visual equation */}
+        <div style={{padding:'8px 14px 4px',display:'flex',flexDirection:'column',gap:10}}>
+          {/* Apple arrays */}
+          <div style={{
+            background:'rgba(255,255,255,0.75)',borderRadius:24,border:`3px solid ${C.ink}`,
+            boxShadow:'0 4px 0 rgba(46,90,58,0.18)',padding:'14px 18px',
+            display:'flex',alignItems:'center',justifyContent:'space-around',gap:8,
+          }}>
+            {/* Group A */}
+            <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:8}}>
+              <div style={{display:'flex',flexWrap:'wrap',gap:4,maxWidth:80,justifyContent:'center'}}>
+                {Array.from({length:a}).map((_,i)=><span key={i} style={{fontSize:28,lineHeight:1}}>🍎</span>)}
+              </div>
+              <div style={{fontFamily:'Fredoka',fontWeight:700,fontSize:28,color:C.ink}}>{a}</div>
+            </div>
+            {/* Operator */}
+            <div style={{fontFamily:'Fredoka',fontWeight:700,fontSize:48,color:C.coral,filter:`drop-shadow(0 2px 0 ${C.coralSh})`}}>{op}</div>
+            {/* Group B */}
+            <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:8}}>
+              <div style={{display:'flex',flexWrap:'wrap',gap:4,maxWidth:80,justifyContent:'center'}}>
+                {Array.from({length:b}).map((_,i)=><span key={i} style={{fontSize:28,lineHeight:1}}>🍎</span>)}
+              </div>
+              <div style={{fontFamily:'Fredoka',fontWeight:700,fontSize:28,color:C.ink}}>{b}</div>
+            </div>
+          </div>
+
+          {/* Equation text */}
+          <div style={{textAlign:'center',fontFamily:'Fredoka',fontWeight:700,fontSize:36,color:C.ink,letterSpacing:-1}}>
+            {a} {op} {b} = <span style={{color:C.coral}}>?</span>
+          </div>
+        </div>
+
+        {/* Answer tiles */}
+        <div style={{flex:1,padding:'8px 14px',display:'flex',flexDirection:'column',justifyContent:'center',gap:10}}>
+          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr 1fr',gap:8}}>
+            {opts.map(n=>{
+              const st = picked===n?(n===target?'correct':'wrong'):'idle';
+              return <NumTile key={n} n={n} state={st} color="cream" size="sm" style={{width:'100%',height:72}}/>;
+            })}
+          </div>
+        </div>
+
+        {feedbackState==='correct'&&<div style={{margin:'0 14px 12px',padding:'12px 16px',borderRadius:18,background:C.correctBg,border:`2px solid ${C.correct}`,display:'flex',alignItems:'center',gap:10,animation:'pop-in .3s both'}}><span style={{fontSize:22}}>🌟</span><div style={{fontSize:15,fontWeight:700,color:C.sageInk}}>4 + 3 = 7! Amazing!</div><div style={{marginLeft:'auto',padding:'6px 14px',borderRadius:999,background:C.correct,color:'#fff',fontWeight:700,fontSize:14,border:`2px solid ${C.ink}`,boxShadow:'0 3px 0 #2F6A3C'}}>Finish! 🎉</div></div>}
+        {feedbackState==='wrong'&&<div style={{margin:'0 14px 12px',padding:'12px 16px',borderRadius:18,background:C.wrongBg,border:`2px solid ${C.wrong}`,display:'flex',alignItems:'center',gap:10}}><span style={{fontSize:22}}>🍎</span><div style={{fontSize:14,fontWeight:700,color:C.coralInk}}>Count all apples together!</div></div>}
+      </div>
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════
+// FEEDBACK STATES SHOWCASE
+// ══════════════════════════════════════════════════════════════
+function FeedbackStates() {
+  const states = [
+    { label:'✅ Correct', bg:C.correctBg, border:C.correct, icon:'🎉', title:'Yes! That\'s right!', body:'', btnBg:C.correct, btnLabel:'Next →', anim:'pop-in .3s both' },
+    { label:'❌ Wrong',   bg:C.wrongBg,   border:C.wrong,   icon:'💪', title:'Try again!',         body:'Listen carefully 🔊', btnBg:C.coral, btnLabel:'Retry', anim:'shake .4s both' },
+    { label:'💡 Hint',    bg:C.hintBg,    border:C.sun,     icon:'💡', title:'Psst — here\'s a clue!', body:'Count the dots one by one…', btnBg:C.sun, btnLabel:'Got it!', anim:'none' },
+    { label:'⏭ Transition', bg:'#F0EAF8', border:C.lav,    icon:'⭐', title:'Level 5 complete!',  body:'+3 stars · +9 coins', btnBg:C.lav, btnLabel:'Keep going!', anim:'pop-in .4s both' },
+  ];
+
+  return (
+    <div style={{position:'absolute',inset:0,background:'#F7F3EC',overflowY:'auto',padding:'52px 14px 24px'}}>
+      <div style={{textAlign:'center',marginBottom:16}}>
+        <div style={{fontSize:11,fontWeight:700,color:C.soft,letterSpacing:.8}}>FEEDBACK STATE COMPONENTS</div>
+        <div style={{fontSize:18,fontWeight:700,color:C.ink,marginTop:2}}>4 Feedback States</div>
+      </div>
+
+      <div style={{display:'flex',flexDirection:'column',gap:12}}>
+        {states.map(s=>(
+          <div key={s.label} style={{background:'#fff',borderRadius:20,overflow:'hidden',border:'1.5px solid rgba(46,90,58,0.1)',boxShadow:'0 2px 8px rgba(46,90,58,0.05)'}}>
+            <div style={{padding:'8px 14px',background:'#F7F3EC',borderBottom:'1px solid rgba(46,90,58,0.08)',fontSize:11,fontWeight:700,color:C.soft,letterSpacing:.5}}>
+              {s.label}
+            </div>
+            <div style={{
+              margin:12,padding:'14px 16px',borderRadius:16,
+              background:s.bg,border:`2.5px solid ${s.border}`,
+              display:'flex',alignItems:'center',gap:12,
+              animation:s.anim,
+            }}>
+              <span style={{fontSize:26}}>{s.icon}</span>
+              <div style={{flex:1}}>
+                <div style={{fontSize:15,fontWeight:700,color:C.ink}}>{s.title}</div>
+                {s.body && <div style={{fontSize:12,color:C.soft,marginTop:2}}>{s.body}</div>}
+              </div>
+              <button style={{
+                padding:'7px 14px',borderRadius:999,fontFamily:'Fredoka',fontWeight:700,fontSize:13,
+                background:s.btnBg,border:`2px solid ${C.ink}`,color:C.ink,
+                boxShadow:'0 3px 0 rgba(46,90,58,0.18)',
+              }}>{s.btnLabel}</button>
+            </div>
+
+            {/* Additional notes */}
+            <div style={{padding:'4px 14px 10px',fontSize:11,color:C.faint,fontWeight:500}}>
+              {s.label.includes('Correct') && 'Triggers: pop-in animation + confetti particles + +score float'}
+              {s.label.includes('Wrong') && 'Triggers: shake animation + heart −1 + audio retry prompt'}
+              {s.label.includes('Hint') && 'Triggers: on 2nd wrong answer · mascot changes to hint mood'}
+              {s.label.includes('Transition') && 'Triggers: level complete · star count-up animation · coin burst'}
+            </div>
+          </div>
+        ))}
+
+        {/* Float-up score */}
+        <div style={{background:'#fff',borderRadius:20,padding:'14px',border:'1.5px solid rgba(46,90,58,0.1)',boxShadow:'0 2px 8px rgba(46,90,58,0.05)'}}>
+          <div style={{fontSize:11,fontWeight:700,color:C.soft,letterSpacing:.5,marginBottom:10}}>FLOAT-UP SCORE ELEMENT</div>
+          <div style={{position:'relative',height:60,display:'flex',alignItems:'center',justifyContent:'center',gap:16}}>
+            {['+1 ⭐','+3 🪙','✓'].map((t,i)=>(
+              <div key={t} style={{
+                fontFamily:'Fredoka',fontWeight:700,fontSize:18,color:i===2?C.correct:C.sunInk,
+                animation:`float-up 1.2s ease-out ${i*.15}s both`,
+                textShadow:'0 2px 0 rgba(46,90,58,0.2)',
+              }}>{t}</div>
+            ))}
+          </div>
+          <div style={{fontSize:11,color:C.faint,textAlign:'center'}}>Plays on correct answer — positioned over the tapped tile</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── CANVAS ──────────────────────────────────────────────────
+function App() {
+  return (
+    <DesignCanvas title="Bắp — Mini-Game Template System">
+      <DCSection id="s0" title="Template Structure">
+        <DCArtboard id="t1" label="Template Anatomy" width={375} height={688}>
+          <TemplateAnatomy/>
+        </DCArtboard>
+        <DCArtboard id="t2" label="Feedback States" width={375} height={688}>
+          <FeedbackStates/>
+        </DCArtboard>
+      </DCSection>
+
+      <DCSection id="s1" title="Game Variants">
+        <DCArtboard id="g1" label="1 · Multiple Choice Tap" width={375} height={688}>
+          <MultipleChoiceGame feedbackState="idle"/>
+        </DCArtboard>
+        <DCArtboard id="g2" label="2 · Drag & Drop Sort" width={375} height={688}>
+          <DragDropGame feedbackState="idle"/>
+        </DCArtboard>
+        <DCArtboard id="g3" label="3 · Sequence / Order" width={375} height={688}>
+          <SequenceGame feedbackState="idle"/>
+        </DCArtboard>
+        <DCArtboard id="g4" label="4 · Build the Number" width={375} height={688}>
+          <BuildNumberGame feedbackState="idle"/>
+        </DCArtboard>
+        <DCArtboard id="g5" label="5 · Arithmetic Visual" width={375} height={688}>
+          <ArithmeticGame feedbackState="idle"/>
+        </DCArtboard>
+      </DCSection>
+
+      <DCSection id="s2" title="Correct / Wrong States">
+        <DCArtboard id="c1" label="Multiple Choice — Correct" width={375} height={688}>
+          <MultipleChoiceGame feedbackState="correct"/>
+        </DCArtboard>
+        <DCArtboard id="c2" label="Multiple Choice — Wrong" width={375} height={688}>
+          <MultipleChoiceGame feedbackState="wrong"/>
+        </DCArtboard>
+        <DCArtboard id="c3" label="Sequence — Hint" width={375} height={688}>
+          <SequenceGame feedbackState="hint"/>
+        </DCArtboard>
+        <DCArtboard id="c4" label="Arithmetic — Correct" width={375} height={688}>
+          <ArithmeticGame feedbackState="correct"/>
+        </DCArtboard>
+        <DCArtboard id="c5" label="Build Number — Match!" width={375} height={688}>
+          <BuildNumberGame feedbackState="correct"/>
+        </DCArtboard>
+      </DCSection>
+    </DesignCanvas>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>

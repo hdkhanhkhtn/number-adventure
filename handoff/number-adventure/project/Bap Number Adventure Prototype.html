@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bắp Number Adventure — Interactive Prototype</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="src/tokens.css">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; height: 100%; overflow: hidden; background: #0C1210; }
+    ::-webkit-scrollbar { width: 3px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel" src="ios-frame.jsx"></script>
+<script type="text/babel" src="src/mascot.jsx"></script>
+<script type="text/babel" src="src/ui.jsx"></script>
+<script type="text/babel" src="src/screens-home.jsx"></script>
+<script type="text/babel" src="src/screens-intro.jsx"></script>
+<script type="text/babel" src="src/screens-reward-parent.jsx"></script>
+<script type="text/babel" src="src/games.jsx"></script>
+
+<script type="text/babel">
+const { useState, useEffect, useCallback, useMemo, useRef } = React;
+
+// ─────────────────────────────────────────────────────────────────────
+// FLOW DEFINITIONS
+// ─────────────────────────────────────────────────────────────────────
+const CHILD_FLOW = [
+  {
+    label: 'Open App',
+    tag: 'LAUNCH', tagColor: '#FFD36E',
+    desc: 'Bắp splash screen loads — mascot bobs on a warm golden background. Three loading dots pulse in sequence. Auto-advances to home after 2 s.',
+    setup: (api) => { api.setGate(false); api.go('splash'); },
+  },
+  {
+    label: 'Child Home',
+    tag: 'HOME', tagColor: '#A8D5A2',
+    desc: 'Child\'s home screen. "Today\'s Adventure" card shows Number Forest · 3 games · 2 min. 🔥3 streak badge, World Map + Sticker quick-tiles, weekly calendar dot-row at the bottom.',
+    setup: (api) => { api.setGate(false); api.go('home'); },
+  },
+  {
+    label: 'Tap Play Now',
+    tag: 'HOME', tagColor: '#A8D5A2',
+    desc: 'Child taps ▶ Play. The button physically presses down 4 px with a shadow crush then bounces back — tactile press micro-interaction. World loads.',
+    setup: (api) => { api.setGate(false); if (window.WORLDS) api.setWorld(window.WORLDS[0]); api.go('level_list'); },
+  },
+  {
+    label: 'World Opens',
+    tag: 'MAP', tagColor: '#7FC089',
+    desc: 'Number Forest opens — 9 circular level nodes on a winding path. Levels 1–5 show 3 stars each. Level 6 is the active node. Levels 7–9 are locked (🔒).',
+    setup: (api) => { api.setGate(false); if (window.WORLDS) api.setWorld(window.WORLDS[0]); api.go('level_list'); },
+  },
+  {
+    label: 'Start: Hear & Tap',
+    tag: 'GAME', tagColor: '#FFC94A',
+    desc: 'Level 6 begins "Hear & Tap Number". A large pulsing 🔊 speaker button dominates the screen. Tapping it speaks a number aloud. Child picks the matching tile from 4 options.',
+    setup: (api) => { api.setGate(false); if (window.WORLDS) api.setWorld(window.WORLDS[0]); api.setGame('hear_tap'); api.go('game'); },
+  },
+  {
+    label: 'Answer Correctly',
+    tag: 'GAME', tagColor: '#FFC94A',
+    desc: 'Child taps correct tile → tile flashes green, progress bar advances, Bắp wiggles. Wrong tap: tile shakes (wiggle anim), costs a ❤️. Hint: re-tap speaker to hear again.',
+    setup: (api) => { api.setGate(false); if (window.WORLDS) api.setWorld(window.WORLDS[0]); api.setGame('hear_tap'); api.go('game'); },
+  },
+  {
+    label: 'Missing Number',
+    tag: 'GAME', tagColor: '#FFC94A',
+    desc: 'Session continues with "Number Order". A 5-number sequence appears with one ? tile. Child selects from 3 choices below the sequence.',
+    setup: (api) => { api.setGate(false); if (window.WORLDS) api.setWorld(window.WORLDS[0]); api.setGame('order'); api.go('game'); },
+  },
+  {
+    label: 'Finish Session',
+    tag: 'GAME', tagColor: '#FFC94A',
+    desc: 'Last round answered. Game fires onRoundEnd — brief scale-out of the game UI, then reward screen transitions in with a slide-up.',
+    setup: (api) => { api.setGate(false); if (window.WORLDS) api.setWorld(window.WORLDS[0]); api.setGame('order'); api.go('game'); },
+  },
+  {
+    label: 'Reward Screen',
+    tag: 'REWARD', tagColor: '#E6779E',
+    desc: 'Full confetti burst! "Amazing, Bắp!" pops in. 3 stars stagger-animate in sequence. Stat card shows 5/5 correct + coins earned. 🦋 Butterfly sticker unlocked badge slides up from bottom.',
+    setup: (api) => {
+      api.setGate(false);
+      api.setResult({ stars: 3, correct: 5, total: 5, sticker: { emoji: '🦋', name: 'Butterfly' } });
+      api.go('reward');
+    },
+  },
+  {
+    label: 'Stickers & Progress',
+    tag: 'REWARD', tagColor: '#E6779E',
+    desc: 'Child taps Next → Sticker Book. New 🦋 Butterfly pops into its previously-empty slot with a bounce animation. Progress bar and collection counter both update.',
+    setup: (api) => { api.setGate(false); api.go('stickers'); },
+  },
+];
+
+const PARENT_FLOW = [
+  {
+    label: 'Parent Gate',
+    tag: 'GATE', tagColor: '#D9C7F0',
+    desc: 'Parent taps the 👤 avatar on child home. Bottom sheet slides up: "Cổng phụ huynh". A simple addition question (e.g. 5 + 3 = ?) must be solved to enter — prevents kids from accessing parent mode.',
+    setup: (api) => { api.go('home'); api.setGate(true); },
+  },
+  {
+    label: 'Parent Dashboard',
+    tag: 'PARENT', tagColor: '#B8DEEF',
+    desc: 'Vietnamese dashboard opens (Bảng điều khiển). 4 metric cards: Hôm nay 12 phút, Chuỗi 3 ngày, Độ chính xác 82%, 18 ⭐. Weekly bar chart. Skill breakdown. Action menu rows.',
+    setup: (api) => { api.setGate(false); api.go('parent'); },
+  },
+  {
+    label: 'Progress Details',
+    tag: 'PARENT', tagColor: '#B8DEEF',
+    desc: '"Báo cáo chi tiết" — per-game accuracy table (Hear & Tap 90%, Build 65%, Order 75%…), 7-day time bar chart, weekly summary text, and a 💡 Gợi ý card with real-world activity tips.',
+    setup: (api) => { api.setGate(false); api.go('parent_report'); },
+  },
+  {
+    label: 'Language Settings',
+    tag: 'SETTINGS', tagColor: '#A8D5A2',
+    desc: 'Settings → 🌏 Ngôn ngữ tab. Parent picks kid\'s audio language: Tiếng Anh (EN), Tiếng Việt (VI), or Song ngữ (Bilingual). Parent UI language is set separately below.',
+    setup: (api) => { api.setGate(false); api.go('parent_settings'); },
+  },
+  {
+    label: 'Set Daily Time Goal',
+    tag: 'SETTINGS', tagColor: '#A8D5A2',
+    desc: 'Switch to ⏱ Thời gian tab. Parent taps 15 phút — pill highlights black. Giờ yên tĩnh toggle blocks app 19:30–07:00. Difficulty: Dễ / Vừa / Khó chips.',
+    setup: (api) => { api.setGate(false); api.go('parent_settings'); },
+  },
+  {
+    label: 'Return to Child',
+    tag: 'HOME', tagColor: '#FFD36E',
+    desc: 'Parent taps ✕ close → smooth transition back to child\'s home. Bắp is bobbing, 🔥3 streak intact, ready for the next adventure.',
+    setup: (api) => { api.setGate(false); api.go('home'); },
+  },
+];
+
+const ALL_FLOWS = { child: CHILD_FLOW, parent: PARENT_FLOW };
+
+// ─────────────────────────────────────────────────────────────────────
+// APP SCREENS ROUTER  (drives the in-phone experience)
+// ─────────────────────────────────────────────────────────────────────
+function AppScreens({ route, profile, currentWorld, currentGame, lastResult, settings, setSettings, showParentGate, setShowParentGate, onNav }) {
+  const go = (r, extra = {}) => onNav(r, extra);
+  const finishGame = (result) => {
+    onNav('reward', {
+      result: {
+        ...result,
+        sticker: result.stars === 3 ? { emoji: '🦋', name: 'Butterfly' } : null,
+      },
+    });
+  };
+
+  const safeWorld = currentWorld || (window.WORLDS && window.WORLDS[0]);
+
+  return (
+    <>
+      {route === 'splash'   && <SplashScreen onReady={() => go('home')} />}
+      {route === 'home'     && (
+        <HomeScreen profile={profile} streak={3}
+          onPlay={() => go('level_list')}
+          onMap={() => go('map')}
+          onStickers={() => go('stickers')}
+          onParent={() => setShowParentGate(true)} />
+      )}
+      {route === 'map'      && (
+        <WorldMap onBack={() => go('home')}
+          onPickWorld={(w) => go('level_list', { world: w })} />
+      )}
+      {route === 'level_list' && safeWorld && (
+        <LevelList world={safeWorld}
+          onBack={() => go('map')}
+          onPickLevel={(lv) => go('game', { game: lv.game })} />
+      )}
+      {route === 'game' && currentGame && (() => {
+        const props = { onExit: () => go('level_list'), onRoundEnd: finishGame };
+        if (currentGame === 'hear_tap') return <HearTap    key={currentGame} {...props} />;
+        if (currentGame === 'build')    return <BuildNumber key={currentGame} {...props} />;
+        if (currentGame === 'even_odd') return <EvenOdd    key={currentGame} {...props} />;
+        if (currentGame === 'order')    return <NumberOrder key={currentGame} {...props} />;
+        if (currentGame === 'add')      return <AddTake    key={currentGame} {...props} />;
+        return null;
+      })()}
+      {route === 'reward' && lastResult && (
+        <RewardScreen profile={profile}
+          stars={lastResult.stars} correct={lastResult.correct}
+          total={lastResult.total} sticker={lastResult.sticker}
+          coinsEarned={(lastResult.stars || 3) * 3}
+          onContinue={() => go('stickers')} />
+      )}
+      {route === 'stickers'         && <StickerBook profile={profile} onBack={() => go('home')} />}
+      {route === 'parent'           && (
+        <ParentDashboard profile={profile}
+          onExit={() => go('home')}
+          onGotoSettings={() => go('parent_settings')}
+          onGotoReport={() => go('parent_report')} />
+      )}
+      {route === 'parent_settings'  && (
+        <ParentSettings onBack={() => go('parent')} settings={settings} setSettings={setSettings} />
+      )}
+      {route === 'parent_report'    && <ParentReport profile={profile} onBack={() => go('parent')} />}
+
+      {showParentGate && (
+        <ParentGate
+          onPass={() => { setShowParentGate(false); go('parent'); }}
+          onCancel={() => setShowParentGate(false)} />
+      )}
+    </>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// FLOW PANEL
+// ─────────────────────────────────────────────────────────────────────
+function FlowPanel({ activeFlow, steps, stepIdx, onFlow, onStep }) {
+  return (
+    <div style={{
+      width: 264, minWidth: 264, height: '100%',
+      background: '#111714',
+      borderRight: '1px solid rgba(255,255,255,0.05)',
+      display: 'flex', flexDirection: 'column',
+      fontFamily: "'Be Vietnam Pro', sans-serif",
+    }}>
+      {/* Logo row */}
+      <div style={{ padding: '20px 18px 0' }}>
+        <div style={{ fontSize: 9, letterSpacing: 2, color: 'rgba(255,255,255,0.25)', fontWeight: 700, textTransform: 'uppercase', marginBottom: 8 }}>
+          Interactive Prototype
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
+          <div style={{ width: 30, height: 30, borderRadius: 9, background: '#FFD36E', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <BapMini size={24} color="sun" />
+          </div>
+          <div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: '#FFF8EC', lineHeight: 1.1 }}>Bắp Number Adventure</div>
+            <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', fontWeight: 500 }}>MVP · End-to-end flow</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Flow tabs */}
+      <div style={{ padding: '16px 14px 12px', display: 'flex', gap: 7 }}>
+        {[
+          { key: 'child',  icon: '🧒', label: 'Child Flow',  active: '#2E4232', border: '#4D8B5840', text: '#A8D5A2' },
+          { key: 'parent', icon: '👤', label: 'Parent Flow', active: '#1E2D3D', border: '#2E6F9340', text: '#B8DEEF' },
+        ].map(({ key, icon, label, active, border, text }) => (
+          <button key={key} onClick={() => onFlow(key)} style={{
+            flex: 1, padding: '9px 4px', borderRadius: 11,
+            background: activeFlow === key ? active : 'rgba(255,255,255,0.03)',
+            border: `1px solid ${activeFlow === key ? border : 'rgba(255,255,255,0.05)'}`,
+            cursor: 'pointer', transition: 'all 0.18s',
+          }}>
+            <div style={{ fontSize: 18, marginBottom: 3 }}>{icon}</div>
+            <div style={{ fontSize: 10, fontWeight: 700, color: activeFlow === key ? text : 'rgba(255,255,255,0.3)', letterSpacing: 0.2 }}>{label}</div>
+          </button>
+        ))}
+      </div>
+
+      <div style={{ height: 1, background: 'rgba(255,255,255,0.05)', margin: '0 14px 8px' }} />
+
+      {/* Steps */}
+      <div style={{ flex: 1, overflowY: 'auto', padding: '0 8px 8px' }}>
+        {steps.map((step, i) => {
+          const isDone   = i < stepIdx;
+          const isActive = i === stepIdx;
+          return (
+            <button key={`${activeFlow}-${i}`} onClick={() => onStep(i)} style={{
+              width: '100%', padding: '8px 10px 8px 8px', borderRadius: 10, marginBottom: 2,
+              background: isActive ? 'rgba(255,255,255,0.06)' : 'transparent',
+              border: isActive ? `1px solid ${step.tagColor}22` : '1px solid transparent',
+              display: 'flex', alignItems: 'center', gap: 9,
+              cursor: 'pointer', textAlign: 'left', transition: 'background 0.12s',
+            }}>
+              {/* Indicator bubble */}
+              <div style={{
+                width: 22, height: 22, borderRadius: '50%', flexShrink: 0,
+                background: isDone ? '#3C7A45' : isActive ? step.tagColor : 'rgba(255,255,255,0.05)',
+                border: !isDone && !isActive ? '1.5px solid rgba(255,255,255,0.1)' : 'none',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 10, fontWeight: 700,
+                color: isDone ? '#fff' : isActive ? '#0C1210' : 'rgba(255,255,255,0.2)',
+                transition: 'all 0.2s',
+              }}>
+                {isDone ? '✓' : i + 1}
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 9, letterSpacing: 1, fontWeight: 700, color: step.tagColor, opacity: isActive ? 1 : 0.45, marginBottom: 1 }}>
+                  {step.tag}
+                </div>
+                <div style={{
+                  fontSize: 11.5, fontWeight: isActive ? 700 : 500, lineHeight: 1.25,
+                  color: isActive ? '#FFF8EC' : isDone ? 'rgba(255,255,255,0.35)' : 'rgba(255,255,255,0.38)',
+                  whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                }}>
+                  {step.label}
+                </div>
+              </div>
+              {isActive && (
+                <div style={{ width: 5, height: 5, borderRadius: '50%', background: step.tagColor, flexShrink: 0 }} />
+              )}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Footer */}
+      <div style={{ padding: '10px 14px 16px', borderTop: '1px solid rgba(255,255,255,0.04)' }}>
+        <div style={{ fontSize: 9.5, color: 'rgba(255,255,255,0.18)', textAlign: 'center', letterSpacing: 0.4 }}>
+          ← → arrow keys · click steps to jump
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// STEP ANNOTATION
+// ─────────────────────────────────────────────────────────────────────
+function StepAnnotation({ step, stepIdx, totalSteps, onPrev, onNext, width }) {
+  return (
+    <div style={{ width, fontFamily: "'Be Vietnam Pro', sans-serif" }}>
+      <div style={{
+        padding: '11px 14px', borderRadius: 12,
+        background: 'rgba(255,255,255,0.03)',
+        border: `1px solid ${step.tagColor}20`,
+        marginBottom: 12, transition: 'border-color 0.3s',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+          <div style={{
+            padding: '2px 7px', borderRadius: 5, flexShrink: 0,
+            background: step.tagColor + '18', color: step.tagColor,
+            fontSize: 8.5, fontWeight: 700, letterSpacing: 1.2, marginTop: 2,
+          }}>
+            {step.tag}
+          </div>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 12, fontWeight: 700, color: '#FFF8EC', marginBottom: 3 }}>
+              {step.label}
+            </div>
+            <div style={{ fontSize: 10.5, color: 'rgba(255,255,255,0.4)', lineHeight: 1.6 }}>
+              {step.desc}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Nav row */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, justifyContent: 'center' }}>
+        <button onClick={onPrev} disabled={stepIdx === 0} style={{
+          padding: '8px 16px', borderRadius: 8,
+          background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.35)',
+          fontWeight: 600, fontSize: 11, border: '1px solid rgba(255,255,255,0.08)',
+          cursor: stepIdx === 0 ? 'not-allowed' : 'pointer',
+          opacity: stepIdx === 0 ? 0.3 : 1, fontFamily: 'inherit',
+          transition: 'opacity 0.15s',
+        }}>← Prev</button>
+
+        <div style={{ display: 'flex', gap: 4 }}>
+          {Array.from({ length: totalSteps }).map((_, i) => (
+            <div key={i} style={{
+              width: i === stepIdx ? 16 : 5, height: 5, borderRadius: 3,
+              background: i === stepIdx ? step.tagColor : i < stepIdx ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.1)',
+              transition: 'all 0.25s',
+            }} />
+          ))}
+        </div>
+
+        <button onClick={onNext} disabled={stepIdx === totalSteps - 1} style={{
+          padding: '8px 16px', borderRadius: 8,
+          background: step.tagColor, color: '#0C1210',
+          fontWeight: 700, fontSize: 11, border: 'none',
+          cursor: stepIdx === totalSteps - 1 ? 'not-allowed' : 'pointer',
+          opacity: stepIdx === totalSteps - 1 ? 0.3 : 1, fontFamily: 'inherit',
+          transition: 'opacity 0.15s',
+        }}>Next →</button>
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// TWEAKS PANEL
+// ─────────────────────────────────────────────────────────────────────
+function TweaksPanel({ tweaks, setTweak }) {
+  const mascotColors = ['sun','sage','coral','lavender','sky'];
+  const swatchBg = { sun:'#FFD36E', sage:'#A8D5A2', coral:'#FFA48C', lavender:'#D9C7F0', sky:'#B8DEEF' };
+
+  return (
+    <div style={{
+      position: 'fixed', bottom: 18, right: 18, zIndex: 9999,
+      background: '#1A2220', border: '1px solid rgba(255,255,255,0.1)',
+      borderRadius: 16, padding: '16px 18px', width: 236,
+      boxShadow: '0 12px 40px rgba(0,0,0,0.5)',
+      fontFamily: "'Be Vietnam Pro', sans-serif",
+      animation: 'tweaks-in 0.2s ease-out',
+    }}>
+      <style>{`@keyframes tweaks-in { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }`}</style>
+      <div style={{ fontSize: 12, fontWeight: 700, color: '#FFF8EC', marginBottom: 14 }}>Tweaks</div>
+
+      <TweakRow label="Mascot Colour">
+        <div style={{ display: 'flex', gap: 6 }}>
+          {mascotColors.map(c => (
+            <button key={c} onClick={() => setTweak('mascotColor', c)} style={{
+              width: 26, height: 26, borderRadius: 7, background: swatchBg[c],
+              border: tweaks.mascotColor === c ? '2.5px solid #fff' : '2.5px solid transparent',
+              cursor: 'pointer', transition: 'border 0.12s', padding: 0,
+            }} />
+          ))}
+        </div>
+      </TweakRow>
+
+      <TweakRow label="Phone Frame">
+        {[['Light', false], ['Dark', true]].map(([lbl, val]) => (
+          <button key={lbl} onClick={() => setTweak('darkFrame', val)} style={{
+            flex: 1, padding: '6px 0', borderRadius: 7, fontSize: 11, fontWeight: 600,
+            background: tweaks.darkFrame === val ? 'rgba(255,255,255,0.14)' : 'rgba(255,255,255,0.04)',
+            color: tweaks.darkFrame === val ? '#FFF8EC' : 'rgba(255,255,255,0.35)',
+            border: `1px solid ${tweaks.darkFrame === val ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.06)'}`,
+            cursor: 'pointer', fontFamily: 'inherit',
+          }}>{lbl}</button>
+        ))}
+      </TweakRow>
+
+      <TweakRow label="Prototype Theme" last>
+        {[['#0C1210', 'Forest'], ['#0E1420', 'Night'], ['#1A1410', 'Dusk']].map(([bg, lbl]) => (
+          <button key={lbl} onClick={() => setTweak('shellBg', bg)} style={{
+            flex: 1, padding: '6px 0', borderRadius: 7, fontSize: 10, fontWeight: 600,
+            background: tweaks.shellBg === bg ? 'rgba(255,255,255,0.14)' : 'rgba(255,255,255,0.04)',
+            color: tweaks.shellBg === bg ? '#FFF8EC' : 'rgba(255,255,255,0.35)',
+            border: `1px solid ${tweaks.shellBg === bg ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.06)'}`,
+            cursor: 'pointer', fontFamily: 'inherit',
+          }}>{lbl}</button>
+        ))}
+      </TweakRow>
+    </div>
+  );
+}
+
+function TweakRow({ label, children, last }) {
+  return (
+    <div style={{ marginBottom: last ? 0 : 14 }}>
+      <div style={{ fontSize: 9, letterSpacing: 1.2, fontWeight: 700, color: 'rgba(255,255,255,0.28)', textTransform: 'uppercase', marginBottom: 7 }}>
+        {label}
+      </div>
+      <div style={{ display: 'flex', gap: 6 }}>{children}</div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// PROTOTYPE SHELL  (root component)
+// ─────────────────────────────────────────────────────────────────────
+function PrototypeShell() {
+  const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{"mascotColor":"sun","darkFrame":false,"shellBg":"#0C1210"}/*EDITMODE-END*/;
+  const [tweaks, setTweaks] = useState(() => {
+    try { return { ...TWEAK_DEFAULTS, ...JSON.parse(localStorage.getItem('bap.proto.tweaks') || '{}') }; }
+    catch { return TWEAK_DEFAULTS; }
+  });
+  const [showTweaks, setShowTweaks] = useState(false);
+
+  // Flow nav
+  const [activeFlow, setActiveFlow] = useState(() => localStorage.getItem('bap.proto.flow') || 'child');
+  const [stepIdx, setStepIdx]       = useState(() => parseInt(localStorage.getItem('bap.proto.step') || '0', 10));
+
+  // App state
+  const [route,           setRoute]           = useState('splash');
+  const [currentWorld,    setCurrentWorld]    = useState(null);
+  const [currentGame,     setCurrentGame]     = useState('hear_tap');
+  const [lastResult,      setLastResult]      = useState({ stars: 3, correct: 5, total: 5, sticker: { emoji: '🦋', name: 'Butterfly' } });
+  const [settings,        setSettings]        = useState({ dailyMin: 15, quietHours: true, difficulty: 'easy', kidLang: 'en', parentLang: 'vi', sfx: true, music: false, voice: true, voiceStyle: 'Friendly' });
+  const [showParentGate,  setShowParentGate]  = useState(false);
+
+  const profile = useMemo(() => ({ name: 'Bắp', age: 4, color: tweaks.mascotColor }), [tweaks.mascotColor]);
+
+  const api = useMemo(() => ({
+    go:       setRoute,
+    setWorld: setCurrentWorld,
+    setGame:  setCurrentGame,
+    setResult: setLastResult,
+    setGate:  setShowParentGate,
+    setSettings,
+  }), []);
+
+  const steps = ALL_FLOWS[activeFlow];
+  const currentStep = steps[Math.min(stepIdx, steps.length - 1)];
+
+  // Persist nav position
+  useEffect(() => { localStorage.setItem('bap.proto.flow', activeFlow); }, [activeFlow]);
+  useEffect(() => { localStorage.setItem('bap.proto.step', stepIdx); }, [stepIdx]);
+
+  const goToStep = useCallback((idx) => {
+    if (idx < 0 || idx >= ALL_FLOWS[activeFlow].length) return;
+    ALL_FLOWS[activeFlow][idx].setup(api);
+    setStepIdx(idx);
+  }, [activeFlow, api]);
+
+  // Apply saved step on mount
+  const didMount = useRef(false);
+  useEffect(() => {
+    if (!didMount.current) {
+      didMount.current = true;
+      const savedIdx = parseInt(localStorage.getItem('bap.proto.step') || '0', 10);
+      const savedFlow = localStorage.getItem('bap.proto.flow') || 'child';
+      const flow = ALL_FLOWS[savedFlow] || ALL_FLOWS.child;
+      const idx = Math.min(savedIdx, flow.length - 1);
+      flow[idx].setup(api);
+      setStepIdx(idx);
+      setActiveFlow(savedFlow);
+    }
+  }, []);
+
+  const switchFlow = useCallback((f) => {
+    setActiveFlow(f);
+    ALL_FLOWS[f][0].setup(api);
+    setStepIdx(0);
+  }, [api]);
+
+  const onNav = useCallback((r, extra = {}) => {
+    if (extra.world)  setCurrentWorld(extra.world);
+    if (extra.game)   setCurrentGame(extra.game);
+    if (extra.result) setLastResult(extra.result);
+    setRoute(r);
+  }, []);
+
+  // Keyboard nav
+  useEffect(() => {
+    const h = (e) => {
+      if (e.key === 'ArrowRight') goToStep(stepIdx + 1);
+      if (e.key === 'ArrowLeft')  goToStep(stepIdx - 1);
+    };
+    window.addEventListener('keydown', h);
+    return () => window.removeEventListener('keydown', h);
+  }, [stepIdx, goToStep]);
+
+  // Tweaks protocol
+  useEffect(() => {
+    const h = (e) => {
+      if (e.data?.type === '__activate_edit_mode')   setShowTweaks(true);
+      if (e.data?.type === '__deactivate_edit_mode') setShowTweaks(false);
+    };
+    window.addEventListener('message', h);
+    window.parent.postMessage({ type: '__edit_mode_available' }, '*');
+    return () => window.removeEventListener('message', h);
+  }, []);
+
+  const setTweak = (key, val) => {
+    setTweaks(prev => {
+      const next = { ...prev, [key]: val };
+      localStorage.setItem('bap.proto.tweaks', JSON.stringify(next));
+      window.parent.postMessage({ type: '__edit_mode_set_keys', edits: { [key]: val } }, '*');
+      return next;
+    });
+  };
+
+  // Scale the phone to fit
+  const [scale, setScale] = useState(1);
+  const [annotW, setAnnotW] = useState(380);
+  useEffect(() => {
+    const PANEL_W  = 264;
+    const PHONE_W  = 402;
+    const PHONE_H  = 874;
+    const PAD_H    = 44; // top+bottom padding
+    const ANNOT_H  = 110; // annotation + nav below phone
+    const PAD_W    = 48;
+    const compute = () => {
+      const avW = window.innerWidth  - PANEL_W - PAD_W;
+      const avH = window.innerHeight - PAD_H   - ANNOT_H;
+      const s   = Math.min(avW / PHONE_W, avH / PHONE_H, 1);
+      setScale(s);
+      setAnnotW(Math.min(Math.round(PHONE_W * s + 48), avW));
+    };
+    compute();
+    window.addEventListener('resize', compute);
+    return () => window.removeEventListener('resize', compute);
+  }, []);
+
+  return (
+    <div style={{ display: 'flex', height: '100vh', width: '100vw', overflow: 'hidden', background: tweaks.shellBg }}>
+      {/* ── Left: Flow panel ── */}
+      <FlowPanel
+        activeFlow={activeFlow}
+        steps={steps}
+        stepIdx={Math.min(stepIdx, steps.length - 1)}
+        onFlow={switchFlow}
+        onStep={goToStep}
+      />
+
+      {/* ── Right: Phone stage ── */}
+      <div style={{
+        flex: 1,
+        display: 'flex', flexDirection: 'column',
+        alignItems: 'center', justifyContent: 'center',
+        overflow: 'hidden', position: 'relative',
+        paddingTop: 20, paddingBottom: 20,
+      }}>
+        {/* Subtle grid background */}
+        <div style={{
+          position: 'absolute', inset: 0, pointerEvents: 'none',
+          backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.04) 1px, transparent 1px)',
+          backgroundSize: '28px 28px',
+        }} />
+
+        <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
+
+          {/* Phone (scaled) */}
+          <div style={{
+            transform: `scale(${scale})`,
+            transformOrigin: 'top center',
+            width: 402, height: 874,
+            marginBottom: -(874 * (1 - scale)),
+            borderRadius: 48,
+            boxShadow: `0 0 0 1px rgba(255,255,255,0.06), 0 40px 80px rgba(0,0,0,0.55), 0 0 60px ${currentStep.tagColor}18`,
+            transition: 'box-shadow 0.4s ease',
+          }}>
+            <IOSDevice dark={tweaks.darkFrame} width={402} height={874}>
+              <div style={{ position: 'relative', width: '100%', height: '100%', overflow: 'hidden' }}>
+                <AppScreens
+                  route={route}
+                  profile={profile}
+                  currentWorld={currentWorld}
+                  currentGame={currentGame}
+                  lastResult={lastResult}
+                  settings={settings}
+                  setSettings={setSettings}
+                  showParentGate={showParentGate}
+                  setShowParentGate={setShowParentGate}
+                  onNav={onNav}
+                />
+              </div>
+            </IOSDevice>
+          </div>
+
+          {/* Annotation + nav */}
+          <StepAnnotation
+            step={currentStep}
+            stepIdx={Math.min(stepIdx, steps.length - 1)}
+            totalSteps={steps.length}
+            onPrev={() => goToStep(stepIdx - 1)}
+            onNext={() => goToStep(stepIdx + 1)}
+            width={annotW}
+          />
+        </div>
+      </div>
+
+      {/* Tweaks panel */}
+      {showTweaks && <TweaksPanel tweaks={tweaks} setTweak={setTweak} />}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<PrototypeShell />);
+</script>
+</body>
+</html>

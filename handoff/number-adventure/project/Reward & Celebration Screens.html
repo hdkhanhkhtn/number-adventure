@@ -1,0 +1,686 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bắp — Reward & Celebration Screens</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; font-family: 'Fredoka', ui-rounded, sans-serif; background: #E8E0D3; -webkit-font-smoothing: antialiased; overflow: hidden; }
+button { cursor: pointer; font-family: inherit; border: none; background: none; }
+@keyframes bobble       { 0%,100%{transform:translateY(0) rotate(0)} 50%{transform:translateY(-8px) rotate(-2deg)} }
+@keyframes pop-in       { 0%{transform:scale(.5) rotate(-8deg);opacity:0} 65%{transform:scale(1.14) rotate(2deg);opacity:1} 100%{transform:scale(1) rotate(0);opacity:1} }
+@keyframes star-in      { 0%{transform:scale(0) rotate(-30deg);opacity:0} 70%{transform:scale(1.2) rotate(4deg);opacity:1} 100%{transform:scale(1) rotate(0);opacity:1} }
+@keyframes pulse-soft   { 0%,100%{transform:scale(1)} 50%{transform:scale(1.06)} }
+@keyframes sparkle      { 0%,100%{transform:scale(.6) rotate(0);opacity:.3} 50%{transform:scale(1.4) rotate(180deg);opacity:1} }
+@keyframes confetti-fall{ 0%{transform:translateY(-14px) rotate(0deg);opacity:1} 100%{transform:translateY(150px) rotate(540deg);opacity:0} }
+@keyframes float-up     { from{transform:translateY(0);opacity:1} to{transform:translateY(-60px);opacity:0} }
+@keyframes slide-up     { from{transform:translateY(22px);opacity:0} to{transform:translateY(0);opacity:1} }
+@keyframes glow-ring    { 0%{box-shadow:0 0 0 0 rgba(255,211,110,.7)} 70%{box-shadow:0 0 0 20px rgba(255,211,110,0)} 100%{box-shadow:0 0 0 0 rgba(255,211,110,0)} }
+@keyframes badge-pop    { 0%{transform:scale(0) rotate(-20deg);opacity:0} 60%{transform:scale(1.18) rotate(3deg);opacity:1} 100%{transform:scale(1) rotate(0);opacity:1} }
+@keyframes shimmer      { 0%{background-position:-200% 0} 100%{background-position:200% 0} }
+@keyframes coin-bounce  { 0%,100%{transform:translateY(0)} 40%{transform:translateY(-12px)} }
+@keyframes rainbow-shift{ 0%{filter:hue-rotate(0deg)} 100%{filter:hue-rotate(360deg)} }
+@keyframes slide-down   { from{transform:translateY(-22px);opacity:0} to{transform:translateY(0);opacity:1} }
+@keyframes ripple-out   { 0%{transform:scale(.8);opacity:.8} 100%{transform:scale(2.4);opacity:0} }
+@keyframes count-up     { from{opacity:0;transform:scale(.6)} to{opacity:1;transform:scale(1)} }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script type="text/babel" src="design-canvas.jsx"></script>
+<script type="text/babel">
+const { useState, useMemo } = React;
+
+const C = {
+  ink:'#2D3A2E', soft:'#6B7A6C', faint:'#A9B4A8',
+  sun:'#FFD36E',  sunSh:'#C79528',  sunInk:'#5E3A00',
+  sage:'#7FC089', sageSh:'#4D8B58', sageInk:'#1F4A28', sagePale:'#C4EBB9',
+  sky:'#8AC4DE',  skySh:'#5A96B1',  skyInk:'#1F4A61',
+  lav:'#D9C7F0',  lavSh:'#A58AD0',  lavInk:'#3D256D',
+  coral:'#FFA48C',coralSh:'#D67560',coralInk:'#7A2B15',
+  berry:'#E6779E',berrySh:'#B44B7A',
+  cream:'#FFF8EC',surface:'#FFFDF7',
+  correct:'#5FB36A',correctSh:'#3D8A4A',correctBg:'#EAF7E4',
+  gold:'#FFC94A',  goldSh:'#A87820', goldInk:'#5E3A00',
+};
+
+// ─── MASCOT ──────────────────────────────────────────────────
+function Bap({ size=100, mood='celebrate', color='sun' }) {
+  const body={sun:'#FFD36E',sage:'#A8D5A2',coral:'#FFA48C',lavender:'#D9C7F0',sky:'#B8DEEF'}[color]||'#FFD36E';
+  const dark={sun:'#E8B23F',sage:'#7FB983',coral:'#E2815E',lavender:'#B39DD1',sky:'#88BED4'}[color]||'#E8B23F';
+  const eye={
+    happy:<><ellipse cx="0" cy="0" rx="6" ry="7" fill={C.ink}/><ellipse cx="-1.5" cy="-2" rx="2" ry="2.5" fill="#fff"/></>,
+    celebrate:<path d="M -6 2 Q 0 -6 6 2" stroke={C.ink} strokeWidth="3" fill="none" strokeLinecap="round"/>,
+    excited:<><ellipse cx="0" cy="0" rx="7.5" ry="9" fill={C.ink}/><ellipse cx="-2" cy="-3" rx="2.5" ry="3" fill="#fff"/></>,
+    wink:<path d="M -6 0 Q 0 -4 6 0" stroke={C.ink} strokeWidth="3" fill="none" strokeLinecap="round"/>,
+    proud:<><ellipse cx="0" cy="0" rx="6" ry="7" fill={C.ink}/><ellipse cx="-1.5" cy="-2" rx="2" ry="2.5" fill="#fff"/></>,
+  };
+  const mouth={
+    happy:<path d="M 35 85 Q 50 98 65 85" stroke={C.ink} strokeWidth="3.5" fill="#C14A2A" strokeLinecap="round"/>,
+    celebrate:<path d="M 30 80 Q 50 108 70 80 Q 50 97 30 80" fill="#C14A2A" stroke={C.ink} strokeWidth="3"/>,
+    excited:<path d="M 28 80 Q 50 112 72 80 Q 50 99 28 80" fill="#C14A2A" stroke={C.ink} strokeWidth="3.5"/>,
+    wink:<path d="M 40 85 Q 50 92 60 85" stroke={C.ink} strokeWidth="3.5" fill="#C14A2A" strokeLinecap="round"/>,
+    proud:<path d="M 34 85 Q 50 100 66 85" stroke={C.ink} strokeWidth="3.5" fill="#C14A2A" strokeLinecap="round"/>,
+  };
+  return (
+    <svg viewBox="0 0 120 140" width={size} height={size*140/120} style={{display:'block'}}>
+      <g><ellipse cx="38" cy="18" rx="14" ry="20" fill="#7FB983" transform="rotate(-30 38 18)"/>
+      <ellipse cx="38" cy="18" rx="7" ry="16" fill="#A8D5A2" transform="rotate(-30 38 18)"/>
+      <ellipse cx="76" cy="14" rx="16" ry="22" fill="#5FA36A" transform="rotate(25 76 14)"/>
+      <ellipse cx="76" cy="14" rx="8" ry="18" fill="#A8D5A2" transform="rotate(25 76 14)"/></g>
+      <ellipse cx="60" cy="126" rx="38" ry="6" fill="rgba(46,90,58,0.18)"/>
+      <path d="M60 28 C92 28 100 56 100 82 C100 110 82 126 60 126 C38 126 20 110 20 82 C20 56 28 28 60 28Z" fill={body} stroke={C.ink} strokeWidth="3.5"/>
+      <g opacity=".3" stroke={dark} strokeWidth="2" fill="none" strokeLinecap="round">
+        <path d="M30 62 Q60 56 90 62"/><path d="M28 80 Q60 74 92 80"/><path d="M30 98 Q60 104 90 98"/>
+      </g>
+      <circle cx="30" cy="82" r="7" fill="#FFA48C" opacity=".7"/>
+      <circle cx="90" cy="82" r="7" fill="#FFA48C" opacity=".7"/>
+      <g transform="translate(42 66)">{eye[mood]||eye.celebrate}</g>
+      <g transform="translate(78 66)">{eye[mood]||eye.celebrate}</g>
+      {mouth[mood]||mouth.celebrate}
+    </svg>
+  );
+}
+
+// ─── SHARED ──────────────────────────────────────────────────
+function Sparkle({x,y,s=11,d=0,color='#FFD36E'}) {
+  return <div style={{position:'absolute',left:x,top:y,width:s,height:s,pointerEvents:'none',animation:`sparkle ${2+d}s ease-in-out ${d}s infinite`,color}}><svg viewBox="0 0 20 20" width="100%" height="100%"><path d="M10 0L12 8 20 10 12 12 10 20 8 12 0 10 8 8Z" fill="currentColor"/></svg></div>;
+}
+function Confetti({count=30}) {
+  const p=useMemo(()=>Array.from({length:count},(_,i)=>({left:Math.random()*100,color:['#FFD36E','#FFA48C','#A8D5A2','#B8DEEF','#D9C7F0','#E6779E','#FFD36E'][i%7],size:6+Math.random()*8,dur:1.4+Math.random()*1.4,delay:Math.random()*.7,shape:Math.random()>.5?'50%':'3px'})),[count]);
+  return <div style={{position:'absolute',inset:0,pointerEvents:'none',overflow:'hidden'}}>{p.map((x,i)=><div key={i} style={{position:'absolute',left:`${x.left}%`,top:-16,width:x.size,height:x.size,background:x.color,borderRadius:x.shape,animation:`confetti-fall ${x.dur}s ease-in ${x.delay}s forwards`}}/>)}</div>;
+}
+
+// ─── STAR ROW ────────────────────────────────────────────────
+function StarRow({ value=3, size=44, gap=8 }) {
+  return (
+    <div style={{display:'flex',gap,justifyContent:'center'}}>
+      {[0,1,2].map(i=>(
+        <div key={i} style={{
+          fontSize:size,
+          filter:i<value?'drop-shadow(0 3px 0 #B87C0E)':'none',
+          opacity:i<value?1:.18,
+          animation:i<value?`star-in .5s cubic-bezier(.34,1.56,.64,1) ${i*.18}s both`:'none',
+        }}>
+          {i<value?'⭐':'☆'}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ─── COIN BURST ──────────────────────────────────────────────
+function CoinBurst({ coins=5, style={} }) {
+  return (
+    <div style={{display:'inline-flex',alignItems:'center',gap:8,padding:'8px 16px',borderRadius:999,background:C.sun,border:`2.5px solid ${C.ink}`,boxShadow:`0 4px 0 ${C.sunSh}`,animation:'coin-bounce 1.2s ease-in-out infinite',...style}}>
+      <span style={{fontSize:22}}>🪙</span>
+      <span style={{fontFamily:'Fredoka',fontWeight:700,fontSize:22,color:C.sunInk}}>+{coins}</span>
+    </div>
+  );
+}
+
+// ─── PROGRESS TO NEXT ────────────────────────────────────────
+function NextProgress({ label, current, max, color=C.correct }) {
+  return (
+    <div style={{background:'rgba(255,255,255,0.7)',borderRadius:16,padding:'10px 14px',border:`1.5px solid rgba(46,90,58,.12)`}}>
+      <div style={{display:'flex',justifyContent:'space-between',marginBottom:6,fontSize:12,fontWeight:700,color:C.soft}}>
+        <span>{label}</span><span>{current}/{max}</span>
+      </div>
+      <div style={{height:10,borderRadius:10,background:'rgba(46,90,58,0.1)',border:`1.5px solid ${C.ink}`,overflow:'hidden'}}>
+        <div style={{height:'100%',width:`${current/max*100}%`,background:color,borderRadius:10,transition:'width .8s cubic-bezier(.34,1.56,.64,1)'}}/>
+      </div>
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════
+// 1 — CORRECT ANSWER POPUP (small, inline)
+// ══════════════════════════════════════════════════════════════
+function CorrectPopup() {
+  return (
+    <div style={{position:'absolute',inset:0,background:'radial-gradient(ellipse 110% 55% at 50% 0%,#D6ECCE 0%,#E8F4E0 45%,#F4FAEE 100%)'}}>
+      {/* Game content (dimmed bg) */}
+      <div style={{position:'absolute',inset:0,opacity:.3,background:'repeating-linear-gradient(45deg,rgba(46,90,58,0.04) 0,rgba(46,90,58,0.04) 1px,transparent 0,transparent 50%)',backgroundSize:'20px 20px'}}/>
+      <Sparkle x="10%"  y="15%" s={12} d={0}/>
+      <Sparkle x="82%"  y="12%" s={10} d={.7}/>
+      <Sparkle x="55%"  y="8%"  s={8}  d={1.3}/>
+
+      {/* Float-up score */}
+      <div style={{position:'absolute',top:'28%',left:0,right:0,display:'flex',justifyContent:'center',gap:16,pointerEvents:'none',zIndex:20}}>
+        {['+1 ⭐','+3 🪙','✓'].map((t,i)=>(
+          <div key={t} style={{fontFamily:'Fredoka',fontWeight:700,fontSize:22,color:C.sunInk,textShadow:'0 2px 0 rgba(46,90,58,0.2)',animation:`float-up 1.6s ease-out ${i*.2}s both`}}>{t}</div>
+        ))}
+      </div>
+
+      {/* Ripple effect */}
+      <div style={{position:'absolute',top:'50%',left:'50%',transform:'translate(-50%,-50%)',width:120,height:120,borderRadius:'50%',border:`3px solid ${C.correct}`,animation:'ripple-out 1s ease-out .2s both',pointerEvents:'none'}}/>
+
+      {/* Popup card */}
+      <div style={{
+        position:'absolute',bottom:100,left:20,right:20,
+        padding:'20px 22px',borderRadius:28,
+        background:C.correctBg,border:`3px solid ${C.correct}`,
+        boxShadow:`0 6px 0 ${C.correctSh},0 16px 32px rgba(95,179,106,0.25)`,
+        animation:'slide-up .35s cubic-bezier(.34,1.56,.64,1) both',
+      }}>
+        <div style={{display:'flex',alignItems:'center',gap:14}}>
+          <div style={{animation:'bobble 2s ease-in-out infinite',flexShrink:0}}>
+            <Bap size={72} mood="celebrate" color="sun"/>
+          </div>
+          <div style={{flex:1}}>
+            <div style={{fontFamily:'Fredoka',fontWeight:700,fontSize:24,color:C.sageInk,lineHeight:1,marginBottom:4}}>Amazing! 🎉</div>
+            <div style={{fontSize:13,color:C.soft,marginBottom:10}}>You got it right!</div>
+            <StarRow value={3} size={28} gap={4}/>
+          </div>
+        </div>
+        <div style={{marginTop:14,display:'flex',gap:10,alignItems:'center'}}>
+          <CoinBurst coins={3} style={{flex:1,justifyContent:'center'}}/>
+          <button style={{flex:1,height:48,borderRadius:18,background:C.correct,border:`2.5px solid ${C.ink}`,boxShadow:`0 4px 0 ${C.correctSh}`,fontFamily:'Fredoka',fontWeight:700,fontSize:18,color:'#fff'}}>
+            Next →
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════
+// 2 — END OF MINI-GAME (full screen)
+// ══════════════════════════════════════════════════════════════
+function EndOfGame() {
+  const stars=3, correct=5, total=5, coins=15;
+  return (
+    <div style={{position:'absolute',inset:0,background:'radial-gradient(ellipse 110% 60% at 50% 0%,#FFE6A8 0%,#FFF2CC 45%,#FFFBEE 100%)'}}>
+      <Confetti count={32}/>
+      <Sparkle x="8%"   y="10%" s={14} d={0}   color="#FFD36E"/>
+      <Sparkle x="84%"  y="8%"  s={11} d={.6}  color="#A8D5A2"/>
+      <Sparkle x="55%"  y="16%" s={9}  d={1.2} color="#B8DEEF"/>
+      <Sparkle x="25%"  y="20%" s={8}  d={.9}  color="#D9C7F0"/>
+
+      <div style={{position:'relative',zIndex:1,height:'100%',padding:'52px 24px 28px',display:'flex',flexDirection:'column',alignItems:'center'}}>
+        {/* Header */}
+        <div style={{textAlign:'center',marginBottom:12,animation:'slide-down .4s both'}}>
+          <div style={{fontSize:13,fontWeight:700,color:C.sunInk,letterSpacing:1,marginBottom:6}}>LEVEL COMPLETE! 🏆</div>
+          <div style={{fontFamily:'Fredoka',fontWeight:700,fontSize:36,color:C.ink,lineHeight:1.1}}>Number Forest<br/>Level 5</div>
+        </div>
+
+        {/* Mascot big */}
+        <div style={{animation:'bobble 2.2s ease-in-out infinite',margin:'8px 0'}}>
+          <Bap size={150} mood="excited" color="sun"/>
+        </div>
+
+        {/* Stars */}
+        <div style={{marginBottom:16}}>
+          <StarRow value={stars} size={54} gap={10}/>
+        </div>
+
+        {/* Stats card */}
+        <div style={{
+          width:'100%',background:'rgba(255,255,255,0.88)',borderRadius:26,
+          border:`3px solid ${C.ink}`,boxShadow:`0 6px 0 rgba(46,90,58,0.2)`,
+          padding:'16px 20px',animation:'pop-in .4s .3s both',
+        }}>
+          <div style={{display:'flex',justifyContent:'space-around',textAlign:'center',marginBottom:14}}>
+            {[[`${correct}/${total}`,'Correct ✓',C.correct],[`${coins}`,`Coins 🪙`,C.sunInk],[`${stars}/3`,'Stars ⭐',C.sunInk]].map(([v,l,c])=>(
+              <div key={l}>
+                <div style={{fontFamily:'Fredoka',fontWeight:700,fontSize:28,color:c,lineHeight:1}}>{v}</div>
+                <div style={{fontSize:11,color:C.soft,fontWeight:600,marginTop:3}}>{l}</div>
+              </div>
+            ))}
+          </div>
+          {/* Progress to next level */}
+          <NextProgress label="Progress to Level 6" current={7} max={9} color={C.correct}/>
+        </div>
+
+        {/* CTAs */}
+        <div style={{width:'100%',marginTop:16,display:'flex',flexDirection:'column',gap:10}}>
+          <button style={{width:'100%',height:60,borderRadius:22,background:C.sage,border:`3px solid ${C.ink}`,boxShadow:`0 5px 0 ${C.sageSh}`,fontFamily:'Fredoka',fontWeight:700,fontSize:22,color:'#fff',animation:'pulse-soft 2s ease-in-out infinite'}}>
+            ▶ Next Level
+          </button>
+          <button style={{width:'100%',height:48,borderRadius:18,background:'rgba(255,255,255,0.6)',border:`2px solid rgba(46,90,58,.2)`,fontFamily:'Fredoka',fontWeight:600,fontSize:16,color:C.soft}}>
+            🏠 Back to Home
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════
+// 3 — END OF DAILY SESSION
+// ══════════════════════════════════════════════════════════════
+function EndOfSession() {
+  const days=['M','T','W','T','F','S','S'];
+  return (
+    <div style={{position:'absolute',inset:0,background:'radial-gradient(ellipse 110% 60% at 50% 0%,#E3D2F4 0%,#EEE3F8 45%,#F7F1FC 100%)'}}>
+      <Sparkle x="7%"  y="12%" s={12} d={0}   color="#D9C7F0"/>
+      <Sparkle x="85%" y="10%" s={10} d={.7}  color="#FFD36E"/>
+      <Sparkle x="50%" y="6%"  s={8}  d={1.3} color="#A8D5A2"/>
+
+      <div style={{position:'relative',zIndex:1,height:'100%',padding:'52px 22px 28px',display:'flex',flexDirection:'column'}}>
+        {/* Header */}
+        <div style={{textAlign:'center',animation:'slide-down .4s both',marginBottom:10}}>
+          <div style={{fontSize:12,fontWeight:700,color:C.lavInk,letterSpacing:1,marginBottom:5}}>TIME TO REST 😴</div>
+          <div style={{fontFamily:'Fredoka',fontWeight:700,fontSize:30,color:C.ink,lineHeight:1.1}}>Great learning<br/>today, Bắp!</div>
+        </div>
+
+        {/* Sleeping mascot */}
+        <div style={{display:'flex',justifyContent:'center',margin:'8px 0',position:'relative'}}>
+          <div style={{animation:'pulse-soft 3s ease-in-out infinite'}}>
+            <Bap size={130} mood="wink" color="lavender"/>
+          </div>
+          {/* ZZZ */}
+          {['z','z','Z'].map((z,i)=>(
+            <div key={i} style={{position:'absolute',top:10+i*14,right:`${32-i*6}%`,fontFamily:'Fredoka',fontWeight:700,fontSize:14+i*4,color:C.lavInk,opacity:.7,animation:`float-up ${1.5+i*.3}s ease-out ${i*.4}s infinite`}}>{z}</div>
+          ))}
+        </div>
+
+        {/* Today's summary */}
+        <div style={{
+          background:'rgba(255,255,255,0.85)',borderRadius:24,
+          border:`3px solid ${C.ink}`,boxShadow:`0 5px 0 rgba(46,90,58,0.18)`,
+          padding:'16px 18px',animation:'pop-in .4s .2s both',marginBottom:12,
+        }}>
+          <div style={{fontSize:12,fontWeight:700,color:C.lavInk,letterSpacing:.5,marginBottom:12}}>TODAY'S SUMMARY</div>
+          <div style={{display:'flex',justifyContent:'space-around',textAlign:'center',marginBottom:14}}>
+            {[['12','Minutes','#8AC4DE'],['6','Stars ⭐','#B87C0E'],['2','Levels 🏆',C.sageInk],['4 🔥','Day streak','#C14A2A']].map(([v,l,c])=>(
+              <div key={l}>
+                <div style={{fontFamily:'Fredoka',fontWeight:700,fontSize:22,color:c,lineHeight:1}}>{v}</div>
+                <div style={{fontSize:10,color:C.soft,fontWeight:600,marginTop:2}}>{l}</div>
+              </div>
+            ))}
+          </div>
+          {/* Weekly streak dots */}
+          <div>
+            <div style={{fontSize:11,fontWeight:700,color:C.soft,marginBottom:6}}>This week</div>
+            <div style={{display:'flex',gap:6}}>
+              {days.map((d,i)=>(
+                <div key={i} style={{flex:1,textAlign:'center'}}>
+                  <div style={{width:'100%',paddingBottom:'100%',borderRadius:9,background:i<4?C.sun:'#F0EADD',border:`2px solid ${i<4?C.sunSh:'rgba(46,90,58,0.12)'}`,position:'relative',marginBottom:3}}>
+                    {i<4&&<div style={{position:'absolute',inset:0,display:'flex',alignItems:'center',justifyContent:'center',fontSize:12}}>⭐</div>}
+                  </div>
+                  <div style={{fontSize:9,color:C.faint,fontWeight:700}}>{d}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Tomorrow teaser */}
+        <div style={{padding:'12px 16px',borderRadius:20,background:'rgba(255,255,255,0.6)',border:`2px solid ${C.lav}`,display:'flex',alignItems:'center',gap:12,marginBottom:16,animation:'slide-up .4s .4s both'}}>
+          <span style={{fontSize:26}}>🌅</span>
+          <div style={{flex:1}}>
+            <div style={{fontSize:14,fontWeight:700,color:C.ink}}>Come back tomorrow!</div>
+            <div style={{fontSize:12,color:C.soft,marginTop:1}}>Keep your 🔥4-day streak going</div>
+          </div>
+        </div>
+
+        <button style={{width:'100%',height:56,borderRadius:22,background:C.lav,border:`3px solid ${C.ink}`,boxShadow:`0 5px 0 ${C.lavSh}`,fontFamily:'Fredoka',fontWeight:700,fontSize:20,color:'#fff'}}>
+          🏠 Back to Home
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════
+// 4 — NEW STICKER UNLOCKED
+// ══════════════════════════════════════════════════════════════
+function StickerUnlocked() {
+  const [revealed, setRevealed] = useState(true);
+  const sticker = { emoji:'🦋', name:'Flutter', rarity:'Rare' };
+  return (
+    <div style={{position:'absolute',inset:0,background:'radial-gradient(ellipse 110% 60% at 50% 0%,#E3D2F4 0%,#EEE3F8 45%,#FAF0FF 100%)'}}>
+      <Confetti count={26}/>
+      <Sparkle x="6%"  y="14%" s={13} d={0}   color="#D9C7F0"/>
+      <Sparkle x="88%" y="9%"  s={11} d={.6}  color="#FFD36E"/>
+      <Sparkle x="50%" y="6%"  s={9}  d={1.2} color="#E6779E"/>
+      <Sparkle x="20%" y="22%" s={7}  d={.4}  color="#B8DEEF"/>
+
+      <div style={{position:'relative',zIndex:1,height:'100%',padding:'52px 24px 32px',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'space-between'}}>
+        {/* Header */}
+        <div style={{textAlign:'center',animation:'slide-down .4s both'}}>
+          <div style={{fontSize:13,fontWeight:700,color:C.lavInk,letterSpacing:1,marginBottom:6}}>✨ NEW STICKER! ✨</div>
+          <div style={{fontFamily:'Fredoka',fontWeight:700,fontSize:32,color:C.ink,lineHeight:1.1}}>You unlocked<br/>a rare sticker!</div>
+        </div>
+
+        {/* Big sticker reveal */}
+        <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:16}}>
+          {/* Glow ring */}
+          <div style={{position:'relative',display:'flex',alignItems:'center',justifyContent:'center'}}>
+            <div style={{position:'absolute',width:200,height:200,borderRadius:'50%',border:`4px solid ${C.lav}`,animation:'ripple-out 1.4s ease-out infinite',opacity:.5}}/>
+            <div style={{position:'absolute',width:180,height:180,borderRadius:'50%',border:`3px solid ${C.berry}`,animation:'ripple-out 1.4s ease-out .4s infinite',opacity:.3}}/>
+            {/* Sticker card */}
+            <div style={{
+              width:160,height:160,borderRadius:36,
+              background:'rgba(255,255,255,0.95)',border:`4px solid ${C.ink}`,
+              boxShadow:`0 8px 0 ${C.lavSh},0 20px 40px rgba(169,88,208,0.3)`,
+              display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:6,
+              animation:'badge-pop .6s cubic-bezier(.34,1.56,.64,1) both',
+            }}>
+              <div style={{fontSize:80,lineHeight:1,animation:'pulse-soft 2s ease-in-out infinite'}}>{sticker.emoji}</div>
+            </div>
+          </div>
+          {/* Name + rarity */}
+          <div style={{textAlign:'center',animation:'pop-in .4s .4s both'}}>
+            <div style={{display:'inline-flex',alignItems:'center',gap:6,padding:'4px 14px',borderRadius:999,background:C.berry,border:`2px solid ${C.ink}`,boxShadow:`0 3px 0 ${C.berrySh}`,marginBottom:8}}>
+              <span style={{fontSize:12,fontWeight:700,color:'#fff',letterSpacing:.5}}>✨ {sticker.rarity.toUpperCase()}</span>
+            </div>
+            <div style={{fontFamily:'Fredoka',fontWeight:700,fontSize:28,color:C.ink}}>{sticker.name}</div>
+            <div style={{fontSize:13,color:C.soft,marginTop:2}}>From Number Forest 🌳</div>
+          </div>
+        </div>
+
+        {/* Sticker book progress */}
+        <div style={{width:'100%',animation:'slide-up .4s .5s both'}}>
+          <NextProgress label="Sticker Book" current={13} max={40} color={C.berry}/>
+          <div style={{fontSize:12,color:C.soft,textAlign:'center',marginTop:6}}>13 of 40 collected</div>
+        </div>
+
+        {/* CTAs */}
+        <div style={{width:'100%',display:'flex',gap:10}}>
+          <button style={{flex:1,height:54,borderRadius:20,background:'rgba(255,255,255,0.7)',border:`2.5px solid ${C.ink}`,fontFamily:'Fredoka',fontWeight:700,fontSize:16,color:C.soft}}>
+            📓 View Book
+          </button>
+          <button style={{flex:1,height:54,borderRadius:20,background:C.lav,border:`3px solid ${C.ink}`,boxShadow:`0 5px 0 ${C.lavSh}`,fontFamily:'Fredoka',fontWeight:700,fontSize:18,color:'#fff'}}>
+            Keep Playing! ▶
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════
+// 5 — NEW WORLD UNLOCKED
+// ══════════════════════════════════════════════════════════════
+function WorldUnlocked() {
+  return (
+    <div style={{position:'absolute',inset:0}}>
+      {/* Sky gradient */}
+      <div style={{position:'absolute',inset:0,background:'linear-gradient(180deg,#1A3A5C 0%,#2E6093 30%,#4E8EC0 60%,#7ABBE0 100%)'}}/>
+      {/* Stars in sky */}
+      {Array.from({length:16}).map((_,i)=>(
+        <div key={i} style={{position:'absolute',left:`${5+Math.random()*90}%`,top:`${2+Math.random()*35}%`,width:3+Math.random()*4,height:3+Math.random()*4,borderRadius:'50%',background:'#fff',opacity:.7,animation:`sparkle ${1.5+Math.random()}s ease-in-out ${Math.random()*2}s infinite`}}/>
+      ))}
+      <Confetti count={30}/>
+
+      {/* Ground */}
+      <div style={{position:'absolute',bottom:0,left:0,right:0,height:180,background:'linear-gradient(180deg,#B8DEEF 0%,#8AC4DE 100%)',borderTop:`4px solid ${C.ink}`}}/>
+
+      <div style={{position:'relative',zIndex:1,height:'100%',padding:'48px 22px 28px',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'space-between'}}>
+        {/* Title */}
+        <div style={{textAlign:'center',animation:'slide-down .5s both'}}>
+          <div style={{fontSize:13,fontWeight:700,color:'rgba(255,255,255,0.7)',letterSpacing:1.2,marginBottom:6}}>🗺️ NEW WORLD UNLOCKED!</div>
+          <div style={{fontFamily:'Fredoka',fontWeight:700,fontSize:34,color:'#fff',lineHeight:1.1,textShadow:'0 3px 0 rgba(0,0,0,0.25)'}}>Tens Town</div>
+          <div style={{fontSize:14,color:'rgba(255,255,255,0.8)',marginTop:4,fontWeight:600}}>Numbers 10–100</div>
+        </div>
+
+        {/* World illustration */}
+        <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:12,animation:'pop-in .6s .2s both'}}>
+          {/* World badge */}
+          <div style={{
+            width:160,height:160,borderRadius:'50%',
+            background:'linear-gradient(135deg,#8AC4DE 0%,#5A96B1 100%)',
+            border:`5px solid #fff`,
+            boxShadow:`0 8px 0 rgba(0,0,0,0.25),0 20px 40px rgba(0,0,0,0.3)`,
+            display:'flex',alignItems:'center',justifyContent:'center',fontSize:80,
+            animation:'glow-ring 1.8s ease-in-out infinite',
+          }}>🏘️</div>
+
+          {/* Mascot excited */}
+          <div style={{animation:'bobble 2s ease-in-out infinite'}}>
+            <Bap size={90} mood="excited" color="sky"/>
+          </div>
+          <div style={{
+            padding:'10px 18px',borderRadius:20,
+            background:'rgba(255,255,255,0.9)',border:`2.5px solid ${C.ink}`,
+            boxShadow:'0 4px 0 rgba(0,0,0,0.15)',
+            fontFamily:'Fredoka',fontWeight:700,fontSize:15,color:C.skyInk,textAlign:'center',
+            animation:'slide-up .4s .4s both',
+          }}>
+            "Tens Town is unlocked! Let's count by 10s! 🚂"
+          </div>
+        </div>
+
+        {/* Teaser */}
+        <div style={{width:'100%',padding:'14px 16px',borderRadius:22,background:'rgba(255,255,255,0.15)',border:'2px solid rgba(255,255,255,0.3)',backdropFilter:'blur(6px)',animation:'slide-up .4s .5s both',marginBottom:12}}>
+          <div style={{fontSize:12,fontWeight:700,color:'rgba(255,255,255,0.7)',letterSpacing:.5,marginBottom:8}}>WHAT'S INSIDE</div>
+          <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
+            {['🔊 Count by 10s','🧱 Build tens','📖 Read 10–100','⚖️ Compare big numbers'].map(s=>(
+              <div key={s} style={{padding:'5px 10px',borderRadius:999,background:'rgba(255,255,255,0.2)',border:'1px solid rgba(255,255,255,0.35)',fontSize:12,fontWeight:600,color:'#fff'}}>{s}</div>
+            ))}
+          </div>
+        </div>
+
+        <button style={{
+          width:'100%',height:62,borderRadius:24,
+          background:'linear-gradient(135deg,#FFD36E 0%,#FFC94A 100%)',
+          border:`3px solid ${C.ink}`,boxShadow:`0 6px 0 ${C.sunSh},0 14px 24px rgba(0,0,0,0.2)`,
+          fontFamily:'Fredoka',fontWeight:700,fontSize:22,color:C.sunInk,
+          animation:'pulse-soft 2s ease-in-out infinite',
+        }}>
+          ▶ Explore Tens Town!
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════
+// 6 — ACHIEVEMENT / MILESTONE
+// ══════════════════════════════════════════════════════════════
+function Achievement() {
+  const badge = { emoji:'🌟', title:'Number Star', desc:'Completed 10 levels!', tier:'Gold' };
+  return (
+    <div style={{position:'absolute',inset:0,background:'radial-gradient(ellipse 110% 60% at 50% 0%,#FFE6A8 0%,#FFF2CC 50%,#FFFBEE 100%)'}}>
+      <Confetti count={28}/>
+      <Sparkle x="7%"  y="12%" s={13} d={0}   color="#FFD36E"/>
+      <Sparkle x="88%" y="8%"  s={11} d={.6}  color="#FFA48C"/>
+      <Sparkle x="50%" y="5%"  s={10} d={1.1} color="#A8D5A2"/>
+      <Sparkle x="25%" y="22%" s={8}  d={.8}  color="#D9C7F0"/>
+      <Sparkle x="75%" y="20%" s={7}  d={1.5} color="#B8DEEF"/>
+
+      <div style={{position:'relative',zIndex:1,height:'100%',padding:'50px 24px 28px',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'space-between'}}>
+        {/* Header */}
+        <div style={{textAlign:'center',animation:'slide-down .4s both'}}>
+          <div style={{fontSize:13,fontWeight:700,color:C.sunInk,letterSpacing:1,marginBottom:6}}>🏆 ACHIEVEMENT UNLOCKED!</div>
+          <div style={{fontFamily:'Fredoka',fontWeight:700,fontSize:30,color:C.ink,lineHeight:1.1}}>You've earned a<br/>special badge!</div>
+        </div>
+
+        {/* Badge */}
+        <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:16}}>
+          {/* Shimmer badge */}
+          <div style={{position:'relative'}}>
+            {/* Tier ring */}
+            <div style={{
+              position:'absolute',inset:-8,borderRadius:'50%',
+              background:'linear-gradient(135deg,#FFD36E,#FFA48C,#D9C7F0,#A8D5A2,#B8DEEF,#FFD36E)',
+              backgroundSize:'200% 200%',
+              animation:'shimmer 3s linear infinite, ripple-out 2s ease-out infinite',
+              opacity:.5,
+            }}/>
+            <div style={{
+              width:180,height:180,borderRadius:'50%',
+              background:'linear-gradient(135deg,#FFC94A 0%,#FFD36E 50%,#FFA48C 100%)',
+              border:`5px solid ${C.ink}`,
+              boxShadow:`0 8px 0 ${C.sunSh},0 20px 40px rgba(199,149,40,0.35)`,
+              display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:4,
+              animation:'badge-pop .6s cubic-bezier(.34,1.56,.64,1) both',
+              position:'relative',
+            }}>
+              <div style={{fontSize:72,lineHeight:1}}>{badge.emoji}</div>
+            </div>
+            {/* Tier label */}
+            <div style={{position:'absolute',bottom:-14,left:'50%',transform:'translateX(-50%)',whiteSpace:'nowrap',padding:'4px 14px',borderRadius:999,background:C.gold,border:`2.5px solid ${C.ink}`,boxShadow:`0 3px 0 ${C.goldSh}`,fontFamily:'Fredoka',fontWeight:700,fontSize:13,color:C.sunInk}}>
+              ✨ {badge.tier} Badge
+            </div>
+          </div>
+
+          <div style={{textAlign:'center',marginTop:8,animation:'pop-in .4s .5s both'}}>
+            <div style={{fontFamily:'Fredoka',fontWeight:700,fontSize:28,color:C.ink}}>{badge.title}</div>
+            <div style={{fontSize:14,color:C.soft,marginTop:2}}>{badge.desc}</div>
+          </div>
+        </div>
+
+        {/* Stats */}
+        <div style={{
+          width:'100%',background:'rgba(255,255,255,0.85)',borderRadius:24,
+          border:`3px solid ${C.ink}`,boxShadow:`0 5px 0 rgba(46,90,58,0.18)`,
+          padding:'14px 18px',animation:'slide-up .4s .5s both',
+        }}>
+          <div style={{display:'flex',justifyContent:'space-around',textAlign:'center',marginBottom:10}}>
+            {[['10','Levels ✓',C.sageInk],['⭐ 27','Stars',C.sunInk],['🔥 4','Day streak','#C14A2A']].map(([v,l,c])=>(
+              <div key={l}>
+                <div style={{fontFamily:'Fredoka',fontWeight:700,fontSize:22,color:c,lineHeight:1}}>{v}</div>
+                <div style={{fontSize:11,color:C.soft,fontWeight:600,marginTop:2}}>{l}</div>
+              </div>
+            ))}
+          </div>
+          <NextProgress label="Next badge: Super Star (20 levels)" current={10} max={20} color={C.gold}/>
+        </div>
+
+        <div style={{width:'100%',display:'flex',gap:10}}>
+          <button style={{flex:1,height:52,borderRadius:20,background:'rgba(255,255,255,0.7)',border:`2.5px solid ${C.ink}`,fontFamily:'Fredoka',fontWeight:700,fontSize:15,color:C.soft}}>
+            🏅 All Badges
+          </button>
+          <button style={{flex:1.6,height:52,borderRadius:20,background:C.sun,border:`3px solid ${C.ink}`,boxShadow:`0 5px 0 ${C.sunSh}`,fontFamily:'Fredoka',fontWeight:700,fontSize:19,color:C.sunInk}}>
+            Keep Going! ▶
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════
+// COMPONENT PANEL — Reward building blocks
+// ══════════════════════════════════════════════════════════════
+function ComponentPanel() {
+  return (
+    <div style={{position:'absolute',inset:0,background:'#F7F3EC',overflowY:'auto',padding:'52px 14px 24px'}}>
+      <div style={{textAlign:'center',marginBottom:16}}>
+        <div style={{fontSize:11,fontWeight:700,color:C.soft,letterSpacing:.8}}>REUSABLE REWARD COMPONENTS</div>
+        <div style={{fontSize:18,fontWeight:700,color:C.ink,marginTop:2}}>Building Blocks</div>
+      </div>
+      <div style={{display:'flex',flexDirection:'column',gap:14}}>
+
+        {/* Star row variants */}
+        <div style={{background:'#fff',borderRadius:20,padding:'14px 16px',border:'1.5px solid rgba(46,90,58,0.1)'}}>
+          <div style={{fontSize:11,fontWeight:700,color:C.soft,letterSpacing:.5,marginBottom:10}}>⭐ STAR ROWS</div>
+          <div style={{display:'flex',flexDirection:'column',gap:10}}>
+            {[3,2,1].map(v=>(
+              <div key={v} style={{display:'flex',alignItems:'center',gap:12}}>
+                <StarRow value={v} size={32} gap={5}/>
+                <div style={{fontSize:12,color:C.soft}}>{v === 3 ? 'Perfect!' : v === 2 ? 'Great job!' : 'Good try!'}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Coin burst */}
+        <div style={{background:'#fff',borderRadius:20,padding:'14px 16px',border:'1.5px solid rgba(46,90,58,0.1)'}}>
+          <div style={{fontSize:11,fontWeight:700,color:C.soft,letterSpacing:.5,marginBottom:10}}>🪙 COIN BURSTS</div>
+          <div style={{display:'flex',gap:10,flexWrap:'wrap'}}>
+            {[3,5,10,15].map(c=><CoinBurst key={c} coins={c}/>)}
+          </div>
+        </div>
+
+        {/* Progress bars */}
+        <div style={{background:'#fff',borderRadius:20,padding:'14px 16px',border:'1.5px solid rgba(46,90,58,0.1)'}}>
+          <div style={{fontSize:11,fontWeight:700,color:C.soft,letterSpacing:.5,marginBottom:10}}>📈 PROGRESS TO NEXT</div>
+          <div style={{display:'flex',flexDirection:'column',gap:8}}>
+            <NextProgress label="Next level unlock" current={7} max={9} color={C.correct}/>
+            <NextProgress label="Sticker book" current={13} max={40} color={C.berry}/>
+            <NextProgress label="World 2 stars" current={5} max={27} color={C.sky}/>
+          </div>
+        </div>
+
+        {/* Popup sizes */}
+        <div style={{background:'#fff',borderRadius:20,padding:'14px 16px',border:'1.5px solid rgba(46,90,58,0.1)'}}>
+          <div style={{fontSize:11,fontWeight:700,color:C.soft,letterSpacing:.5,marginBottom:10}}>💬 POPUP VARIANTS</div>
+          {/* Small toast */}
+          <div style={{padding:'10px 14px',borderRadius:16,background:C.correctBg,border:`2px solid ${C.correct}`,display:'flex',alignItems:'center',gap:10,marginBottom:8,animation:'slide-up .3s both'}}>
+            <span style={{fontSize:20}}>⭐</span>
+            <div style={{flex:1,fontSize:14,fontWeight:700,color:C.sageInk}}>+1 Star earned!</div>
+            <div style={{fontSize:11,color:C.correct,fontWeight:700}}>dismiss</div>
+          </div>
+          {/* Medium */}
+          <div style={{padding:'12px 14px',borderRadius:18,background:C.hintBg,border:`2.5px solid ${C.sun}`,display:'flex',alignItems:'center',gap:12,boxShadow:`0 4px 0 ${C.sunSh}`}}>
+            <span style={{fontSize:32}}>🎉</span>
+            <div style={{flex:1}}>
+              <div style={{fontSize:15,fontWeight:700,color:C.sunInk}}>Level complete!</div>
+              <StarRow value={3} size={20} gap={3}/>
+            </div>
+            <button style={{padding:'8px 14px',borderRadius:14,background:C.sun,border:`2px solid ${C.ink}`,fontFamily:'Fredoka',fontWeight:700,fontSize:14,color:C.sunInk,boxShadow:`0 3px 0 ${C.sunSh}`}}>Next →</button>
+          </div>
+        </div>
+
+        {/* Tone guide */}
+        <div style={{background:'#fff',borderRadius:20,padding:'14px 16px',border:'1.5px solid rgba(46,90,58,0.1)'}}>
+          <div style={{fontSize:11,fontWeight:700,color:C.soft,letterSpacing:.5,marginBottom:8}}>✍️ MICROCOPY EXAMPLES</div>
+          <div style={{display:'flex',flexDirection:'column',gap:6}}>
+            {[
+              ['1⭐','Good try, Bắp! Keep going!',C.coral],
+              ['2⭐','Great job! Almost perfect!',C.sun],
+              ['3⭐','AMAZING!! You nailed it! 🎉',C.correct],
+              ['New sticker','Ooh, a new sticker! ✨ Flutter found you!',C.lav],
+              ['World done','You finished Number Forest! 🌳 Hero!',C.sage],
+              ['Daily done','Rest time! You did so great today 😴',C.sky],
+            ].map(([t,m,c])=>(
+              <div key={t} style={{display:'flex',gap:8,alignItems:'flex-start',padding:'6px 0',borderBottom:'1px solid rgba(46,90,58,0.06)'}}>
+                <div style={{padding:'3px 8px',borderRadius:999,background:c+'22',border:`1px solid ${c}`,fontSize:10,fontWeight:700,color:c,whiteSpace:'nowrap',flexShrink:0}}>{t}</div>
+                <div style={{fontSize:12,color:C.soft,lineHeight:1.4}}>{m}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── CANVAS ──────────────────────────────────────────────────
+function App() {
+  return (
+    <DesignCanvas title="Bắp — Reward & Celebration Screen System">
+      <DCSection id="s1" title="Reward Screens">
+        <DCArtboard id="r1" label="✅ Correct Answer Popup" width={375} height={720}>
+          <CorrectPopup/>
+        </DCArtboard>
+        <DCArtboard id="r2" label="🏆 End of Mini-Game" width={375} height={720}>
+          <EndOfGame/>
+        </DCArtboard>
+        <DCArtboard id="r3" label="😴 End of Daily Session" width={375} height={720}>
+          <EndOfSession/>
+        </DCArtboard>
+      </DCSection>
+      <DCSection id="s2" title="Unlock Celebrations">
+        <DCArtboard id="u1" label="🦋 New Sticker Unlocked" width={375} height={720}>
+          <StickerUnlocked/>
+        </DCArtboard>
+        <DCArtboard id="u2" label="🏘️ New World Unlocked" width={375} height={720}>
+          <WorldUnlocked/>
+        </DCArtboard>
+        <DCArtboard id="u3" label="🌟 Achievement Earned" width={375} height={720}>
+          <Achievement/>
+        </DCArtboard>
+      </DCSection>
+      <DCSection id="s3" title="Components & Specs">
+        <DCArtboard id="c1" label="🧩 Reward Component Library" width={375} height={720}>
+          <ComponentPanel/>
+        </DCArtboard>
+      </DCSection>
+    </DesignCanvas>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>

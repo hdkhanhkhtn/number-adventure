@@ -1,0 +1,943 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bắp Number Adventure — IA & User Flows</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=Fredoka:wght@600;700&display=swap" rel="stylesheet">
+<style>
+/* ─── Reset + Base ─────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg:        #F7F3EC;
+  --surface:   #FFFFFF;
+  --surface-2: #FDF8F0;
+  --ink:        #1E2A1F;
+  --ink-soft:   #5A6B5C;
+  --ink-faint:  #9EAB9F;
+  --outline:    rgba(30,42,31,.12);
+  --outline-md: rgba(30,42,31,.22);
+
+  /* Child mode — warm garden */
+  --child:      #3E7B4A;
+  --child-bg:   #EBF5E7;
+  --child-mid:  #7FC089;
+  --child-pale: #D6EDD0;
+
+  /* Parent mode — slate */
+  --parent:     #2E6F93;
+  --parent-bg:  #E8F2F8;
+  --parent-mid: #8AC4DE;
+  --parent-pale:#D4EAF5;
+
+  /* Accents */
+  --sun:   #FFD36E;
+  --coral: #FFA48C;
+  --berry: #E6779E;
+  --lavender: #D9C7F0;
+
+  --r: 14px;
+  --r-sm: 8px;
+  --r-lg: 20px;
+  --shadow: 0 2px 0 rgba(30,42,31,.07), 0 8px 20px rgba(30,42,31,.08);
+  --shadow-sm: 0 1px 0 rgba(30,42,31,.06), 0 4px 10px rgba(30,42,31,.07);
+
+  --serif: 'Be Vietnam Pro', system-ui, sans-serif;
+  --display: 'Fredoka', 'Be Vietnam Pro', ui-rounded, sans-serif;
+}
+html { scroll-behavior: smooth; }
+body {
+  font-family: var(--serif);
+  background: var(--bg);
+  color: var(--ink);
+  line-height: 1.6;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+a { color: inherit; text-decoration: none; }
+
+/* ─── Layout ────────────────────────────────────────────── */
+.layout { display: flex; min-height: 100vh; }
+
+/* Sidebar TOC */
+.sidebar {
+  width: 240px; flex-shrink: 0;
+  position: sticky; top: 0; height: 100vh;
+  overflow-y: auto; padding: 28px 0;
+  background: var(--surface);
+  border-right: 1px solid var(--outline);
+  z-index: 100;
+}
+.sidebar::-webkit-scrollbar { width: 0; }
+.sidebar-logo {
+  padding: 0 20px 20px;
+  border-bottom: 1px solid var(--outline);
+  margin-bottom: 16px;
+}
+.sidebar-logo-title { font-family: var(--display); font-size: 17px; font-weight: 700; color: var(--child); line-height: 1.1; }
+.sidebar-logo-sub { font-size: 11px; color: var(--ink-faint); font-weight: 500; margin-top: 2px; }
+.toc-group { margin-bottom: 4px; padding: 0 12px; }
+.toc-label { font-size: 10px; font-weight: 700; letter-spacing: .8px; color: var(--ink-faint); padding: 8px 8px 4px; text-transform: uppercase; }
+.toc-link {
+  display: flex; align-items: center; gap: 8px;
+  padding: 7px 10px; border-radius: 10px;
+  font-size: 13px; font-weight: 500; color: var(--ink-soft);
+  transition: background .15s, color .15s; cursor: pointer;
+}
+.toc-link:hover, .toc-link.active { background: var(--child-pale); color: var(--child); }
+.toc-link .toc-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+
+/* Main content */
+.main { flex: 1; padding: 48px 56px; max-width: 1000px; }
+@media (max-width: 900px) {
+  .sidebar { display: none; }
+  .main { padding: 28px 20px; }
+}
+
+/* ─── Typography ──────────────────────────────────────── */
+.doc-title { font-family: var(--display); font-size: 42px; font-weight: 700; color: var(--ink); line-height: 1.1; }
+.doc-subtitle { font-size: 18px; color: var(--ink-soft); margin-top: 8px; font-weight: 400; }
+.doc-meta { margin-top: 16px; display: flex; gap: 10px; flex-wrap: wrap; }
+.badge { display: inline-flex; align-items: center; gap: 5px; padding: 5px 12px; border-radius: 999px; font-size: 12px; font-weight: 600; border: 1.5px solid; }
+.badge.child { background: var(--child-pale); color: var(--child); border-color: var(--child-mid); }
+.badge.parent { background: var(--parent-pale); color: var(--parent); border-color: var(--parent-mid); }
+.badge.neutral { background: #F0EADE; color: #5A4E30; border-color: #D4C898; }
+
+.section { margin-top: 64px; }
+.section-header { display: flex; align-items: center; gap: 14px; margin-bottom: 24px; padding-bottom: 14px; border-bottom: 2px solid var(--outline); }
+.section-num { font-family: var(--display); font-size: 13px; font-weight: 700; color: var(--ink-faint); min-width: 24px; }
+.section-title { font-family: var(--display); font-size: 28px; font-weight: 700; color: var(--ink); }
+.section-tag { margin-left: auto; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 999px; letter-spacing: .5px; }
+
+h3 { font-family: var(--display); font-size: 18px; font-weight: 700; color: var(--ink); margin: 28px 0 12px; }
+h4 { font-size: 13px; font-weight: 700; color: var(--ink-soft); letter-spacing: .5px; text-transform: uppercase; margin: 20px 0 8px; }
+p { font-size: 14px; color: var(--ink-soft); line-height: 1.7; margin-bottom: 10px; }
+
+.card { background: var(--surface); border-radius: var(--r-lg); border: 1.5px solid var(--outline); box-shadow: var(--shadow-sm); padding: 20px; margin-bottom: 14px; }
+.card-title { font-weight: 700; font-size: 14px; color: var(--ink); margin-bottom: 6px; }
+.note { background: #FFF9EC; border-left: 3px solid var(--sun); border-radius: 0 var(--r) var(--r) 0; padding: 12px 16px; font-size: 13px; color: #5E3A00; margin: 14px 0; line-height: 1.6; }
+.note b { color: #3A2000; }
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.grid-3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; }
+@media (max-width: 700px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
+
+/* ─── Sitemap ─────────────────────────────────────────── */
+.sitemap { display: flex; gap: 20px; overflow-x: auto; padding-bottom: 8px; }
+.sitemap::-webkit-scrollbar { height: 4px; background: transparent; }
+.sitemap::-webkit-scrollbar-thumb { background: var(--outline-md); border-radius: 2px; }
+
+.site-mode { flex-shrink: 0; width: 260px; }
+.site-mode-header {
+  padding: 14px 16px; border-radius: 16px 16px 0 0;
+  font-family: var(--display); font-size: 16px; font-weight: 700;
+  border: 2px solid; border-bottom: 0;
+}
+.site-mode.child .site-mode-header { background: var(--child-bg); color: var(--child); border-color: var(--child-mid); }
+.site-mode.parent .site-mode-header { background: var(--parent-bg); color: var(--parent); border-color: var(--parent-mid); }
+.site-mode-body { border: 2px solid; border-top: 1px dashed; border-radius: 0 0 16px 16px; padding: 8px 0; }
+.site-mode.child .site-mode-body { border-color: var(--child-mid); }
+.site-mode.parent .site-mode-body { border-color: var(--parent-mid); }
+
+.site-node {
+  display: flex; align-items: flex-start; gap: 8px;
+  padding: 5px 14px; font-size: 13px; color: var(--ink); font-weight: 500;
+  cursor: default;
+}
+.site-node.sub { padding-left: 28px; color: var(--ink-soft); font-size: 12px; }
+.site-node.sub2 { padding-left: 44px; color: var(--ink-faint); font-size: 11px; }
+.site-node .dot {
+  width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 4px;
+}
+.site-mode.child .dot { background: var(--child-mid); }
+.site-mode.parent .dot { background: var(--parent-mid); }
+.site-node .tag-new { background: var(--sun); color: #5E3A00; font-size: 10px; font-weight: 700; padding: 1px 7px; border-radius: 999px; margin-left: auto; }
+.site-sep { border: 0; border-top: 1px dashed var(--outline); margin: 5px 14px; }
+
+/* ─── Flow Diagram ────────────────────────────────────── */
+.flow-container { display: flex; flex-direction: column; gap: 20px; }
+.flow-diagram { overflow-x: auto; }
+.flow-diagram::-webkit-scrollbar { height: 4px; background: transparent; }
+.flow-diagram::-webkit-scrollbar-thumb { background: var(--outline-md); border-radius: 2px; }
+.flow-row { display: flex; align-items: center; gap: 0; min-width: max-content; padding: 4px 0; }
+.flow-step {
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  flex-shrink: 0;
+}
+.flow-box {
+  padding: 10px 14px; border-radius: 12px; border: 2px solid;
+  font-size: 12px; font-weight: 600; text-align: center; line-height: 1.3;
+  min-width: 96px; max-width: 120px;
+}
+.flow-box.child { background: var(--child-pale); color: var(--child); border-color: var(--child-mid); }
+.flow-box.parent { background: var(--parent-pale); color: var(--parent); border-color: var(--parent-mid); }
+.flow-box.action { background: #FFF8EC; color: #5E3A00; border-color: var(--sun); }
+.flow-box.reward { background: #FFF0F8; color: #8A2048; border-color: var(--berry); }
+.flow-box.system { background: #F5F0FA; color: #4A2A7A; border-color: var(--lavender); }
+.flow-box.decision { background: #FFF4DE; color: #5E3A00; border-color: var(--coral); border-style: dashed; border-radius: 6px; }
+.flow-box.gate { background: var(--parent-pale); color: var(--parent); border-color: var(--parent); border-style: dashed; }
+.flow-label { font-size: 10px; color: var(--ink-faint); text-align: center; max-width: 100px; line-height: 1.2; }
+.flow-arrow { display: flex; align-items: center; flex-shrink: 0; }
+.flow-arrow-line {
+  width: 32px; height: 2px; background: var(--ink-faint);
+}
+.flow-arrow-head {
+  width: 0; height: 0;
+  border-top: 5px solid transparent; border-bottom: 5px solid transparent;
+  border-left: 7px solid var(--ink-faint);
+}
+.flow-arrow.down { flex-direction: column; }
+.flow-arrow.down .flow-arrow-line { width: 2px; height: 24px; }
+.flow-arrow.down .flow-arrow-head { border-left: 5px solid transparent; border-right: 5px solid transparent; border-top: 7px solid var(--ink-faint); border-bottom: 0; }
+
+.flow-branch { display: flex; flex-direction: column; gap: 4px; }
+.flow-branch-label { font-size: 10px; font-weight: 700; color: var(--ink-faint); padding: 0 4px; }
+
+/* ─── Nav model ───────────────────────────────────────── */
+.nav-diagram { display: flex; gap: 16px; flex-wrap: wrap; }
+.nav-layer { flex: 1; min-width: 160px; }
+.nav-layer-title { font-size: 11px; font-weight: 700; letter-spacing: .6px; color: var(--ink-faint); text-transform: uppercase; margin-bottom: 8px; }
+.nav-item {
+  padding: 9px 12px; border-radius: 10px; font-size: 13px; font-weight: 600;
+  border: 2px solid; margin-bottom: 6px; position: relative;
+}
+.nav-item.persistent { background: var(--child-pale); color: var(--child); border-color: var(--child-mid); }
+.nav-item.contextual { background: #FFF8EC; color: #5E3A00; border-color: var(--sun); }
+.nav-item.parent-nav { background: var(--parent-pale); color: var(--parent); border-color: var(--parent-mid); }
+.nav-item .nav-badge { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 999px; }
+.nav-item.persistent .nav-badge { background: var(--child-mid); color: #fff; }
+.nav-item.contextual .nav-badge { background: var(--sun); color: #5E3A00; }
+
+/* ─── Screen hierarchy ────────────────────────────────── */
+.hier-tree { display: flex; flex-direction: column; gap: 2px; }
+.hier-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 7px 12px; border-radius: 10px;
+  font-size: 13px; font-weight: 500; color: var(--ink);
+}
+.hier-item.l0 { background: var(--child-pale); font-weight: 700; color: var(--child); font-family: var(--display); font-size: 15px; }
+.hier-item.l0.p { background: var(--parent-pale); color: var(--parent); }
+.hier-item.l1 { padding-left: 28px; background: var(--surface); border: 1px solid var(--outline); }
+.hier-item.l2 { padding-left: 46px; background: transparent; font-size: 12px; color: var(--ink-soft); }
+.hier-icon { width: 22px; height: 22px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0; }
+.hier-item.l0 .hier-icon { background: rgba(255,255,255,.6); }
+.hier-item.l1 .hier-icon { background: var(--child-pale); }
+.hier-item.l0.p .hier-icon { background: rgba(255,255,255,.6); }
+.hier-item.l1.p .hier-icon { background: var(--parent-pale); }
+.hier-tag { margin-left: auto; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 999px; }
+.hier-tag.entry { background: #C4EBB9; color: #2F6A3C; }
+.hier-tag.leaf { background: var(--surface-2); color: var(--ink-faint); border: 1px solid var(--outline); }
+.hier-tag.gate { background: var(--parent-pale); color: var(--parent); }
+.hier-tag.new { background: var(--sun); color: #5E3A00; }
+
+/* ─── UX principles ───────────────────────────────────── */
+.principle-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+.principle { padding: 14px; border-radius: var(--r); border: 1.5px solid var(--outline); background: var(--surface); }
+.principle-icon { font-size: 22px; margin-bottom: 6px; }
+.principle-title { font-weight: 700; font-size: 13px; color: var(--ink); margin-bottom: 4px; }
+.principle-body { font-size: 12px; color: var(--ink-soft); line-height: 1.5; }
+
+/* ─── Persistent vs contextual table ─────────────────── */
+table { width: 100%; border-collapse: collapse; font-size: 13px; margin: 12px 0; }
+th { text-align: left; padding: 10px 12px; font-weight: 700; background: var(--surface); border-bottom: 2px solid var(--outline); color: var(--ink-soft); font-size: 11px; text-transform: uppercase; letter-spacing: .5px; }
+td { padding: 9px 12px; border-bottom: 1px solid var(--outline); vertical-align: top; line-height: 1.5; }
+tr:last-child td { border-bottom: 0; }
+td:first-child { font-weight: 600; color: var(--ink); }
+td code { background: var(--surface-2); border: 1px solid var(--outline); border-radius: 5px; padding: 1px 5px; font-family: monospace; font-size: 11px; }
+
+/* ─── Print ───────────────────────────────────────────── */
+@media print {
+  .sidebar { display: none; }
+  .main { padding: 20px; }
+  .section { break-inside: avoid; }
+  .flow-diagram { overflow: visible; }
+}
+</style>
+</head>
+<body>
+<div class="layout">
+
+<!-- SIDEBAR TOC -->
+<nav class="sidebar">
+  <div class="sidebar-logo">
+    <div class="sidebar-logo-title">🌱 Bắp Number<br>Adventure</div>
+    <div class="sidebar-logo-sub">IA & User Flows v1.0</div>
+  </div>
+  <div class="toc-group">
+    <div class="toc-label">Document</div>
+    <a href="#overview" class="toc-link"><div class="toc-dot" style="background:#A8D5A2"></div>Overview</a>
+    <a href="#sitemap" class="toc-link"><div class="toc-dot" style="background:#FFD36E"></div>Sitemap</a>
+    <a href="#ia" class="toc-link"><div class="toc-dot" style="background:#B8DEEF"></div>Information Architecture</a>
+    <a href="#nav" class="toc-link"><div class="toc-dot" style="background:#D9C7F0"></div>Navigation Model</a>
+    <a href="#hierarchy" class="toc-link"><div class="toc-dot" style="background:#FFA48C"></div>Screen Hierarchy</a>
+  </div>
+  <div class="toc-group">
+    <div class="toc-label">User Flows</div>
+    <a href="#flow1" class="toc-link"><div class="toc-dot" style="background:#7FC089"></div>1. First-time Onboarding</a>
+    <a href="#flow2" class="toc-link"><div class="toc-dot" style="background:#7FC089"></div>2. Returning Quick Play</a>
+    <a href="#flow3" class="toc-link"><div class="toc-dot" style="background:#7FC089"></div>3. World → Game → Reward</a>
+    <a href="#flow4" class="toc-link"><div class="toc-dot" style="background:#7FC089"></div>4. Daily 5-min Session</a>
+    <a href="#flow5" class="toc-link"><div class="toc-dot" style="background:#8AC4DE"></div>5. Parent enters mode</a>
+    <a href="#flow6" class="toc-link"><div class="toc-dot" style="background:#8AC4DE"></div>6. Parent reviews progress</a>
+    <a href="#flow7" class="toc-link"><div class="toc-dot" style="background:#7FC089"></div>7. Stickers & Unlock</a>
+    <a href="#flow8" class="toc-link"><div class="toc-dot" style="background:#FFD36E"></div>8. Locked Lesson flow</a>
+  </div>
+  <div class="toc-group">
+    <div class="toc-label">Guidelines</div>
+    <a href="#persnav" class="toc-link"><div class="toc-dot" style="background:#E6779E"></div>Persistent vs Contextual Nav</a>
+    <a href="#uxreason" class="toc-link"><div class="toc-dot" style="background:#FFA48C"></div>UX Reasoning</a>
+  </div>
+</nav>
+
+<!-- MAIN CONTENT -->
+<main class="main">
+
+  <!-- HEADER -->
+  <section id="overview">
+    <div style="display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap;">
+      <div>
+        <p style="font-size:11px;font-weight:700;letter-spacing:.8px;color:var(--ink-faint);text-transform:uppercase;margin-bottom:4px">Information Architecture · User Flows · Navigation Model</p>
+        <h1 class="doc-title">Bắp Number Adventure</h1>
+        <p class="doc-subtitle">Complete IA, screen hierarchy, navigation model &amp; 8 user flow diagrams for a mobile-first preschool math app.</p>
+        <div class="doc-meta">
+          <span class="badge child">🌱 Child Mode</span>
+          <span class="badge parent">👤 Parent Mode</span>
+          <span class="badge neutral">📱 Mobile-first</span>
+          <span class="badge neutral">🎯 Age 4</span>
+          <span class="badge neutral">🌍 EN / VI bilingual</span>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top:28px" class="grid-2">
+      <div class="card">
+        <div class="card-title">🎯 Product Goal</div>
+        <p style="margin:0;font-size:13px">Help a 4-year-old child build early math fluency through short, gamified mini-game sessions, supported by a parent dashboard for progress tracking and controls.</p>
+      </div>
+      <div class="card">
+        <div class="card-title">📐 IA Principles</div>
+        <ul style="font-size:13px;color:var(--ink-soft);padding-left:16px;line-height:1.8">
+          <li>One primary task per screen</li>
+          <li>Child & parent areas strictly separated</li>
+          <li>Minimal depth for child paths (≤3 taps to any game)</li>
+          <li>Audio-first, text-minimal child UI</li>
+          <li>Parent gate blocks all parent screens</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- SITEMAP -->
+  <section id="sitemap" class="section">
+    <div class="section-header">
+      <span class="section-num">01</span>
+      <h2 class="section-title">Sitemap</h2>
+      <span class="section-tag badge neutral">Complete app map</span>
+    </div>
+
+    <div class="sitemap">
+      <!-- Child Mode -->
+      <div class="site-mode child">
+        <div class="site-mode-header">🌱 Child Mode</div>
+        <div class="site-mode-body">
+          <div class="site-node"><div class="dot"></div>Splash Screen<span class="tag-new">entry</span></div>
+          <div class="site-node"><div class="dot"></div>Welcome / Language</div>
+          <div class="site-node"><div class="dot"></div>Profile Setup</div>
+          <hr class="site-sep">
+          <div class="site-node"><div class="dot"></div>Home Dashboard<span class="tag-new">hub</span></div>
+          <div class="site-node sub"><div class="dot"></div>Daily Goal Card</div>
+          <div class="site-node sub"><div class="dot"></div>Resume Last Activity</div>
+          <div class="site-node sub"><div class="dot"></div>Streak / Coins display</div>
+          <hr class="site-sep">
+          <div class="site-node"><div class="dot"></div>World Map</div>
+          <div class="site-node sub"><div class="dot"></div>World 1: Number Forest</div>
+          <div class="site-node sub2"><div class="dot"></div>Level 1–9 nodes</div>
+          <div class="site-node sub"><div class="dot"></div>World 2: Tens Town</div>
+          <div class="site-node sub2"><div class="dot"></div>Level 1–9 nodes</div>
+          <div class="site-node sub"><div class="dot"></div>World 3: Even/Odd Bridge</div>
+          <div class="site-node sub"><div class="dot"></div>World 4: Math Kitchen 🔒</div>
+          <div class="site-node sub"><div class="dot"></div>World 5: Big # Castle 🔒</div>
+          <hr class="site-sep">
+          <div class="site-node"><div class="dot"></div>Mini-Game Session</div>
+          <div class="site-node sub"><div class="dot"></div>Hear & Tap Number</div>
+          <div class="site-node sub"><div class="dot"></div>Build the Number</div>
+          <div class="site-node sub"><div class="dot"></div>Even / Odd Sort</div>
+          <div class="site-node sub"><div class="dot"></div>Number Order</div>
+          <div class="site-node sub"><div class="dot"></div>Add / Take Away</div>
+          <hr class="site-sep">
+          <div class="site-node"><div class="dot"></div>Reward / Celebration</div>
+          <div class="site-node sub"><div class="dot"></div>Star rating (1–3)</div>
+          <div class="site-node sub"><div class="dot"></div>Coin earn / display</div>
+          <div class="site-node sub"><div class="dot"></div>Sticker unlock (chance)</div>
+          <hr class="site-sep">
+          <div class="site-node"><div class="dot"></div>Sticker Collection</div>
+          <div class="site-node sub"><div class="dot"></div>All / By World filter</div>
+          <div class="site-node sub"><div class="dot"></div>Locked placeholders</div>
+          <hr class="site-sep">
+          <div class="site-node"><div class="dot"></div>Progress Path (visual)</div>
+          <div class="site-node"><div class="dot"></div>Daily Streak Screen</div>
+        </div>
+      </div>
+
+      <!-- Gate -->
+      <div style="flex-shrink:0;width:100px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding-top:80px">
+        <div style="writing-mode:vertical-rl;font-size:11px;font-weight:700;color:var(--ink-faint);letter-spacing:.6px;text-transform:uppercase">Parent Gate</div>
+        <div style="width:2px;flex:1;background:repeating-linear-gradient(to bottom,var(--parent) 0,var(--parent) 6px,transparent 6px,transparent 12px)"></div>
+        <div style="padding:6px 10px;border-radius:999px;background:var(--parent-pale);color:var(--parent);font-size:11px;font-weight:700;border:1.5px solid var(--parent-mid)">🔐 Math lock</div>
+        <div style="width:2px;flex:1;background:repeating-linear-gradient(to bottom,var(--parent) 0,var(--parent) 6px,transparent 6px,transparent 12px)"></div>
+      </div>
+
+      <!-- Parent Mode -->
+      <div class="site-mode parent">
+        <div class="site-mode-header">👤 Parent Mode</div>
+        <div class="site-mode-body">
+          <div class="site-node"><div class="dot"></div>Parent Gate<span class="tag-new">guard</span></div>
+          <div class="site-node sub"><div class="dot"></div>Math problem lock</div>
+          <hr class="site-sep">
+          <div class="site-node"><div class="dot"></div>Parent Dashboard<span class="tag-new">hub</span></div>
+          <div class="site-node sub"><div class="dot"></div>Today's overview</div>
+          <div class="site-node sub"><div class="dot"></div>Weekly chart</div>
+          <hr class="site-sep">
+          <div class="site-node"><div class="dot"></div>Progress Reports</div>
+          <div class="site-node sub"><div class="dot"></div>Skills Breakdown</div>
+          <div class="site-node sub"><div class="dot"></div>Learning History</div>
+          <div class="site-node sub"><div class="dot"></div>Mini-game accuracy</div>
+          <div class="site-node sub"><div class="dot"></div>Parenting tips</div>
+          <hr class="site-sep">
+          <div class="site-node"><div class="dot"></div>Settings</div>
+          <div class="site-node sub"><div class="dot"></div>Session time limits</div>
+          <div class="site-node sub"><div class="dot"></div>Quiet hours</div>
+          <div class="site-node sub"><div class="dot"></div>Language (EN/VI/BI)</div>
+          <div class="site-node sub"><div class="dot"></div>Audio (SFX/music/voice)</div>
+          <div class="site-node sub"><div class="dot"></div>Difficulty level</div>
+          <div class="site-node sub"><div class="dot"></div>Voice style</div>
+          <hr class="site-sep">
+          <div class="site-node"><div class="dot"></div>Profile Management</div>
+          <div class="site-node sub"><div class="dot"></div>Child name / avatar</div>
+          <div class="site-node sub"><div class="dot"></div>Reset progress</div>
+          <div class="site-node sub"><div class="dot"></div>App version / about</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="note" style="margin-top:16px">
+      <b>Depth rule:</b> Every mini-game is reachable from Home in ≤3 taps (Home → World → Level → Play). Parent mode requires solving a math problem first — this acts as both a child lock and a subtle endorsement of the app's approach.
+    </div>
+  </section>
+
+  <!-- IA -->
+  <section id="ia" class="section">
+    <div class="section-header">
+      <span class="section-num">02</span>
+      <h2 class="section-title">Information Architecture</h2>
+    </div>
+
+    <div class="grid-2">
+      <div>
+        <h3>Child Mode Structure</h3>
+        <div class="card" style="padding:14px">
+          <div style="display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--ink-soft);line-height:1.8">
+            <div><b style="color:var(--child)">Entry Layer</b> — Splash, Welcome, Language pick, Profile creation</div>
+            <div><b style="color:var(--child)">Hub Layer</b> — Home Dashboard (central, always-reachable)</div>
+            <div><b style="color:var(--child)">Explore Layer</b> — World Map → Level nodes</div>
+            <div><b style="color:var(--child)">Task Layer</b> — Active game session (focused, no escape except ✕)</div>
+            <div><b style="color:var(--child)">Reward Layer</b> — Celebration screen, sticker reveal</div>
+            <div><b style="color:var(--child)">Collection Layer</b> — Sticker book, Progress path (low-pressure explore)</div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <h3>Parent Mode Structure</h3>
+        <div class="card" style="padding:14px">
+          <div style="display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--ink-soft);line-height:1.8">
+            <div><b style="color:var(--parent)">Gate Layer</b> — Math problem challenge (blocks child access)</div>
+            <div><b style="color:var(--parent)">Overview Layer</b> — Parent dashboard, today's stats</div>
+            <div><b style="color:var(--parent)">Insight Layer</b> — Skills, history, game-by-game reports</div>
+            <div><b style="color:var(--parent)">Control Layer</b> — Time limits, language, difficulty, audio</div>
+            <div><b style="color:var(--parent)">Admin Layer</b> — Profile mgmt, reset, version info</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <h3>Ownership & Separation Model</h3>
+    <div class="card" style="padding:0;overflow:hidden">
+      <table>
+        <thead><tr><th>Layer</th><th>Owner</th><th>Access method</th><th>Key screens</th></tr></thead>
+        <tbody>
+          <tr><td>Onboarding</td><td>Child + Parent together</td><td>Direct on first launch</td><td>Splash, Welcome, Profile Setup</td></tr>
+          <tr><td>Child play area</td><td>Child</td><td>Direct — no lock</td><td>Home, Map, Games, Rewards</td></tr>
+          <tr><td>Collections</td><td>Child</td><td>Tap from Home nav</td><td>Sticker Book, Progress Path</td></tr>
+          <tr><td>Parent mode</td><td>Parent only</td><td>Math gate (2+3=?) block</td><td>Dashboard, Reports, Settings</td></tr>
+          <tr><td>Language / Audio</td><td>Parent</td><td>Inside parent mode</td><td>Settings → Language / Audio</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- NAVIGATION MODEL -->
+  <section id="nav" class="section">
+    <div class="section-header">
+      <span class="section-num">03</span>
+      <h2 class="section-title">Navigation Model</h2>
+      <span class="section-tag badge child">Recommended: Hub & Spoke</span>
+    </div>
+
+    <p>The recommended model is <b>Hub & Spoke with contextual back arrows</b>. Home is the single hub. All child destinations are spokes. There is no persistent bottom tab bar for kids — it adds cognitive load and accidental taps for a 4-year-old. Navigation is done through large illustrated buttons on the home screen instead.</p>
+
+    <div class="note"><b>Why not tabs for kids?</b> Tabs require reading labels and making abstract categorical choices. A 4-year-old navigates better through a single illustrated home screen with large, colourful picture buttons — the app should feel like one flowing world, not a tabbed interface.</div>
+
+    <h3>Navigation Layers</h3>
+    <div class="nav-diagram">
+      <div class="nav-layer">
+        <div class="nav-layer-title">🌱 Persistent (child)</div>
+        <div class="nav-item persistent">🏠 Home Hub<div class="nav-badge">always</div></div>
+        <div class="nav-item persistent">‹ Back arrow<div class="nav-badge">top-left</div></div>
+        <div class="nav-item persistent">🔊 Audio replay<div class="nav-badge">top-right</div></div>
+        <div class="nav-item persistent">❤️ Hearts (in-game)<div class="nav-badge">game only</div></div>
+      </div>
+      <div class="nav-layer">
+        <div class="nav-layer-title">⚡ Contextual (child)</div>
+        <div class="nav-item contextual">▶ Play / Next<div class="nav-badge">forward</div></div>
+        <div class="nav-item contextual">✕ Exit game<div class="nav-badge">in-game</div></div>
+        <div class="nav-item contextual">⭐ View stickers<div class="nav-badge">reward screen</div></div>
+        <div class="nav-item contextual">🗺️ World Map btn<div class="nav-badge">home card</div></div>
+        <div class="nav-item contextual">👤 Parent icon<div class="nav-badge">top-right home</div></div>
+      </div>
+      <div class="nav-layer">
+        <div class="nav-layer-title">👤 Parent mode</div>
+        <div class="nav-item parent-nav">🔐 Math gate<div class="nav-badge">entry</div></div>
+        <div class="nav-item parent-nav">✕ Exit to child<div class="nav-badge">top-right</div></div>
+        <div class="nav-item parent-nav">‹ Back (sheet)<div class="nav-badge">sub-pages</div></div>
+        <div class="nav-item parent-nav">Tabs: Time/Lang/Audio<div class="nav-badge">settings</div></div>
+      </div>
+    </div>
+
+    <h3>Home Screen as the Navigation Hub</h3>
+    <div class="card" style="padding:16px 20px">
+      <div style="display:flex;flex-direction:column;gap:10px;font-size:13px;color:var(--ink-soft)">
+        <div style="display:flex;gap:12px;align-items:flex-start">
+          <div style="width:32px;height:32px;border-radius:10px;background:var(--child-pale);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:16px">🌳</div>
+          <div><b style="color:var(--ink)">Big "Play Today" card</b> — Taps directly into the recommended daily lesson. 1-tap play, no decision required from the child.</div>
+        </div>
+        <div style="display:flex;gap:12px;align-items:flex-start">
+          <div style="width:32px;height:32px;border-radius:10px;background:var(--child-pale);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:16px">🗺️</div>
+          <div><b style="color:var(--ink)">World Map button</b> — Secondary action, for exploration and self-directed play.</div>
+        </div>
+        <div style="display:flex;gap:12px;align-items:flex-start">
+          <div style="width:32px;height:32px;border-radius:10px;background:var(--child-pale);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:16px">⭐</div>
+          <div><b style="color:var(--ink)">Sticker button</b> — Collectible reward motivation, available from home at any time.</div>
+        </div>
+        <div style="display:flex;gap:12px;align-items:flex-start">
+          <div style="width:32px;height:32px;border-radius:10px;background:var(--parent-pale);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:16px">👤</div>
+          <div><b style="color:var(--ink)">Parent icon</b> — Top-right corner, small but accessible. Opens the parent gate.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SCREEN HIERARCHY -->
+  <section id="hierarchy" class="section">
+    <div class="section-header">
+      <span class="section-num">04</span>
+      <h2 class="section-title">Screen Hierarchy</h2>
+    </div>
+    <div class="grid-2">
+      <div>
+        <div class="hier-tree">
+          <div class="hier-item l0"><div class="hier-icon">🌱</div>Child Mode<span class="hier-tag entry">entry</span></div>
+          <div class="hier-item l1"><div class="hier-icon">✨</div>Splash Screen<span class="hier-tag entry">auto</span></div>
+          <div class="hier-item l1"><div class="hier-icon">👋</div>Welcome / Language</div>
+          <div class="hier-item l1"><div class="hier-icon">🐣</div>Profile Setup (3 steps)</div>
+          <div class="hier-item l0"><div class="hier-icon">🏠</div>Home Dashboard<span class="hier-tag entry">hub</span></div>
+          <div class="hier-item l1"><div class="hier-icon">☀️</div>Daily Goal Card</div>
+          <div class="hier-item l1"><div class="hier-icon">🔄</div>Resume Last</div>
+          <div class="hier-item l1"><div class="hier-icon">🔥</div>Streak view</div>
+          <div class="hier-item l0"><div class="hier-icon">🗺️</div>World Map</div>
+          <div class="hier-item l1"><div class="hier-icon">🌳</div>World 1 — Number Forest</div>
+          <div class="hier-item l2"><div class="hier-icon">1</div>Levels 1–9 (lesson nodes)</div>
+          <div class="hier-item l1"><div class="hier-icon">🏘️</div>World 2 — Tens Town</div>
+          <div class="hier-item l1"><div class="hier-icon">🌉</div>World 3 — Even/Odd Bridge</div>
+          <div class="hier-item l1" style="opacity:.5"><div class="hier-icon">🍳</div>World 4 — Math Kitchen 🔒</div>
+          <div class="hier-item l1" style="opacity:.5"><div class="hier-icon">🏰</div>World 5 — Big # Castle 🔒</div>
+          <div class="hier-item l0"><div class="hier-icon">🎮</div>Mini-Game Session</div>
+          <div class="hier-item l1"><div class="hier-icon">🔊</div>Hear & Tap Number</div>
+          <div class="hier-item l1"><div class="hier-icon">🧱</div>Build the Number</div>
+          <div class="hier-item l1"><div class="hier-icon">⚖️</div>Even / Odd Sort</div>
+          <div class="hier-item l1"><div class="hier-icon">🔢</div>Number Order</div>
+          <div class="hier-item l1"><div class="hier-icon">➕</div>Add / Take Away</div>
+          <div class="hier-item l0"><div class="hier-icon">🎉</div>Reward / Celebration</div>
+          <div class="hier-item l1"><div class="hier-icon">⭐</div>Star Rating (1–3)</div>
+          <div class="hier-item l1"><div class="hier-icon">🌟</div>Sticker Unlock (chance)</div>
+          <div class="hier-item l0"><div class="hier-icon">📓</div>Sticker Collection</div>
+          <div class="hier-item l0"><div class="hier-icon">🛤️</div>Progress Path</div>
+        </div>
+      </div>
+      <div>
+        <div class="hier-tree">
+          <div class="hier-item l0 p"><div class="hier-icon">👤</div>Parent Mode<span class="hier-tag gate">gated</span></div>
+          <div class="hier-item l1 p"><div class="hier-icon">🔐</div>Parent Gate (math problem)</div>
+          <div class="hier-item l0 p"><div class="hier-icon">📊</div>Parent Dashboard<span class="hier-tag entry">hub</span></div>
+          <div class="hier-item l1 p"><div class="hier-icon">📅</div>Today's overview</div>
+          <div class="hier-item l1 p"><div class="hier-icon">📈</div>Weekly activity chart</div>
+          <div class="hier-item l1 p"><div class="hier-icon">🏅</div>Skill health bars</div>
+          <div class="hier-item l0 p"><div class="hier-icon">📋</div>Progress Reports</div>
+          <div class="hier-item l1 p"><div class="hier-icon">🧩</div>Skills Breakdown</div>
+          <div class="hier-item l2"><div class="hier-icon">·</div>Per-skill progress</div>
+          <div class="hier-item l2"><div class="hier-icon">·</div>Mini-game accuracy</div>
+          <div class="hier-item l1 p"><div class="hier-icon">📜</div>Learning History</div>
+          <div class="hier-item l2"><div class="hier-icon">·</div>Session log</div>
+          <div class="hier-item l2"><div class="hier-icon">·</div>Parenting tips</div>
+          <div class="hier-item l0 p"><div class="hier-icon">⚙️</div>Settings</div>
+          <div class="hier-item l1 p"><div class="hier-icon">⏱️</div>Session time limits</div>
+          <div class="hier-item l1 p"><div class="hier-icon">🌙</div>Quiet hours</div>
+          <div class="hier-item l1 p"><div class="hier-icon">🌏</div>Language (EN/VI/BI)</div>
+          <div class="hier-item l1 p"><div class="hier-icon">🔊</div>Audio (SFX/music/voice)</div>
+          <div class="hier-item l1 p"><div class="hier-icon">🎯</div>Difficulty level</div>
+          <div class="hier-item l0 p"><div class="hier-icon">🧑</div>Profile Management</div>
+          <div class="hier-item l1 p"><div class="hier-icon">✏️</div>Edit name / avatar color</div>
+          <div class="hier-item l1 p"><div class="hier-icon">🗑️</div>Reset progress</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- USER FLOWS -->
+  <section id="flow1" class="section">
+    <div class="section-header">
+      <span class="section-num">05</span>
+      <h2 class="section-title">User Flows</h2>
+    </div>
+
+    <!-- Flow 1 -->
+    <h3 id="flow1-h">Flow 1 — First-time Onboarding</h3>
+    <p>New install. Child and parent together. Sets up profile, language, and lands on Home.</p>
+    <div class="flow-diagram">
+      <div class="flow-row">
+        <div class="flow-step"><div class="flow-box system">App Launch</div><div class="flow-label">Install / first open</div></div>
+        <div class="flow-arrow"><div class="flow-arrow-line"></div><div class="flow-arrow-head"></div></div>
+        <div class="flow-step"><div class="flow-box system">Splash Screen</div><div class="flow-label">2s auto-advance</div></div>
+        <div class="flow-arrow"><div class="flow-arrow-line"></div><div class="flow-arrow-head"></div></div>
+        <div class="flow-step"><div class="flow-box action">Welcome Screen</div><div class="flow-label">Language toggle EN/VI/BI</div></div>
+        <div class="flow-arrow"><div class="flow-arrow-line"></div><div class="flow-arrow-head"></div></div>
+        <div class="flow-step"><div class="flow-box child">Name entry</div><div class="flow-label">Step 1/3 — type name</div></div>
+        <div class="flow-arrow"><div class="flow-arrow-line"></div><div class="flow-arrow-head"></div></div>
+        <div class="flow-step"><div class="flow-box child">Pick age</div><div class="flow-label">Step 2/3 — tap number</div></div>
+        <div class="flow-arrow"><div class="flow-arrow-line"></div><div class="flow-arrow-head"></div></div>
+        <div class="flow-step"><div class="flow-box child">Pick mascot color</div><div class="flow-label">Step 3/3</div></div>
+        <div class="flow-arrow"><div class="flow-arrow-line"></div><div class="flow-arrow-head"></div></div>
+        <div class="flow-step"><div class="flow-box reward">🎉 Let's Go!</div><div class="flow-label">Mascot celebrates</div></div>
+        <div class="flow-arrow"><div class="flow-arrow-line"></div><div class="flow-arrow-head"></div></div>
+        <div class="flow-step"><div class="flow-box child">🏠 Home Dashboard</div><div class="flow-label">Profile saved · play begins</div></div>
+      </div>
+    </div>
+    <div class="note" style="margin-top:12px"><b>UX note:</b> Profile setup uses only number taps and color picks — no reading required. The mascot speaks the question aloud. Bắp's name is pre-filled as default to reduce friction for the target child.</div>
+
+    <!-- Flow 2 -->
+    <h3 id="flow2" style="margin-top:40px">Flow 2 — Returning Child Quick Play</h3>
+    <p>Child opens app again. Fastest path to playing — ≤2 taps from open to game.</p>
+    <div class="flow-diagram">
+      <div class="flow-row">
+        <div class="flow-step"><div class="flow-box system">App Launch</div><div class="flow-label">Profile exists in storage</div></div>
+        <div class="flow-arrow"><div class="flow-arrow-line"></div><div class="flow-arrow-head"></div></div>
+        <div class="flow-step"><div class="flow-box system">Splash Screen</div><div class="flow-label">2s auto-advance</div></div>
+        <div class="flow-arrow"><div class="flow-arrow-line"></div><div class="flow-arrow-head"></div></div>
+        <div class="flow-step"><div class="flow-box child">🏠 Home Dashboard</div><div class="flow-label">Daily card ready</div></div>
+        <div class="flow-arrow"><div class="flow-arrow-line"></div><div class="flow-arrow-head"></div></div>
+        <div class="flow-step"><div class="flow-box action">▶ Play button</div><div class="flow-label">1 tap — recommended game</div></div>
+        <div class="flow-arrow"><div class="flow-arrow-line"></div><div class="flow-arrow-head"></div></div>
+        <div class="flow-step"><div class="flow-box child">🎮 Mini-game</div><div class="flow-label">Immediate play</div></div>
+      </div>
+    </div>
+    <div class="note"><b>Design decision:</b> Skip profile / welcome screen entirely on return. The daily goal card pre-selects the next recommended activity — child never has to choose what to play.</div>
+
+    <!-- Flow 3 -->
+    <h3 id="flow3" style="margin-top:40px">Flow 3 — World → Lesson → Game → Reward → Next</h3>
+    <p>Child self-directs: chooses a world, picks a level, plays, gets rewarded, continues.</p>
+    <div class="flow-diagram">
+      <div class="flow-row">
+        <div class="flow-step"><div class="flow-box child">🏠 Home</div></div>
+        <div class="flow-arrow"><div class="flow-arrow-line"></div><div class="flow-arrow-head"></div></div>
+        <div class="flow-step"><div class="flow-box child">🗺️ World Map</div><div class="flow-label">tap World Map button</div></div>
+        <div class="flow-arrow"><div class="flow-arrow-line"></div><div class="flow-arrow-head"></div></div>
+        <div class="flow-step"><div class="flow-box action">Pick World</div><div class="flow-label">tap unlocked world</div></div>
+        <div class="flow-arrow"><div class="flow-arrow-line"></div><div class="flow-arrow-head"></div></div>
+        <div class="flow-step"><div class="flow-box action">Pick Level</div><div class="flow-label">tap unlocked node</div></div>
+        <div class="flow-arrow"><div class="flow-arrow-line"></div><div class="flow-arrow-head"></div></div>
+        <div class="flow-step"><div class="flow-box child">🎮 Game starts</div><div class="flow-label">HUD shows hearts + progress</div></div>
+        <div class="flow-arrow"><div class="flow-arrow-line"></div><div class="flow-arrow-head"></div></div>
+        <div class="flow-step"><div class="flow-box decision">All rounds done?</div></div>
+        <div class="flow-arrow"><div class="flow-arrow-line"></div><div class="flow-arrow-head"></div></div>
+        <div class="flow-step"><div class="flow-box reward">🌟 Reward screen</div><div class="flow-label">Stars · coins · maybe sticker</div></div>
+        <div class="flow-arrow"><div class="flow-arrow-line"></div><div class="flow-arrow-head"></div></div>
+        <div class="flow-step"><div class="flow-box child">▶ Next level</div><div class="flow-label">or back to level list</div></div>
+      </div>
+    </div>
+
+    <!-- Flow 4 -->
+    <h3 id="flow4" style="margin-top:40px">Flow 4 — Daily 5-minute Session</h3>
+    <p>Time-limited session. Parent has set 5-minute limit. Child hits the limit mid-session.</p>
+    <div class="flow-diagram">
+      <div class="flow-row">
+        <div class="flow-step"><div class="flow-box child">Start game</div><div class="flow-label">timer starts in background</div></div>
+        <div class="flow-arrow"><div class="flow-arrow-line"></div><div class="flow-arrow-head"></div></div>
+        <div class="flow-step"><div class="flow-box child">Play rounds</div><div class="flow-label">normal game loop</div></div>
+        <div class="flow-arrow"><div class="flow-arrow-line"></div><div class="flow-arrow-head"></div></div>
+        <div class="flow-step"><div class="flow-box decision">Time limit reached?</div></div>
+        <div class="flow-arrow"><div class="flow-arrow-line"></div><div class="flow-arrow-head"></div></div>
+        <div class="flow-step"><div class="flow-box system">Gentle rest modal</div><div class="flow-label">"Bắp đã chơi 5 phút rồi!"<br>Mascot: 😴</div></div>
+        <div class="flow-arrow"><div class="flow-arrow-line"></div><div class="flow-arrow-head"></div></div>
+        <div class="flow-step"><div class="flow-box reward">Mini summary</div><div class="flow-label">Stars earned today</div></div>
+        <div class="flow-arrow"><div class="flow-arrow-line"></div><div class="flow-arrow-head"></div></div>
+        <div class="flow-step"><div class="flow-box child">🏠 Home (locked)</div><div class="flow-label">Play button greyed until tomorrow</div></div>
+      </div>
+    </div>
+    <div class="note"><b>Emotional design:</b> The time limit is never punishing. The mascot says "Let's rest now — you did great!" The summary screen shows what was earned. Tomorrow's session unlocks with a ⭐ on the daily streak.</div>
+
+    <!-- Flow 5 -->
+    <h3 id="flow5" style="margin-top:40px">Flow 5 — Parent Enters Protected Mode</h3>
+    <p>Parent wants to access their dashboard from the child's home screen.</p>
+    <div class="flow-diagram">
+      <div class="flow-row">
+        <div class="flow-step"><div class="flow-box child">🏠 Child Home</div></div>
+        <div class="flow-arrow"><div class="flow-arrow-line"></div><div class="flow-arrow-head"></div></div>
+        <div class="flow-step"><div class="flow-box action">Tap 👤 icon</div><div class="flow-label">top-right, small</div></div>
+        <div class="flow-arrow"><div class="flow-arrow-line"></div><div class="flow-arrow-head"></div></div>
+        <div class="flow-step"><div class="flow-box gate">🔐 Math Gate</div><div class="flow-label">Sheet slides up<br>"For grown-ups only"</div></div>
+        <div class="flow-arrow"><div class="flow-arrow-line"></div><div class="flow-arrow-head"></div></div>
+        <div class="flow-step"><div class="flow-box decision">Solve: 4+3=?</div><div class="flow-label">4 answer tiles shown</div></div>
+        <div class="flow-arrow"><div class="flow-arrow-line"></div><div class="flow-arrow-head"></div></div>
+        <div class="flow-step"><div class="flow-box decision">Correct?</div></div>
+        <div class="flow-arrow"><div class="flow-arrow-line"></div><div class="flow-arrow-head"></div></div>
+        <div class="flow-step"><div class="flow-box parent">✓ Open Parent Dashboard</div></div>
+      </div>
+    </div>
+    <div style="margin-top:10px" class="flow-diagram">
+      <div class="flow-row">
+        <div class="flow-step"><div class="flow-box decision">Wrong answer</div></div>
+        <div class="flow-arrow"><div class="flow-arrow-line"></div><div class="flow-arrow-head"></div></div>
+        <div class="flow-step"><div class="flow-box system">Tile shakes ✗</div><div class="flow-label">No message, just visual</div></div>
+        <div class="flow-arrow"><div class="flow-arrow-line"></div><div class="flow-arrow-head"></div></div>
+        <div class="flow-step"><div class="flow-box gate">Try again</div><div class="flow-label">New problem generated</div></div>
+      </div>
+    </div>
+    <div class="note"><b>Why math lock?</b> A simple math problem (5–15 range) blocks young children who can't solve it, while being trivial for any adult. Avoids PINs (forgettable), patterns (guessable by watching), or long text (inaccessible). It also subtly communicates the app's brand mission.</div>
+
+    <!-- Flow 6 -->
+    <h3 id="flow6" style="margin-top:40px">Flow 6 — Parent Reviews Progress & Adjusts Settings</h3>
+    <p>Parent reviews the week's activity and changes the daily time limit.</p>
+    <div class="flow-diagram">
+      <div class="flow-row">
+        <div class="flow-step"><div class="flow-box parent">Parent Dashboard</div></div>
+        <div class="flow-arrow"><div class="flow-arrow-line"></div><div class="flow-arrow-head"></div></div>
+        <div class="flow-step"><div class="flow-box parent">View weekly chart</div><div class="flow-label">Bar chart · accuracy stats</div></div>
+        <div class="flow-arrow"><div class="flow-arrow-line"></div><div class="flow-arrow-head"></div></div>
+        <div class="flow-step"><div class="flow-box action">Tap "Báo cáo"</div><div class="flow-label">detailed report link</div></div>
+        <div class="flow-arrow"><div class="flow-arrow-line"></div><div class="flow-arrow-head"></div></div>
+        <div class="flow-step"><div class="flow-box parent">Skills Breakdown</div><div class="flow-label">Per-game accuracy + tips</div></div>
+        <div class="flow-arrow"><div class="flow-arrow-line"></div><div class="flow-arrow-head"></div></div>
+        <div class="flow-step"><div class="flow-box action">‹ Back → Settings</div></div>
+        <div class="flow-arrow"><div class="flow-arrow-line"></div><div class="flow-arrow-head"></div></div>
+        <div class="flow-step"><div class="flow-box parent">⏱ Time tab</div><div class="flow-label">Tap "15 phút" option</div></div>
+        <div class="flow-arrow"><div class="flow-arrow-line"></div><div class="flow-arrow-head"></div></div>
+        <div class="flow-step"><div class="flow-box system">Auto-saved ✓</div><div class="flow-label">No confirm needed</div></div>
+        <div class="flow-arrow"><div class="flow-arrow-line"></div><div class="flow-arrow-head"></div></div>
+        <div class="flow-step"><div class="flow-box action">✕ Return to child</div></div>
+      </div>
+    </div>
+
+    <!-- Flow 7 -->
+    <h3 id="flow7" style="margin-top:40px">Flow 7 — Child Earns Sticker & Unlocks New Content</h3>
+    <p>Child completes a level with 3 stars and triggers a sticker unlock plus world progression.</p>
+    <div class="flow-diagram">
+      <div class="flow-row">
+        <div class="flow-step"><div class="flow-box child">Complete level</div><div class="flow-label">All rounds done</div></div>
+        <div class="flow-arrow"><div class="flow-arrow-line"></div><div class="flow-arrow-head"></div></div>
+        <div class="flow-step"><div class="flow-box reward">3 ⭐ screen</div><div class="flow-label">Confetti · mascot celebrate</div></div>
+        <div class="flow-arrow"><div class="flow-arrow-line"></div><div class="flow-arrow-head"></div></div>
+        <div class="flow-step"><div class="flow-box decision">Stars = 3?</div></div>
+        <div class="flow-arrow"><div class="flow-arrow-line"></div><div class="flow-arrow-head"></div></div>
+        <div class="flow-step"><div class="flow-box reward">🌟 New Sticker!</div><div class="flow-label">Pop-in reveal animation</div></div>
+        <div class="flow-arrow"><div class="flow-arrow-line"></div><div class="flow-arrow-head"></div></div>
+        <div class="flow-step"><div class="flow-box decision">World complete?</div></div>
+        <div class="flow-arrow"><div class="flow-arrow-line"></div><div class="flow-arrow-head"></div></div>
+        <div class="flow-step"><div class="flow-box reward">🏆 World cleared!</div><div class="flow-label">Boss celebration</div></div>
+        <div class="flow-arrow"><div class="flow-arrow-line"></div><div class="flow-arrow-head"></div></div>
+        <div class="flow-step"><div class="flow-box action">Next world unlocks</div><div class="flow-label">World map updates</div></div>
+        <div class="flow-arrow"><div class="flow-arrow-line"></div><div class="flow-arrow-head"></div></div>
+        <div class="flow-step"><div class="flow-box child">▶ Continue</div><div class="flow-label">Next level / next world</div></div>
+      </div>
+    </div>
+    <div class="note"><b>Unlock trigger:</b> A world unlocks when all 9 levels in the previous world are completed (any star count). 3-star levels give a bonus sticker chance (50%). Stickers are cosmetic rewards only — they do not gate progress.</div>
+
+    <!-- Flow 8 -->
+    <h3 id="flow8" style="margin-top:40px">Flow 8 — Locked Lesson & Lesson Completion Loop</h3>
+    <p>Child taps a locked level node. System explains it's locked. Then plays and completes a nearby level.</p>
+    <div class="flow-diagram">
+      <div class="flow-row">
+        <div class="flow-step"><div class="flow-box child">Level List</div></div>
+        <div class="flow-arrow"><div class="flow-arrow-line"></div><div class="flow-arrow-head"></div></div>
+        <div class="flow-step"><div class="flow-box action">Tap locked node 🔒</div></div>
+        <div class="flow-arrow"><div class="flow-arrow-line"></div><div class="flow-arrow-head"></div></div>
+        <div class="flow-step"><div class="flow-box system">Gentle bounce</div><div class="flow-label">Lock jiggles, no harsh message</div></div>
+        <div class="flow-arrow"><div class="flow-arrow-line"></div><div class="flow-arrow-head"></div></div>
+        <div class="flow-step"><div class="flow-box child">Mascot: "Finish level X first!"</div><div class="flow-label">Audio prompt, pointer arrow</div></div>
+        <div class="flow-arrow"><div class="flow-arrow-line"></div><div class="flow-arrow-head"></div></div>
+        <div class="flow-step"><div class="flow-box action">Tap unlocked node</div></div>
+        <div class="flow-arrow"><div class="flow-arrow-line"></div><div class="flow-arrow-head"></div></div>
+        <div class="flow-step"><div class="flow-box child">🎮 Game runs</div></div>
+        <div class="flow-arrow"><div class="flow-arrow-line"></div><div class="flow-arrow-head"></div></div>
+        <div class="flow-step"><div class="flow-box decision">Passed?</div></div>
+        <div class="flow-arrow"><div class="flow-arrow-line"></div><div class="flow-arrow-head"></div></div>
+        <div class="flow-step"><div class="flow-box reward">✓ Reward screen</div></div>
+        <div class="flow-arrow"><div class="flow-arrow-line"></div><div class="flow-arrow-head"></div></div>
+        <div class="flow-step"><div class="flow-box action">Next level unlocks 🔓</div><div class="flow-label">Level list updates</div></div>
+      </div>
+    </div>
+    <div style="margin-top:10px" class="flow-diagram">
+      <div class="flow-row">
+        <div class="flow-step"><div class="flow-box decision">Failed (hearts=0)</div></div>
+        <div class="flow-arrow"><div class="flow-arrow-line"></div><div class="flow-arrow-head"></div></div>
+        <div class="flow-step"><div class="flow-box system">Encouraging end screen</div><div class="flow-label">"Let's try again!" Mascot: 💛</div></div>
+        <div class="flow-arrow"><div class="flow-arrow-line"></div><div class="flow-arrow-head"></div></div>
+        <div class="flow-step"><div class="flow-box child">🔄 Try again</div><div class="flow-label">Same level, fresh hearts</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PERSISTENT VS CONTEXTUAL -->
+  <section id="persnav" class="section">
+    <div class="section-header">
+      <span class="section-num">06</span>
+      <h2 class="section-title">Persistent vs Contextual Navigation</h2>
+    </div>
+
+    <div class="card" style="padding:0;overflow:hidden">
+      <table>
+        <thead><tr><th>Element</th><th>Type</th><th>Where</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td>🏠 Home button / back-to-hub</td><td><span class="badge child" style="font-size:11px">Persistent</span></td><td>All screens except games</td><td>Via back arrow only — no permanent home tab</td></tr>
+          <tr><td>‹ Back arrow</td><td><span class="badge child" style="font-size:11px">Persistent</span></td><td>All child non-home screens</td><td>Top-left, 48px tap target. Returns to parent screen.</td></tr>
+          <tr><td>🔊 Audio replay</td><td><span class="badge child" style="font-size:11px">Persistent</span></td><td>All game screens</td><td>Top-right or near prompt. Replays audio instruction.</td></tr>
+          <tr><td>❤️ Hearts counter</td><td><span class="badge child" style="font-size:11px">Persistent</span></td><td>Active game session only</td><td>Top-right, part of HUD.</td></tr>
+          <tr><td>📊 Progress bar</td><td><span class="badge child" style="font-size:11px">Persistent</span></td><td>Active game session only</td><td>Shows rounds completed in current game.</td></tr>
+          <tr><td>▶ Play / Next button</td><td><span class="badge neutral" style="font-size:11px">Contextual</span></td><td>Home, Reward, Level list</td><td>Appears only when there is a forward action.</td></tr>
+          <tr><td>✕ Exit game</td><td><span class="badge neutral" style="font-size:11px">Contextual</span></td><td>Active game only</td><td>Top-left. Exits to level list with confirmation.</td></tr>
+          <tr><td>🌟 View stickers</td><td><span class="badge neutral" style="font-size:11px">Contextual</span></td><td>Reward screen</td><td>Only shown when a sticker was earned.</td></tr>
+          <tr><td>👤 Parent icon</td><td><span class="badge neutral" style="font-size:11px">Contextual</span></td><td>Home screen only</td><td>Small, top-right — hidden during games.</td></tr>
+          <tr><td>✕ Exit parent mode</td><td><span class="badge parent" style="font-size:11px">Parent</span></td><td>All parent screens</td><td>Always top-right. Returns to child home.</td></tr>
+          <tr><td>‹ Back (parent sub)</td><td><span class="badge parent" style="font-size:11px">Parent</span></td><td>Parent sub-screens</td><td>Returns within parent area, not to child.</td></tr>
+          <tr><td>Tabs: Time / Lang / Audio</td><td><span class="badge parent" style="font-size:11px">Parent</span></td><td>Settings screen only</td><td>Segment control in settings, not global tabs.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note"><b>Key rule:</b> Never show parent navigation elements to a child, and never show child game navigation to a parent. The two modes are visually and structurally distinct — child mode uses warm colors + big rounded shapes; parent mode uses a clean document-style layout with standard UI patterns.</div>
+  </section>
+
+  <!-- UX REASONING -->
+  <section id="uxreason" class="section">
+    <div class="section-header">
+      <span class="section-num">07</span>
+      <h2 class="section-title">UX Reasoning — Preschool Child Behavior</h2>
+    </div>
+
+    <div class="principle-grid">
+      <div class="principle">
+        <div class="principle-icon">👁️</div>
+        <div class="principle-title">Visual memory over reading</div>
+        <div class="principle-body">A 4-year-old navigates by pictures, color, and position — not by reading labels. Every navigation element must have a distinct visual identity. Never rely on text alone.</div>
+      </div>
+      <div class="principle">
+        <div class="principle-icon">👆</div>
+        <div class="principle-title">Big, forgiving touch targets</div>
+        <div class="principle-body">Minimum 64px tap targets for primary actions. Key buttons (Play, number tiles) should be 80–140px. Children have imprecise motor control — leave generous spacing between tappables.</div>
+      </div>
+      <div class="principle">
+        <div class="principle-icon">⏱️</div>
+        <div class="principle-title">Micro-loops under 30 seconds</div>
+        <div class="principle-body">Each question round resolves in ≤30 seconds. Each game session is 2–3 minutes maximum. Children this age have short working memory and need rapid feedback loops to stay motivated.</div>
+      </div>
+      <div class="principle">
+        <div class="principle-icon">🔊</div>
+        <div class="principle-title">Audio-first, text-minimal</div>
+        <div class="principle-body">All instructions are delivered by audio (speech synthesis or recorded). Text on kid screens is for number recognition only — the one thing Bắp can read. No button labels needed if icons are clear.</div>
+      </div>
+      <div class="principle">
+        <div class="principle-icon">🌈</div>
+        <div class="principle-title">Color is navigation</div>
+        <div class="principle-body">Each world has a unique color identity. Each feedback state (correct/wrong) has consistent color. Children learn to associate green=good, warm orange=try again — use these consistently.</div>
+      </div>
+      <div class="principle">
+        <div class="principle-icon">💛</div>
+        <div class="principle-title">Never punish — always encourage</div>
+        <div class="principle-body">Wrong answers cause a gentle wiggle animation and lose one heart. The mascot reacts with encouragement, never disappointment. The retry experience feels like a new chance, not a failure.</div>
+      </div>
+      <div class="principle">
+        <div class="principle-icon">🎁</div>
+        <div class="principle-title">Variable reward keeps engagement</div>
+        <div class="principle-body">Stickers appear randomly on 3-star completions (not guaranteed). This variable reward schedule is highly motivating for children without being manipulative — the child always earns coins and stars.</div>
+      </div>
+      <div class="principle">
+        <div class="principle-icon">🗺️</div>
+        <div class="principle-title">Spatial navigation (world map)</div>
+        <div class="principle-body">Young children understand space and place better than abstract categories. The world map gives them a mental model of "I am here, I want to go there" — far more intuitive than a content library grid.</div>
+      </div>
+      <div class="principle">
+        <div class="principle-icon">🐣</div>
+        <div class="principle-title">Mascot as safety anchor</div>
+        <div class="principle-body">Bắp the mascot provides a consistent emotional anchor. Seeing the same friendly character react to what happens makes the experience feel personal and safe — especially important for a child using an app independently.</div>
+      </div>
+      <div class="principle">
+        <div class="principle-icon">📵</div>
+        <div class="principle-title">No external links or notifications</div>
+        <div class="principle-body">The app should feel like a closed, safe world. No external links, no push notifications without parental opt-in, no social features. Parents should always feel fully in control.</div>
+      </div>
+      <div class="principle">
+        <div class="principle-icon">↩️</div>
+        <div class="principle-title">Persist state across sessions</div>
+        <div class="principle-body">Always remember where the child left off. Session state, progress, and stickers persist via localStorage. Seeing your progress exactly where you left it is reassuring and reduces re-orientation time.</div>
+      </div>
+      <div class="principle">
+        <div class="principle-icon">🔒</div>
+        <div class="principle-title">Parent gate is non-negotiable</div>
+        <div class="principle-body">The math problem gate must be unsolvable by a typical 4-year-old. Use sums in the 5–15 range with 4 decoy answers. Never show a PIN — parents forget them. The gate protects both the settings and the child's mental model of a "safe play space."</div>
+      </div>
+    </div>
+
+    <h3 style="margin-top:32px">Session length recommendations</h3>
+    <div class="card" style="padding:0;overflow:hidden">
+      <table>
+        <thead><tr><th>Age</th><th>Recommended session</th><th>Max daily</th><th>Game loop length</th></tr></thead>
+        <tbody>
+          <tr><td>3–4 years</td><td>5–10 minutes</td><td>15 minutes</td><td>30 sec per round · 5 rounds/game</td></tr>
+          <tr><td>4–5 years (Bắp)</td><td>10–15 minutes</td><td>20 minutes</td><td>45 sec per round · 5 rounds/game</td></tr>
+          <tr><td>5–6 years</td><td>15–20 minutes</td><td>30 minutes</td><td>60 sec per round · 5–8 rounds/game</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="note" style="margin-top:20px"><b>Bilingual note:</b> Kid-facing screens use English audio (as per Bắp's learning path). Parent-facing screens use Vietnamese. The language toggle in Settings lets parents switch to EN-only, VI-only, or bilingual (both languages announced). This setting persists and is respected by the speech synthesis system.</div>
+  </section>
+
+  <div style="height:60px"></div>
+</main>
+</div>
+
+<script>
+// Active TOC link tracking
+const links = document.querySelectorAll('.toc-link');
+const sections = document.querySelectorAll('[id]');
+const obs = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      links.forEach(l => l.classList.remove('active'));
+      const a = document.querySelector(`.toc-link[href="#${e.target.id}"]`);
+      if (a) a.classList.add('active');
+    }
+  });
+}, { threshold: 0.2, rootMargin: '-80px 0px -60% 0px' });
+sections.forEach(s => obs.observe(s));
+</script>
+</body>
+</html>

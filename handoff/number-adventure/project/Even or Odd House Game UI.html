@@ -1,0 +1,694 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bắp — Even or Odd House Game UI</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; font-family: 'Fredoka', ui-rounded, sans-serif; background: #E8E0D3; -webkit-font-smoothing: antialiased; overflow: hidden; }
+button { cursor: pointer; font-family: inherit; border: none; background: none; }
+@keyframes bobble     { 0%,100%{transform:translateY(0) rotate(0)} 50%{transform:translateY(-7px) rotate(-2deg)} }
+@keyframes pop-in     { 0%{transform:scale(.55);opacity:0} 65%{transform:scale(1.12);opacity:1} 100%{transform:scale(1)} }
+@keyframes shake      { 0%,100%{transform:translateX(0) rotate(0)} 20%{transform:translateX(-8px) rotate(-3deg)} 40%{transform:translateX(8px) rotate(3deg)} 60%{transform:translateX(-5px)} 80%{transform:translateX(5px)} }
+@keyframes pulse-soft { 0%,100%{transform:scale(1)} 50%{transform:scale(1.05)} }
+@keyframes pulse-ring { 0%{box-shadow:0 0 0 0 rgba(95,179,106,.6)} 70%{box-shadow:0 0 0 16px rgba(95,179,106,0)} 100%{box-shadow:0 0 0 0 rgba(95,179,106,0)} }
+@keyframes sparkle    { 0%,100%{transform:scale(.6) rotate(0);opacity:.3} 50%{transform:scale(1.3) rotate(180deg);opacity:1} }
+@keyframes confetti-fall { 0%{transform:translateY(-14px) rotate(0deg);opacity:1} 100%{transform:translateY(140px) rotate(540deg);opacity:0} }
+@keyframes float-up   { from{transform:translateY(0);opacity:1} to{transform:translateY(-50px);opacity:0} }
+@keyframes slide-up   { from{transform:translateY(18px);opacity:0} to{transform:translateY(0);opacity:1} }
+@keyframes hint-glow  { 0%,100%{box-shadow:0 0 0 0 rgba(255,211,110,.5)} 50%{box-shadow:0 0 0 12px rgba(255,211,110,0)} }
+@keyframes pair-slide { from{transform:translateX(30px);opacity:0} to{transform:translateX(0);opacity:1} }
+@keyframes leftover-bounce { 0%,100%{transform:translateY(0) scale(1)} 40%{transform:translateY(-8px) scale(1.1)} }
+@keyframes house-glow-even { 0%,100%{box-shadow:0 8px 0 #5A96B1,0 16px 32px rgba(90,150,177,0.18)} 50%{box-shadow:0 8px 0 #5A96B1,0 16px 32px rgba(90,150,177,0.40)} }
+@keyframes house-glow-odd  { 0%,100%{box-shadow:0 8px 0 #D67560,0 16px 32px rgba(214,117,96,0.18)} 50%{box-shadow:0 8px 0 #D67560,0 16px 32px rgba(214,117,96,0.40)} }
+@keyframes card-drag  { 0%,100%{transform:scale(1) rotate(0)} 50%{transform:scale(1.08) rotate(3deg)} }
+@keyframes flag-wave  { 0%,100%{transform:rotate(-5deg)} 50%{transform:rotate(5deg)} }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script type="text/babel" src="design-canvas.jsx"></script>
+<script type="text/babel">
+const { useState, useMemo } = React;
+
+const C = {
+  ink:'#2D3A2E', soft:'#6B7A6C', faint:'#A9B4A8',
+  sun:'#FFD36E',  sunSh:'#C79528',  sunInk:'#5E3A00',
+  sage:'#7FC089', sageSh:'#4D8B58', sageInk:'#1F4A28', sagePale:'#C4EBB9',
+  sky:'#8AC4DE',  skySh:'#5A96B1',  skyInk:'#1F4A61',  skyPale:'#D4EAF5',  skyBg:'#E4F2FA',
+  coral:'#FF8F74',coralSh:'#C8614A',coralInk:'#6B1F0A',coralBg:'#FFF0EA',coralPale:'#FFD6C6',
+  lav:'#B9A4E0',  lavSh:'#8872B4',  lavInk:'#3D256D',
+  cream:'#FFF8EC',surface:'#FFFDF7',
+  correct:'#5FB36A',correctSh:'#3D8A4A',correctBg:'#EAF7E4',
+  wrong:'#F2795A',  wrongSh:'#C8614A',  wrongBg:'#FFE8DF',
+  hint:'#FFD36E',   hintBg:'#FFF4DE',
+  even:'#8AC4DE',   evenSh:'#5A96B1',   evenInk:'#1F4A61', evenBg:'#E0F0FA',
+  odd:'#FF8F74',    oddSh:'#C8614A',    oddInk:'#6B1F0A',  oddBg:'#FFE8DF',
+};
+
+// ─── MASCOT ──────────────────────────────────────────────────
+function Bap({ size=70, mood='happy', color='sun' }) {
+  const body={sun:'#FFD36E',sage:'#A8D5A2',coral:'#FFA48C',lavender:'#D9C7F0',sky:'#B8DEEF'}[color]||'#FFD36E';
+  const dark={sun:'#E8B23F',sage:'#7FB983',coral:'#E2815E',lavender:'#B39DD1',sky:'#88BED4'}[color]||'#E8B23F';
+  const eye={
+    happy:<><ellipse cx="0" cy="0" rx="6" ry="7" fill={C.ink}/><ellipse cx="-1.5" cy="-2" rx="2" ry="2.5" fill="#fff"/></>,
+    celebrate:<path d="M -6 2 Q 0 -6 6 2" stroke={C.ink} strokeWidth="3" fill="none" strokeLinecap="round"/>,
+    worry:<ellipse cx="0" cy="1" rx="5" ry="5" fill={C.ink}/>,
+    hint:<><ellipse cx="0" cy="0" rx="6" ry="6" fill={C.ink}/><ellipse cx="2" cy="-2" rx="2" ry="2.5" fill="#fff"/></>,
+    excited:<><ellipse cx="0" cy="0" rx="7" ry="8" fill={C.ink}/><ellipse cx="-2" cy="-2.5" rx="2.5" ry="3" fill="#fff"/></>,
+    wink:<path d="M -6 0 Q 0 -4 6 0" stroke={C.ink} strokeWidth="3" fill="none" strokeLinecap="round"/>,
+  };
+  const mouth={
+    happy:<path d="M 35 85 Q 50 98 65 85" stroke={C.ink} strokeWidth="3.5" fill="#C14A2A" strokeLinecap="round"/>,
+    celebrate:<path d="M 32 82 Q 50 105 68 82 Q 50 95 32 82" fill="#C14A2A" stroke={C.ink} strokeWidth="3"/>,
+    worry:<path d="M 38 89 Q 50 81 62 89" stroke={C.ink} strokeWidth="3" fill="none" strokeLinecap="round"/>,
+    hint:<path d="M 40 85 Q 50 91 60 85" stroke={C.ink} strokeWidth="3" fill="#C14A2A" strokeLinecap="round"/>,
+    excited:<path d="M 30 80 Q 50 108 70 80 Q 50 96 30 80" fill="#C14A2A" stroke={C.ink} strokeWidth="3"/>,
+    wink:<path d="M 40 85 Q 50 92 60 85" stroke={C.ink} strokeWidth="3.5" fill="#C14A2A" strokeLinecap="round"/>,
+  };
+  return (
+    <svg viewBox="0 0 120 140" width={size} height={size*140/120} style={{display:'block'}}>
+      <g><ellipse cx="38" cy="18" rx="14" ry="20" fill="#7FB983" transform="rotate(-30 38 18)"/>
+      <ellipse cx="38" cy="18" rx="7" ry="16" fill="#A8D5A2" transform="rotate(-30 38 18)"/>
+      <ellipse cx="76" cy="14" rx="16" ry="22" fill="#5FA36A" transform="rotate(25 76 14)"/>
+      <ellipse cx="76" cy="14" rx="8" ry="18" fill="#A8D5A2" transform="rotate(25 76 14)"/></g>
+      <ellipse cx="60" cy="126" rx="38" ry="6" fill="rgba(46,90,58,0.15)"/>
+      <path d="M60 28 C92 28 100 56 100 82 C100 110 82 126 60 126 C38 126 20 110 20 82 C20 56 28 28 60 28Z" fill={body} stroke={C.ink} strokeWidth="3.5"/>
+      <g opacity=".3" stroke={dark} strokeWidth="2" fill="none" strokeLinecap="round">
+        <path d="M30 62 Q60 56 90 62"/><path d="M28 80 Q60 74 92 80"/><path d="M30 98 Q60 104 90 98"/>
+      </g>
+      <circle cx="30" cy="82" r="7" fill="#FFA48C" opacity=".7"/>
+      <circle cx="90" cy="82" r="7" fill="#FFA48C" opacity=".7"/>
+      <g transform="translate(42 66)">{eye[mood]||eye.happy}</g>
+      <g transform="translate(78 66)">{eye[mood]||eye.happy}</g>
+      {mouth[mood]||mouth.happy}
+    </svg>
+  );
+}
+
+// ─── HOUSE SVG ───────────────────────────────────────────────
+function House({ type='even', size=140, glow=false, numInside=null, state='idle' }) {
+  const cfg = type==='even'
+    ? {wall:'#D4EAF5',roof:C.sky,roofSh:'#4A80A0',window:'#FFF8EC',door:C.sky,doorKnob:C.sunInk,label:'EVEN',labelColor:C.skyInk,flag:'💙'}
+    : {wall:'#FFE8DF',roof:C.coral,roofSh:'#A04A2A',window:'#FFF8EC',door:C.coral,doorKnob:C.sunInk,label:'ODD',labelColor:C.oddInk,flag:'🧡'};
+  const anim = glow ? (type==='even'?'house-glow-even':'house-glow-odd') + ' 1.8s ease-in-out infinite' : 'none';
+  const shake = state==='wrong' ? 'shake .5s ease-in-out both' : 'none';
+  const pop = state==='correct' ? 'pop-in .4s cubic-bezier(.34,1.56,.64,1) both' : 'none';
+  return (
+    <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:0,animation:shake||pop}}>
+      {/* Roof */}
+      <div style={{position:'relative',width:size,zIndex:2}}>
+        <svg width={size} height={size*.52} viewBox="0 0 140 73">
+          {/* Main roof triangle */}
+          <polygon points="0,73 70,0 140,73" fill={cfg.roof} stroke={C.ink} strokeWidth="3" strokeLinejoin="round"/>
+          {/* Roof shadow */}
+          <polygon points="0,73 70,0 140,73" fill="rgba(0,0,0,0.06)"/>
+          {/* Chimney */}
+          <rect x="95" y="15" width="16" height="30" rx="4" fill={cfg.wall} stroke={C.ink} strokeWidth="2.5"/>
+          {/* Smoke */}
+          <text x="100" y="8" fontSize="14" style={{animation:'float-up 2s ease-out infinite',opacity:.6}}>💨</text>
+          {/* Flag */}
+          <g transform="translate(58, 0)">
+            <rect x="0" y="-2" width="2.5" height="22" fill={C.ink} rx="1"/>
+            <text x="4" y="14" fontSize="14" style={{animation:'flag-wave 1.5s ease-in-out infinite', transformOrigin:'left center'}}>
+              {cfg.flag}
+            </text>
+          </g>
+        </svg>
+      </div>
+      {/* Walls */}
+      <div style={{
+        width:size, minHeight:size*.58, borderRadius:'0 0 18px 18px',
+        background:cfg.wall, border:`3px solid ${C.ink}`,
+        borderTop:'none', boxShadow:anim!=='none'?'':`0 6px 0 rgba(46,90,58,0.2)`,
+        animation:anim, position:'relative', zIndex:1,
+        display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'space-between',
+        padding:'10px 10px 12px',
+      }}>
+        {/* Windows row */}
+        <div style={{display:'flex',gap:10,justifyContent:'center'}}>
+          {[0,1].map(i=>(
+            <div key={i} style={{width:size*.22,height:size*.22,borderRadius:size*.05,background:cfg.window,border:`2.5px solid ${C.ink}`,boxShadow:'inset 0 2px 4px rgba(46,90,58,0.12)',position:'relative',overflow:'hidden'}}>
+              {/* Cross frame */}
+              <div style={{position:'absolute',left:'50%',top:0,bottom:0,width:2,background:C.ink,opacity:.4}}/>
+              <div style={{position:'absolute',top:'50%',left:0,right:0,height:2,background:C.ink,opacity:.4}}/>
+            </div>
+          ))}
+        </div>
+
+        {/* Label badge */}
+        <div style={{padding:'4px 14px',borderRadius:999,background:type==='even'?C.sky:C.coral,border:`2.5px solid ${C.ink}`,fontFamily:'Fredoka',fontWeight:700,fontSize:16,color:'#fff',letterSpacing:.5,boxShadow:`0 3px 0 ${type==='even'?C.skySh:C.coralSh}`}}>
+          {cfg.label}
+        </div>
+
+        {/* Door */}
+        <div style={{width:size*.3,height:size*.4,borderRadius:`${size*.06}px ${size*.06}px 0 0`,background:cfg.door,border:`2.5px solid ${C.ink}`,borderBottom:'none',boxShadow:`inset 0 -3px 0 ${type==='even'?C.skySh:C.coralSh}`,position:'relative',display:'flex',alignItems:'center',justifyContent:'center'}}>
+          <div style={{width:6,height:6,borderRadius:'50%',background:cfg.doorKnob,border:'1px solid rgba(0,0,0,0.2)'}}/>
+          {/* Correct/wrong icons */}
+          {state==='correct'&&<div style={{position:'absolute',top:-14,right:-10,fontSize:20,animation:'pop-in .3s both'}}>✅</div>}
+          {state==='wrong'&&<div style={{position:'absolute',top:-14,right:-10,fontSize:20}}>🚫</div>}
+          {/* Number inside door */}
+          {numInside&&<div style={{position:'absolute',top:-56,left:'50%',transform:'translateX(-50%)',fontFamily:'Fredoka',fontWeight:700,fontSize:28,color:C.ink,animation:'pop-in .4s both'}}>{numInside}</div>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── SHARED ──────────────────────────────────────────────────
+function Sparkle({x,y,s=10,d=0}) {
+  return <div style={{position:'absolute',left:x,top:y,width:s,height:s,pointerEvents:'none',animation:`sparkle ${1.8+d}s ease-in-out ${d}s infinite`}}><svg viewBox="0 0 20 20" width="100%" height="100%"><path d="M10 0L12 8 20 10 12 12 10 20 8 12 0 10 8 8Z" fill="#FFD36E"/></svg></div>;
+}
+function Confetti({count=22}) {
+  const p=useMemo(()=>Array.from({length:count},(_,i)=>({left:Math.random()*100,color:['#FFD36E','#FFA48C','#A8D5A2','#B8DEEF','#D9C7F0','#E6779E'][i%6],size:6+Math.random()*7,dur:1.3+Math.random()*1.2,delay:Math.random()*.6,shape:Math.random()>.5?'50%':'3px'})),[count]);
+  return <div style={{position:'absolute',inset:0,pointerEvents:'none',overflow:'hidden'}}>{p.map((x,i)=><div key={i} style={{position:'absolute',left:`${x.left}%`,top:-14,width:x.size,height:x.size,background:x.color,borderRadius:x.shape,animation:`confetti-fall ${x.dur}s ease-in ${x.delay}s forwards`}}/>)}</div>;
+}
+function HUD({hearts=3,progress=2,total=5,color=C.sky}) {
+  return (
+    <div style={{padding:'52px 16px 8px',display:'flex',alignItems:'center',gap:10}}>
+      <button style={{width:44,height:44,borderRadius:'50%',background:C.cream,border:`3px solid ${C.ink}`,boxShadow:'0 3px 0 #D9C38A',display:'flex',alignItems:'center',justifyContent:'center',fontSize:20,color:C.soft,flexShrink:0}}>✕</button>
+      <div style={{flex:1}}>
+        <div style={{height:14,borderRadius:14,background:'rgba(46,90,58,0.1)',border:`2px solid ${C.ink}`,overflow:'hidden'}}>
+          <div style={{height:'100%',width:`${progress/total*100}%`,borderRadius:14,background:color,transition:'width .6s cubic-bezier(.34,1.56,.64,1)'}}/>
+        </div>
+      </div>
+      <div style={{padding:'6px 12px',borderRadius:999,background:'#FFDDE2',border:`2px solid ${C.ink}`,fontSize:14,fontWeight:700,color:'#A33A1D',flexShrink:0}}>❤️ {hearts}</div>
+    </div>
+  );
+}
+function Bubble({text,mood='happy',color='sun',size=66}) {
+  return (
+    <div style={{display:'flex',alignItems:'flex-end',gap:8,padding:'0 16px 8px'}}>
+      <div style={{animation:'bobble 2.5s ease-in-out infinite',flexShrink:0}}><Bap size={size} mood={mood} color={color}/></div>
+      <div style={{flex:1,background:C.cream,borderRadius:'16px 16px 16px 5px',border:`2.5px solid ${C.ink}`,boxShadow:'0 4px 0 #D9C38A',padding:'10px 14px',fontSize:14,fontWeight:700,color:C.ink,lineHeight:1.4}}>{text}</div>
+    </div>
+  );
+}
+function DiffBadge({label,color}) {
+  return <div style={{display:'inline-flex',alignItems:'center',gap:4,padding:'4px 11px',borderRadius:999,background:color+'22',border:`1.5px solid ${color}`,fontSize:11,fontWeight:700,color,letterSpacing:.4}}>{label}</div>;
+}
+
+// ─── NUMBER CARD ──────────────────────────────────────────────
+function NumCard({ n, state='idle', large=false, dragging=false }) {
+  const sz = large ? {w:100,h:114,fs:58,r:26} : {w:82,h:94,fs:46,r:22};
+  const s={
+    idle:    {bg:'#fff',sh:'rgba(46,90,58,.22)',border:`3px solid ${C.ink}`,color:C.ink,anim:'none'},
+    drag:    {bg:C.cream,sh:C.sunSh,border:`3px solid ${C.sun}`,color:C.ink,anim:'card-drag .6s ease-in-out infinite'},
+    correct: {bg:C.correctBg,sh:C.correctSh,border:`3px solid ${C.correct}`,color:C.correct,anim:'pop-in .4s cubic-bezier(.34,1.56,.64,1) both'},
+    wrong:   {bg:C.wrongBg,sh:C.wrongSh,border:`3px solid ${C.wrong}`,color:C.wrong,anim:'shake .45s ease-in-out both'},
+    placed:  {bg:C.skyPale,sh:C.skySh,border:`3px solid ${C.sky}`,color:C.skyInk,anim:'none'},
+  }[state]||{bg:'#fff',sh:'rgba(46,90,58,.22)',border:`3px solid ${C.ink}`,color:C.ink,anim:'none'};
+  return (
+    <div style={{
+      width:sz.w,height:sz.h,borderRadius:sz.r,
+      background:s.bg,border:s.border,color:s.color,
+      boxShadow:`0 6px 0 ${s.sh}, 0 12px 20px rgba(46,90,58,0.1)`,
+      display:'flex',alignItems:'center',justifyContent:'center',
+      fontFamily:'Fredoka',fontWeight:700,fontSize:sz.fs,
+      animation:s.anim,position:'relative',flexShrink:0,
+      transform:state==='drag'?'rotate(6deg) scale(1.05)':'none',
+      cursor:state==='idle'?'grab':'default',
+    }}>
+      {n}
+      {state==='correct'&&<div style={{position:'absolute',top:4,right:6,fontSize:16}}>⭐</div>}
+      {state==='wrong'&&<div style={{position:'absolute',top:4,right:6,fontSize:14,color:C.wrong}}>✕</div>}
+    </div>
+  );
+}
+
+// ─── PAIRING VISUAL ──────────────────────────────────────────
+function PairingVisual({ n, emoji='🧦' }) {
+  const pairs = Math.floor(n/2);
+  const leftover = n%2;
+  return (
+    <div style={{background:'rgba(255,255,255,0.7)',borderRadius:20,border:`2px solid rgba(46,90,58,.12)`,padding:'12px 16px'}}>
+      <div style={{fontSize:11,fontWeight:700,color:C.soft,letterSpacing:.5,marginBottom:8,textAlign:'center'}}>
+        {n} {emoji}{emoji.repeat(n-1).slice(0,2)} = {pairs} pairs {leftover?'+ 1 left over':''}
+      </div>
+      <div style={{display:'flex',flexWrap:'wrap',gap:6,justifyContent:'center'}}>
+        {Array.from({length:pairs}).map((_,i)=>(
+          <div key={i} style={{display:'flex',gap:3,padding:'5px 8px',borderRadius:12,background:C.skyPale,border:`2px solid ${C.sky}`,animation:`pair-slide .3s ease-out ${i*.08}s both`}}>
+            <span style={{fontSize:20}}>{emoji}</span>
+            <span style={{fontSize:20}}>{emoji}</span>
+          </div>
+        ))}
+        {leftover>0&&(
+          <div style={{display:'flex',gap:3,padding:'5px 8px',borderRadius:12,background:C.coralBg,border:`2px dashed ${C.coral}`,animation:'leftover-bounce 1s ease-in-out infinite'}}>
+            <span style={{fontSize:20}}>{emoji}</span>
+            <span style={{fontSize:14,display:'flex',alignItems:'center',color:C.coralInk,fontWeight:700}}>left!</span>
+          </div>
+        )}
+      </div>
+      <div style={{textAlign:'center',marginTop:10,padding:'6px 12px',borderRadius:12,background:leftover===0?C.evenBg:C.oddBg,border:`2px solid ${leftover===0?C.even:C.odd}`,display:'inline-block',margin:'10px auto 0',display:'flex',justifyContent:'center'}}>
+        <div style={{fontFamily:'Fredoka',fontWeight:700,fontSize:16,color:leftover===0?C.evenInk:C.oddInk}}>
+          {leftover===0 ? '✓ EVEN — all paired!' : '✓ ODD — one left over!'}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════
+// 1 — INTRO TEACHING (Mode 1 — Visual Pairing)
+// ══════════════════════════════════════════════════════════════
+function IntroTeaching() {
+  const [step,setStep]=useState(0);
+  const steps=[
+    {n:4,even:true,emoji:'🧦',title:'4 socks — try to pair them!'},
+    {n:3,even:false,emoji:'🍎',title:'3 apples — one has no pair!'},
+  ];
+  const s=steps[step];
+  return (
+    <div style={{position:'absolute',inset:0,background:'radial-gradient(ellipse 110% 55% at 50% 0%,#E8D0F4 0%,#F0E4FA 40%,#FAF0FF 100%)'}}>
+      <Sparkle x="8%"  y="12%" s={11} d={0}/>
+      <Sparkle x="85%" y="9%"  s={9}  d={.7}/>
+      <div style={{position:'relative',zIndex:1,height:'100%',display:'flex',flexDirection:'column'}}>
+        <HUD hearts={3} progress={0} total={5} color={C.lav}/>
+        <div style={{padding:'0 18px 4px',display:'flex',alignItems:'center',gap:8}}>
+          <DiffBadge label="📚 LEARN FIRST" color={C.lavInk}/>
+          <div style={{fontSize:11,color:C.faint,fontWeight:600}}>Before the game</div>
+        </div>
+
+        {/* Big intro card */}
+        <div style={{margin:'4px 16px 0',padding:'16px',borderRadius:24,background:'linear-gradient(135deg,#E3D2F4 0%,#C5AAE8 100%)',border:`3px solid ${C.ink}`,boxShadow:`0 5px 0 ${C.lavSh}`}}>
+          <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:10}}>
+            <div style={{animation:'bobble 2.5s ease-in-out infinite',flexShrink:0}}><Bap size={68} mood="hint" color="lavender"/></div>
+            <div>
+              <div style={{fontFamily:'Fredoka',fontWeight:700,fontSize:20,color:C.ink,lineHeight:1.1}}>Even or Odd?</div>
+              <div style={{fontSize:13,color:C.lavInk,marginTop:4,lineHeight:1.4}}>
+                Even = everyone has a pair 💙<br/>
+                Odd = one is left alone 🧡
+              </div>
+            </div>
+          </div>
+          {/* Step indicator */}
+          <div style={{display:'flex',gap:6,marginBottom:10}}>
+            {steps.map((_,i)=>(
+              <button key={i} onClick={()=>setStep(i)} style={{flex:1,height:6,borderRadius:999,background:i===step?C.lav:'rgba(255,255,255,0.4)',border:'none',cursor:'pointer',transition:'background .2s'}}/>
+            ))}
+          </div>
+          <div style={{fontSize:14,fontWeight:700,color:C.ink,marginBottom:10}}>{s.title}</div>
+          <PairingVisual n={s.n} emoji={s.emoji}/>
+        </div>
+
+        {/* Navigation */}
+        <div style={{display:'flex',gap:10,padding:'12px 16px 0',justifyContent:'space-between',alignItems:'center'}}>
+          {step>0 ? (
+            <button onClick={()=>setStep(step-1)} style={{padding:'10px 20px',borderRadius:16,background:C.cream,border:`2.5px solid ${C.ink}`,fontFamily:'Fredoka',fontWeight:700,fontSize:15,color:C.soft,boxShadow:'0 3px 0 #D9C38A'}}>← Back</button>
+          ) : <div/>}
+          <button onClick={()=>step<steps.length-1?setStep(step+1):null} style={{padding:'12px 24px',borderRadius:18,background:step===steps.length-1?C.lav:C.sky,border:`3px solid ${C.ink}`,fontFamily:'Fredoka',fontWeight:700,fontSize:17,color:'#fff',boxShadow:`0 4px 0 ${step===steps.length-1?C.lavSh:C.skySh}`}}>
+            {step<steps.length-1 ? 'Next example →' : 'Play Now! 🎮'}
+          </button>
+        </div>
+
+        {/* Even / Odd quick reference */}
+        <div style={{display:'flex',gap:10,padding:'12px 16px 16px'}}>
+          {[{type:'even',nums:[2,4,6,8,10],bg:C.evenBg,border:C.even,label:'EVEN',color:C.evenInk},
+            {type:'odd', nums:[1,3,5,7,9], bg:C.oddBg, border:C.odd, label:'ODD', color:C.oddInk}
+          ].map(r=>(
+            <div key={r.type} style={{flex:1,padding:'8px 10px',borderRadius:16,background:r.bg,border:`2px solid ${r.border}`}}>
+              <div style={{fontSize:10,fontWeight:700,color:r.color,letterSpacing:.5,marginBottom:5}}>{r.label}</div>
+              <div style={{display:'flex',gap:4,flexWrap:'wrap'}}>
+                {r.nums.map(n=><div key={n} style={{width:26,height:26,borderRadius:8,background:'rgba(255,255,255,0.8)',border:`1.5px solid ${r.border}`,display:'flex',alignItems:'center',justifyContent:'center',fontFamily:'Fredoka',fontWeight:700,fontSize:14,color:r.color}}>{n}</div>)}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════
+// 2 — VISUAL EXPLANATION STATE (pairing for 6 and 7)
+// ══════════════════════════════════════════════════════════════
+function VisualExplanation() {
+  return (
+    <div style={{position:'absolute',inset:0,background:'radial-gradient(ellipse 110% 55% at 50% 0%,#D4EAF5 0%,#E4F2FA 40%,#F0F8FF 100%)'}}>
+      <div style={{position:'relative',zIndex:1,height:'100%',display:'flex',flexDirection:'column'}}>
+        <HUD hearts={3} progress={1} total={5} color={C.sky}/>
+        <div style={{padding:'0 18px 4px',display:'flex',alignItems:'center',gap:8}}>
+          <DiffBadge label="🔍 LOOK CAREFULLY" color={C.skyInk}/>
+        </div>
+
+        <Bubble text="Can ALL the stars find a partner? Count with me! ⭐" mood="hint" color="sky" size={64}/>
+
+        {/* Side by side even vs odd explanation */}
+        <div style={{flex:1,padding:'8px 14px',display:'flex',flexDirection:'column',gap:12}}>
+          {/* Even example — 6 */}
+          <div style={{background:C.evenBg,borderRadius:22,border:`2.5px solid ${C.even}`,padding:'12px 14px',boxShadow:`0 4px 0 ${C.skySh}`}}>
+            <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:8}}>
+              <div style={{width:44,height:44,borderRadius:14,background:C.sky,border:`2.5px solid ${C.ink}`,display:'flex',alignItems:'center',justifyContent:'center',fontFamily:'Fredoka',fontWeight:700,fontSize:24,color:'#fff',boxShadow:`0 3px 0 ${C.skySh}`}}>6</div>
+              <div>
+                <div style={{fontFamily:'Fredoka',fontWeight:700,fontSize:17,color:C.evenInk}}>6 is EVEN</div>
+                <div style={{fontSize:12,color:C.soft}}>All stars have a partner! 🎉</div>
+              </div>
+              <div style={{marginLeft:'auto',fontSize:26}}>💙</div>
+            </div>
+            <div style={{display:'flex',gap:6,flexWrap:'wrap'}}>
+              {[0,1,2].map(i=>(
+                <div key={i} style={{display:'flex',gap:3,padding:'5px 8px',borderRadius:12,background:'rgba(255,255,255,0.7)',border:`2px solid ${C.sky}`,animation:`pair-slide .3s ease-out ${i*.1}s both`}}>
+                  <span style={{fontSize:22}}>⭐</span><span style={{fontSize:22}}>⭐</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Odd example — 7 */}
+          <div style={{background:C.oddBg,borderRadius:22,border:`2.5px solid ${C.odd}`,padding:'12px 14px',boxShadow:`0 4px 0 ${C.coralSh}`}}>
+            <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:8}}>
+              <div style={{width:44,height:44,borderRadius:14,background:C.coral,border:`2.5px solid ${C.ink}`,display:'flex',alignItems:'center',justifyContent:'center',fontFamily:'Fredoka',fontWeight:700,fontSize:24,color:'#fff',boxShadow:`0 3px 0 ${C.coralSh}`}}>7</div>
+              <div>
+                <div style={{fontFamily:'Fredoka',fontWeight:700,fontSize:17,color:C.oddInk}}>7 is ODD</div>
+                <div style={{fontSize:12,color:C.soft}}>One star has no partner! 😢</div>
+              </div>
+              <div style={{marginLeft:'auto',fontSize:26}}>🧡</div>
+            </div>
+            <div style={{display:'flex',gap:6,flexWrap:'wrap',alignItems:'center'}}>
+              {[0,1,2].map(i=>(
+                <div key={i} style={{display:'flex',gap:3,padding:'5px 8px',borderRadius:12,background:'rgba(255,255,255,0.7)',border:`2px solid ${C.coral}`,animation:`pair-slide .3s ease-out ${i*.1}s both`}}>
+                  <span style={{fontSize:22}}>⭐</span><span style={{fontSize:22}}>⭐</span>
+                </div>
+              ))}
+              {/* Leftover */}
+              <div style={{display:'flex',gap:3,padding:'5px 8px',borderRadius:12,background:'rgba(255,168,140,0.3)',border:`2px dashed ${C.coral}`,animation:'leftover-bounce 1s ease-in-out infinite',alignItems:'center'}}>
+                <span style={{fontSize:22}}>⭐</span>
+                <span style={{fontSize:11,color:C.coralInk,fontWeight:700}}>😢</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Quick rule */}
+          <div style={{padding:'10px 14px',borderRadius:18,background:C.cream,border:`2px solid rgba(46,90,58,.12)`,display:'flex',gap:10}}>
+            <div style={{flex:1,textAlign:'center',padding:'6px 0',borderRight:`1px dashed rgba(46,90,58,.15)`}}>
+              <div style={{fontSize:22}}>💙</div>
+              <div style={{fontFamily:'Fredoka',fontWeight:700,fontSize:14,color:C.evenInk}}>EVEN</div>
+              <div style={{fontSize:11,color:C.soft}}>0 left over</div>
+            </div>
+            <div style={{flex:1,textAlign:'center',padding:'6px 0'}}>
+              <div style={{fontSize:22}}>🧡</div>
+              <div style={{fontFamily:'Fredoka',fontWeight:700,fontSize:14,color:C.oddInk}}>ODD</div>
+              <div style={{fontSize:11,color:C.soft}}>1 left over</div>
+            </div>
+          </div>
+        </div>
+
+        <div style={{padding:'0 16px 18px'}}>
+          <button style={{width:'100%',height:54,borderRadius:20,background:C.sky,border:`3px solid ${C.ink}`,boxShadow:`0 5px 0 ${C.skySh}`,fontFamily:'Fredoka',fontWeight:700,fontSize:19,color:'#fff'}}>
+            I get it! Let's sort! 🏠
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════
+// 3 — SORTING GAME DEFAULT STATE (n=8)
+// ══════════════════════════════════════════════════════════════
+function SortingDefault() {
+  const [dropped,setDropped]=useState(null);
+  const n=8, isEven=n%2===0;
+  return (
+    <div style={{position:'absolute',inset:0,background:'radial-gradient(ellipse 100% 50% at 50% 0%,#D6ECCE 0%,#E8F4E0 45%,#FFFDF7 100%)'}}>
+      <Sparkle x="7%"  y="12%" s={11} d={0}/>
+      <Sparkle x="85%" y="9%"  s={8}  d={.7}/>
+      {/* Ground */}
+      <div style={{position:'absolute',bottom:0,left:0,right:0,height:80,background:'linear-gradient(0deg,#C4E5A8 0%,transparent 100%)'}}/>
+      <div style={{position:'relative',zIndex:1,height:'100%',display:'flex',flexDirection:'column'}}>
+        <HUD hearts={3} progress={2} total={5} color={C.sage}/>
+        <div style={{padding:'0 18px 4px',display:'flex',alignItems:'center',gap:8}}>
+          <DiffBadge label="🏠 SORT THE NUMBER" color={C.sageInk}/>
+          <div style={{fontSize:11,color:C.faint,fontWeight:600}}>Round 2 of 5</div>
+        </div>
+
+        <Bubble text="Where does 8 belong — Even or Odd House? 🏠" mood="happy" color="sage" size={62}/>
+
+        {/* Number card — floating */}
+        <div style={{display:'flex',justifyContent:'center',padding:'4px 0 6px'}}>
+          <div style={{position:'relative'}}>
+            <NumCard n={8} state="idle" large/>
+            <div style={{position:'absolute',bottom:-12,left:'50%',transform:'translateX(-50%)',fontSize:10,fontWeight:700,color:C.soft,whiteSpace:'nowrap'}}>Tap a house!</div>
+          </div>
+        </div>
+
+        {/* Two houses */}
+        <div style={{flex:1,padding:'10px 10px 0',display:'flex',gap:12,justifyContent:'center',alignItems:'flex-end'}}>
+          <button onClick={()=>setDropped('even')} style={{flex:1,background:'none',border:'none',display:'flex',justifyContent:'center',maxWidth:170}}>
+            <House type="even" size={130} glow={true}/>
+          </button>
+          <button onClick={()=>setDropped('odd')} style={{flex:1,background:'none',border:'none',display:'flex',justifyContent:'center',maxWidth:170}}>
+            <House type="odd" size={130} glow={true}/>
+          </button>
+        </div>
+
+        {/* Pairing hint strip */}
+        <div style={{padding:'8px 14px 14px',display:'flex',gap:8,alignItems:'center'}}>
+          <div style={{display:'flex',gap:2}}>{Array.from({length:n}).map((_,i)=><div key={i} style={{width:10,height:10,borderRadius:'50%',background:i%2===0?C.sky:C.faint,border:`1.5px solid ${C.ink}`,boxShadow:i%2===0?`0 1px 0 ${C.skySh}`:'none'}}/>)}</div>
+          <div style={{fontSize:12,color:C.soft,fontWeight:600,flex:1}}>Pair up the dots: {Math.floor(n/2)} pairs, {n%2} left over</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════
+// 4 — DRAG STATE (card being dragged toward ODD)
+// ══════════════════════════════════════════════════════════════
+function DragState() {
+  return (
+    <div style={{position:'absolute',inset:0,background:'radial-gradient(ellipse 100% 50% at 50% 0%,#D6ECCE 0%,#E8F4E0 45%,#FFFDF7 100%)'}}>
+      <div style={{position:'absolute',bottom:0,left:0,right:0,height:80,background:'linear-gradient(0deg,#C4E5A8 0%,transparent 100%)'}}/>
+      <div style={{position:'relative',zIndex:1,height:'100%',display:'flex',flexDirection:'column'}}>
+        <HUD hearts={3} progress={3} total={5} color={C.sage}/>
+
+        <Bubble text="Good — drop it on a house! 🏠" mood="excited" color="sun" size={62}/>
+
+        {/* Dragging card — positioned over odd house */}
+        <div style={{display:'flex',justifyContent:'center',padding:'4px 0 4px',position:'relative'}}>
+          <div style={{position:'relative',left:60,zIndex:10}}>
+            <NumCard n={7} state="drag" large/>
+          </div>
+        </div>
+
+        {/* Two houses — ODD highlighted */}
+        <div style={{flex:1,padding:'8px 10px 0',display:'flex',gap:12,justifyContent:'center',alignItems:'flex-end'}}>
+          <div style={{flex:1,display:'flex',justifyContent:'center',maxWidth:170,opacity:.7}}>
+            <House type="even" size={130}/>
+          </div>
+          <div style={{flex:1,display:'flex',justifyContent:'center',maxWidth:170}}>
+            <House type="odd" size={130} glow={true}/>
+          </div>
+        </div>
+
+        {/* Dot pairing hint */}
+        <div style={{padding:'8px 14px 14px',display:'flex',gap:8,alignItems:'center'}}>
+          <div style={{display:'flex',gap:2}}>
+            {[0,1,2].map(i=><React.Fragment key={i}><div style={{width:10,height:10,borderRadius:'50%',background:C.coral,border:`1.5px solid ${C.ink}`}}/><div style={{width:10,height:10,borderRadius:'50%',background:C.coral,border:`1.5px solid ${C.ink}`}}/></React.Fragment>)}
+            <div style={{width:10,height:10,borderRadius:'50%',background:C.faint,border:`1.5px dashed ${C.ink}`,animation:'leftover-bounce 1s ease-in-out infinite',marginLeft:2}}/>
+          </div>
+          <div style={{fontSize:12,color:C.coralInk,fontWeight:700,flex:1}}>7 = 3 pairs + 1 leftover → ODD!</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════
+// 5 — CORRECT DROP (8 → EVEN house)
+// ══════════════════════════════════════════════════════════════
+function CorrectDrop() {
+  return (
+    <div style={{position:'absolute',inset:0,background:'radial-gradient(ellipse 100% 50% at 50% 0%,#C8E8B8 0%,#D6ECCE 40%,#EAF7E4 100%)'}}>
+      <Confetti count={20}/>
+      <Sparkle x="7%"  y="12%" s={12} d={0}/>
+      <Sparkle x="85%" y="9%"  s={10} d={.6}/>
+      <div style={{position:'absolute',bottom:0,left:0,right:0,height:80,background:'linear-gradient(0deg,#A8D5A2 0%,transparent 100%)'}}/>
+      <div style={{position:'relative',zIndex:1,height:'100%',display:'flex',flexDirection:'column'}}>
+        <HUD hearts={3} progress={3} total={5} color={C.correct}/>
+
+        <Bubble text="YES! 8 goes in the EVEN house! 🎉" mood="celebrate" color="sage" size={72}/>
+
+        {/* Float-up */}
+        <div style={{position:'relative',height:44,overflow:'visible'}}>
+          {['+1 ⭐','+3 🪙'].map((t,i)=>(
+            <div key={t} style={{position:'absolute',left:`${30+i*28}%`,top:0,fontFamily:'Fredoka',fontWeight:700,fontSize:18,color:C.sunInk,textShadow:'0 2px 0 rgba(46,90,58,0.2)',animation:`float-up 1.4s ease-out ${i*.18}s both`}}>{t}</div>
+          ))}
+        </div>
+
+        {/* Houses — even one with number inside */}
+        <div style={{flex:1,padding:'8px 10px 0',display:'flex',gap:12,justifyContent:'center',alignItems:'flex-end'}}>
+          <div style={{flex:1,display:'flex',justifyContent:'center',maxWidth:170}}>
+            <House type="even" size={130} state="correct" numInside={8}/>
+          </div>
+          <div style={{flex:1,display:'flex',justifyContent:'center',maxWidth:170,opacity:.6}}>
+            <House type="odd" size={130}/>
+          </div>
+        </div>
+
+        {/* Correct strip */}
+        <div style={{margin:'8px 14px 18px',padding:'13px 16px',borderRadius:22,background:'linear-gradient(135deg,#C4EBB9 0%,#7FC089 100%)',border:`3px solid ${C.ink}`,boxShadow:`0 5px 0 ${C.sageSh}`,display:'flex',alignItems:'center',gap:12,animation:'slide-up .3s both'}}>
+          <div style={{fontSize:28}}>💙</div>
+          <div style={{flex:1}}>
+            <div style={{fontSize:16,fontWeight:700,color:'#1F4A28'}}>8 is EVEN!</div>
+            <div style={{fontSize:12,color:C.sageInk,marginTop:1}}>4 perfect pairs — no leftovers ✓</div>
+          </div>
+          <button style={{padding:'10px 18px',borderRadius:16,background:C.sun,border:`2.5px solid ${C.ink}`,boxShadow:`0 4px 0 ${C.sunSh}`,fontFamily:'Fredoka',fontWeight:700,fontSize:16,color:C.sunInk}}>Next →</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════
+// 6 — WRONG DROP (8 → ODD house — wrong)
+// ══════════════════════════════════════════════════════════════
+function WrongDrop() {
+  return (
+    <div style={{position:'absolute',inset:0,background:'radial-gradient(ellipse 100% 50% at 50% 0%,#FFE0D4 0%,#FFE8DF 40%,#FFF4F0 100%)'}}>
+      <div style={{position:'absolute',bottom:0,left:0,right:0,height:80,background:'linear-gradient(0deg,#F5C8B8 0%,transparent 100%)'}}/>
+      <div style={{position:'relative',zIndex:1,height:'100%',display:'flex',flexDirection:'column'}}>
+        <HUD hearts={2} progress={2} total={5} color={C.coral}/>
+
+        <Bubble text="Oops! 8 bounced out! Can you try again? 🤔" mood="worry" color="coral" size={68}/>
+
+        {/* Houses — odd one shaking */}
+        <div style={{flex:1,padding:'12px 10px 0',display:'flex',gap:12,justifyContent:'center',alignItems:'flex-end'}}>
+          <div style={{flex:1,display:'flex',justifyContent:'center',maxWidth:170}}>
+            <House type="even" size={130} glow={true}/>
+          </div>
+          <div style={{flex:1,display:'flex',justifyContent:'center',maxWidth:170}}>
+            <House type="odd" size={130} state="wrong"/>
+          </div>
+        </div>
+
+        {/* Wrong feedback */}
+        <div style={{margin:'8px 14px',padding:'12px 14px',borderRadius:20,background:C.wrongBg,border:`2.5px solid ${C.wrong}`,boxShadow:`0 4px 0 ${C.wrongSh}`,animation:'shake .5s both'}}>
+          <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:8}}>
+            <span style={{fontSize:22}}>💪</span>
+            <div style={{fontSize:14,fontWeight:700,color:C.coralInk}}>8 isn't ODD — try again!</div>
+            <div style={{marginLeft:'auto',display:'flex',gap:1}}>
+              {[0,1,2].map(i=><span key={i} style={{fontSize:15,opacity:i<2?1:.25}}>❤️</span>)}
+            </div>
+          </div>
+          {/* Hint */}
+          <div style={{display:'flex',gap:3,flexWrap:'wrap'}}>
+            {[0,1,2,3].map(i=>(
+              <div key={i} style={{display:'flex',gap:2,padding:'4px 6px',borderRadius:8,background:'rgba(255,255,255,0.7)',border:`1.5px solid ${C.sky}`}}>
+                <span style={{fontSize:16}}>⭐</span><span style={{fontSize:16}}>⭐</span>
+              </div>
+            ))}
+          </div>
+          <div style={{fontSize:12,color:C.soft,marginTop:6}}>4 perfect pairs — that means EVEN! 💙</div>
+        </div>
+
+        <div style={{padding:'0 14px 18px'}}>
+          <button style={{width:'100%',height:52,borderRadius:20,background:C.sky,border:`3px solid ${C.ink}`,boxShadow:`0 5px 0 ${C.skySh}`,fontFamily:'Fredoka',fontWeight:700,fontSize:18,color:'#fff'}}>
+            Try Even House →
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════
+// 7 — ROUND COMPLETE
+// ══════════════════════════════════════════════════════════════
+function RoundComplete() {
+  const sorted=[{n:4,type:'even'},{n:7,type:'odd'},{n:8,type:'even'},{n:3,type:'odd'},{n:6,type:'even'}];
+  return (
+    <div style={{position:'absolute',inset:0,background:'radial-gradient(ellipse 100% 50% at 50% 0%,#C8E8B8 0%,#D6ECCE 40%,#EAF7E4 100%)'}}>
+      <Confetti count={28}/>
+      <Sparkle x="7%"  y="12%" s={12} d={0}/>
+      <Sparkle x="85%" y="9%"  s={10} d={.6}/>
+      <Sparkle x="50%" y="15%" s={8}  d={1.2}/>
+      <div style={{position:'relative',zIndex:1,height:'100%',display:'flex',flexDirection:'column'}}>
+        <HUD hearts={3} progress={5} total={5} color={C.correct}/>
+
+        <Bubble text="WOW! You sorted all 5 numbers! 🎉🎉🎉" mood="celebrate" color="sage" size={76}/>
+
+        {/* Stats */}
+        <div style={{padding:'4px 14px 8px',display:'flex',gap:10}}>
+          {[['5/5','Correct ✓',C.correct,C.correctBg],['⭐ 3','Stars',C.sunInk,'#FFF4DE'],['+15','Coins 🪙',C.sunInk,'#FFF4DE']].map(([v,l,color,bg])=>(
+            <div key={l} style={{flex:1,padding:'10px 8px',borderRadius:18,background:bg,border:`2px solid rgba(46,90,58,.12)`,textAlign:'center',animation:'pop-in .4s both'}}>
+              <div style={{fontFamily:'Fredoka',fontWeight:700,fontSize:22,color,lineHeight:1}}>{v}</div>
+              <div style={{fontSize:11,color:C.soft,fontWeight:600,marginTop:2}}>{l}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Sorted summary */}
+        <div style={{flex:1,padding:'0 14px',display:'flex',gap:12,justifyContent:'center'}}>
+          {['even','odd'].map(type=>(
+            <div key={type} style={{flex:1,borderRadius:20,background:type==='even'?C.evenBg:C.oddBg,border:`2.5px solid ${type==='even'?C.even:C.odd}`,padding:'10px 10px 8px'}}>
+              <div style={{fontFamily:'Fredoka',fontWeight:700,fontSize:15,color:type==='even'?C.evenInk:C.oddInk,marginBottom:8,textAlign:'center'}}>
+                {type==='even'?'💙 EVEN':'🧡 ODD'}
+              </div>
+              <div style={{display:'flex',flexWrap:'wrap',gap:6,justifyContent:'center'}}>
+                {sorted.filter(s=>s.type===type).map((s,i)=>(
+                  <div key={s.n} style={{width:40,height:46,borderRadius:13,background:'#fff',border:`2.5px solid ${type==='even'?C.even:C.odd}`,display:'flex',alignItems:'center',justifyContent:'center',fontFamily:'Fredoka',fontWeight:700,fontSize:22,color:C.ink,boxShadow:`0 3px 0 ${type==='even'?C.skySh:C.coralSh}`,animation:`pop-in .4s cubic-bezier(.34,1.56,.64,1) ${i*.1}s both`}}>
+                    {s.n}
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* CTA */}
+        <div style={{margin:'12px 14px 20px',padding:'14px 18px',borderRadius:22,background:'linear-gradient(135deg,#C4EBB9 0%,#7FC089 100%)',border:`3px solid ${C.ink}`,boxShadow:`0 5px 0 ${C.sageSh}`,display:'flex',alignItems:'center',gap:12,animation:'slide-up .3s both'}}>
+          <div style={{fontSize:34}}>🏠🏠</div>
+          <div style={{flex:1}}>
+            <div style={{fontSize:17,fontWeight:700,color:'#1F4A28'}}>Perfect sorting!</div>
+            <div style={{fontSize:12,color:C.sageInk,marginTop:1}}>You've mastered even and odd! 🌟</div>
+          </div>
+          <button style={{padding:'12px 20px',borderRadius:18,background:C.sun,border:`3px solid ${C.ink}`,boxShadow:`0 4px 0 ${C.sunSh}`,fontFamily:'Fredoka',fontWeight:700,fontSize:17,color:C.sunInk}}>Finish! 🎉</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── CANVAS ──────────────────────────────────────────────────
+function App() {
+  return (
+    <DesignCanvas title="Bắp — Even or Odd House: Full UI System">
+      <DCSection id="s1" title="Teaching Phase (Mode 1 — Visual Pairing)">
+        <DCArtboard id="t1" label="📚 Intro — Pairing Concept" width={375} height={720}>
+          <IntroTeaching/>
+        </DCArtboard>
+        <DCArtboard id="t2" label="🔍 Visual Explanation (6 vs 7)" width={375} height={720}>
+          <VisualExplanation/>
+        </DCArtboard>
+      </DCSection>
+      <DCSection id="s2" title="Sorting Game (Mode 2 — Houses)">
+        <DCArtboard id="g1" label="🏠 Default — Ready to Sort" width={375} height={720}>
+          <SortingDefault/>
+        </DCArtboard>
+        <DCArtboard id="g2" label="✋ Drag State (7 → Odd)" width={375} height={720}>
+          <DragState/>
+        </DCArtboard>
+        <DCArtboard id="g3" label="✅ Correct Drop (8 → Even)" width={375} height={720}>
+          <CorrectDrop/>
+        </DCArtboard>
+        <DCArtboard id="g4" label="❌ Wrong Drop (8 → Odd)" width={375} height={720}>
+          <WrongDrop/>
+        </DCArtboard>
+        <DCArtboard id="g5" label="🎉 Round Complete — All Sorted" width={375} height={720}>
+          <RoundComplete/>
+        </DCArtboard>
+      </DCSection>
+    </DesignCanvas>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>

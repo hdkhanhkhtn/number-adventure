@@ -1,0 +1,598 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bắp — Home Screen Designs</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; font-family: 'Fredoka', ui-rounded, sans-serif; background: #E8E0D3; -webkit-font-smoothing: antialiased; overflow: hidden; }
+button { cursor: pointer; font-family: inherit; border: none; background: none; }
+@keyframes bobble { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
+@keyframes pop-in { 0%{transform:scale(0.6);opacity:0} 60%{transform:scale(1.08);opacity:1} 100%{transform:scale(1)} }
+@keyframes pulse-soft { 0%,100%{transform:scale(1)} 50%{transform:scale(1.04)} }
+@keyframes sparkle { 0%,100%{transform:scale(.6) rotate(0);opacity:.3} 50%{transform:scale(1.2) rotate(180deg);opacity:1} }
+@keyframes shimmer { 0%{opacity:.6} 50%{opacity:1} 100%{opacity:.6} }
+@keyframes badge-pop { 0%{transform:scale(0) rotate(-20deg)} 70%{transform:scale(1.15) rotate(4deg)} 100%{transform:scale(1) rotate(0)} }
+@keyframes glow-pulse { 0%,100%{box-shadow:0 0 0 0 rgba(255,211,110,0.5)} 50%{box-shadow:0 0 0 12px rgba(255,211,110,0)} }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script type="text/babel" src="design-canvas.jsx"></script>
+<script type="text/babel">
+const { useState, useEffect, useMemo, useRef } = React;
+
+// ─── TOKENS ────────────────────────────────────────────────
+const T = {
+  ink: '#2D3A2E', inkSoft: '#6B7A6C', inkFaint: '#A9B4A8',
+  sun: '#FFD36E', sunSh: '#C79528', sunInk: '#5E3A00',
+  sage: '#7FC089', sageSh: '#4D8B58', sageInk: '#1F4A28',
+  sky: '#B8DEEF', skySh: '#7DB0C8', skyInk: '#1F4A61',
+  coral: '#FFA48C', coralSh: '#D67560', coralInk: '#7A2B15',
+  lav: '#D9C7F0', lavSh: '#A58AD0', lavInk: '#3D256D',
+  berry: '#E6779E', berrySh: '#B44B7A',
+  cream: '#FFF8EC', cream2: '#FFF4DE',
+  correct: '#5FB36A', correctSh: '#3D8A4A',
+};
+
+// ─── MASCOT ─────────────────────────────────────────────────
+function BapMascot({ size=80, mood='happy', color='sun' }) {
+  const body={sun:'#FFD36E',sage:'#A8D5A2',coral:'#FFA48C',lavender:'#D9C7F0',sky:'#B8DEEF'}[color]||'#FFD36E';
+  const dark={sun:'#E8B23F',sage:'#7FB983',coral:'#E2815E',lavender:'#B39DD1',sky:'#88BED4'}[color]||'#E8B23F';
+  const eye={
+    happy:<><ellipse cx="0" cy="0" rx="6" ry="7" fill="#2D3A2E"/><ellipse cx="-1.5" cy="-2" rx="2" ry="2.5" fill="#fff"/></>,
+    wink:<path d="M -6 0 Q 0 -4 6 0" stroke="#2D3A2E" strokeWidth="3" fill="none" strokeLinecap="round"/>,
+    celebrate:<path d="M -6 2 Q 0 -6 6 2" stroke="#2D3A2E" strokeWidth="3" fill="none" strokeLinecap="round"/>,
+    sleep:<path d="M -6 0 Q 0 4 6 0" stroke="#2D3A2E" strokeWidth="3" fill="none" strokeLinecap="round"/>,
+    excited:<><ellipse cx="0" cy="0" rx="7" ry="8" fill="#2D3A2E"/><ellipse cx="-2" cy="-2.5" rx="2.5" ry="3" fill="#fff"/></>,
+  };
+  const mouth={
+    happy:<path d="M 35 85 Q 50 98 65 85" stroke="#2D3A2E" strokeWidth="3.5" fill="#C14A2A" strokeLinecap="round"/>,
+    wink:<path d="M 40 85 Q 50 92 60 85" stroke="#2D3A2E" strokeWidth="3.5" fill="#C14A2A" strokeLinecap="round"/>,
+    celebrate:<path d="M 32 82 Q 50 105 68 82 Q 50 95 32 82" fill="#C14A2A" stroke="#2D3A2E" strokeWidth="3"/>,
+    sleep:<path d="M 42 88 Q 50 92 58 88" stroke="#2D3A2E" strokeWidth="3" fill="none" strokeLinecap="round"/>,
+    excited:<path d="M 30 80 Q 50 108 70 80 Q 50 96 30 80" fill="#C14A2A" stroke="#2D3A2E" strokeWidth="3"/>,
+  };
+  return (
+    <svg viewBox="0 0 120 140" width={size} height={size*140/120} style={{display:'block'}}>
+      <g><ellipse cx="38" cy="18" rx="14" ry="20" fill="#7FB983" transform="rotate(-30 38 18)"/>
+      <ellipse cx="38" cy="18" rx="7" ry="16" fill="#A8D5A2" transform="rotate(-30 38 18)"/>
+      <ellipse cx="76" cy="14" rx="16" ry="22" fill="#5FA36A" transform="rotate(25 76 14)"/>
+      <ellipse cx="76" cy="14" rx="8" ry="18" fill="#A8D5A2" transform="rotate(25 76 14)"/></g>
+      <ellipse cx="60" cy="126" rx="38" ry="6" fill="rgba(46,90,58,0.18)"/>
+      <path d="M 60 28 C 92 28 100 56 100 82 C 100 110 82 126 60 126 C 38 126 20 110 20 82 C 20 56 28 28 60 28 Z"
+        fill={body} stroke="#2D3A2E" strokeWidth="3.5"/>
+      <g opacity="0.35" stroke={dark} strokeWidth="2" fill="none" strokeLinecap="round">
+        <path d="M 30 62 Q 60 56 90 62"/><path d="M 28 80 Q 60 74 92 80"/><path d="M 30 98 Q 60 104 90 98"/>
+      </g>
+      <circle cx="30" cy="82" r="7" fill="#FFA48C" opacity="0.7"/>
+      <circle cx="90" cy="82" r="7" fill="#FFA48C" opacity="0.7"/>
+      <g transform="translate(42 66)">{eye[mood]||eye.happy}</g>
+      <g transform="translate(78 66)">{eye[mood]||eye.happy}</g>
+      {mouth[mood]||mouth.happy}
+    </svg>
+  );
+}
+
+// ─── SHARED UI ──────────────────────────────────────────────
+function BigBtn({ children, color='sage', icon, onClick, style={} }) {
+  const c={sage:{bg:T.sage,sh:T.sageSh,ink:T.sageInk},sun:{bg:T.sun,sh:T.sunSh,ink:T.sunInk},coral:{bg:T.coral,sh:T.coralSh,ink:T.coralInk},sky:{bg:T.sky,sh:T.skySh,ink:T.skyInk}}[color];
+  return (
+    <button onClick={onClick} style={{
+      height:64,padding:'0 24px',borderRadius:22,
+      background:c.bg,color:c.ink,
+      fontFamily:'Fredoka',fontWeight:700,fontSize:21,
+      boxShadow:`0 5px 0 ${c.sh}, 0 10px 20px rgba(46,90,58,0.14)`,
+      border:'3px solid #2D3A2E',
+      display:'inline-flex',alignItems:'center',justifyContent:'center',gap:8,
+      ...style,
+    }}>
+      {icon && <span style={{fontSize:22}}>{icon}</span>}{children}
+    </button>
+  );
+}
+function IconBtn({ children, color='cream', size=44, style={} }) {
+  const c={cream:{bg:T.cream,sh:'#D9C38A'},sun:{bg:T.sun,sh:T.sunSh},sage:{bg:'#C4E5BE',sh:T.sageSh}}[color]||{bg:T.cream,sh:'#D9C38A'};
+  return (
+    <button style={{
+      width:size,height:size,borderRadius:'50%',
+      background:c.bg,boxShadow:`0 3px 0 ${c.sh}`,
+      border:'3px solid #2D3A2E',
+      display:'flex',alignItems:'center',justifyContent:'center',
+      fontSize:size*.44,...style,
+    }}>{children}</button>
+  );
+}
+function Sparkle({ x, y, size=10, delay=0 }) {
+  return (
+    <div style={{position:'absolute',left:x,top:y,width:size,height:size,pointerEvents:'none',animation:`sparkle ${1.8+delay}s ease-in-out ${delay}s infinite`}}>
+      <svg viewBox="0 0 20 20" width="100%" height="100%">
+        <path d="M10 0 L12 8 L20 10 L12 12 L10 20 L8 12 L0 10 L8 8 Z" fill="#FFD36E"/>
+      </svg>
+    </div>
+  );
+}
+function ProgressBar({ value, max=1, color=T.correct, h=12 }) {
+  const pct=Math.max(0,Math.min(1,value/max))*100;
+  return (
+    <div style={{height:h,borderRadius:h,background:'rgba(46,90,58,0.1)',border:'2px solid #2D3A2E',overflow:'hidden'}}>
+      <div style={{height:'100%',width:`${pct}%`,borderRadius:h,background:color,transition:'width .5s cubic-bezier(.34,1.56,.64,1)',boxShadow:'inset 0 -2px 0 rgba(0,0,0,0.1)'}}/>
+    </div>
+  );
+}
+
+// ─── BOTTOM NAV ─────────────────────────────────────────────
+function BottomNav({ active='home' }) {
+  const items = [
+    { id:'home',   icon:'🏠', label:'Home'    },
+    { id:'map',    icon:'🗺️', label:'Worlds'  },
+    { id:'stickers',icon:'⭐',label:'Stars'   },
+    { id:'path',   icon:'🛤️', label:'Journey' },
+  ];
+  return (
+    <div style={{
+      position:'absolute',bottom:0,left:0,right:0,
+      height:72,background:'#fff',
+      borderTop:'2px solid rgba(46,90,58,0.1)',
+      display:'flex',alignItems:'center',
+      paddingBottom:8,
+    }}>
+      {items.map(it=>(
+        <button key={it.id} style={{
+          flex:1,display:'flex',flexDirection:'column',alignItems:'center',
+          justifyContent:'center',gap:3,height:'100%',
+          color: active===it.id ? T.sageInk : T.inkFaint,
+        }}>
+          <div style={{
+            fontSize:22,lineHeight:1,
+            filter: active===it.id ? 'drop-shadow(0 2px 0 rgba(79,139,88,0.3))' : 'none',
+          }}>{it.icon}</div>
+          <div style={{fontSize:10,fontWeight:700,letterSpacing:.3}}>{it.label}</div>
+          {active===it.id && <div style={{position:'absolute',bottom:6,width:20,height:3,borderRadius:2,background:T.sage}}/>}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+// ─── PHONE SHELL ────────────────────────────────────────────
+function Phone({ children, label, desc, w=375, h=780 }) {
+  return (
+    <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:12}}>
+      <div style={{fontSize:13,fontWeight:700,color:'#6B7A6C',letterSpacing:.5,textTransform:'uppercase'}}>{label}</div>
+      <div style={{
+        width:w,height:h,borderRadius:44,overflow:'hidden',
+        background:'#FFFDF7',
+        boxShadow:'0 0 0 3px #2D3A2E,0 8px 0 3px rgba(46,90,58,0.25),0 24px 48px rgba(46,90,58,0.18)',
+        position:'relative',flexShrink:0,
+      }}>
+        {/* Status bar */}
+        <div style={{position:'absolute',top:0,left:0,right:0,height:48,background:'rgba(255,253,247,0.9)',zIndex:50,display:'flex',alignItems:'center',justifyContent:'space-between',padding:'8px 20px 0'}}>
+          <div style={{fontSize:13,fontWeight:700,color:T.ink}}>9:41</div>
+          <div style={{width:100,height:26,borderRadius:20,background:'#2D3A2E'}}/>
+          <div style={{display:'flex',gap:5,alignItems:'center'}}>
+            <div style={{fontSize:11,fontWeight:700,color:T.ink}}>●●●</div>
+          </div>
+        </div>
+        {children}
+      </div>
+      {desc && <div style={{maxWidth:w,textAlign:'center',fontSize:13,color:'#6B7A6C',lineHeight:1.5,padding:'0 8px'}}>{desc}</div>}
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════
+// STATE 1 — RETURNING CHILD (normal play state)
+// ══════════════════════════════════════════════════════════════
+function HomeReturning() {
+  const name = 'Bắp';
+  const streak = 3;
+  return (
+    <div style={{position:'absolute',inset:0,background:'radial-gradient(ellipse 100% 60% at 50% 0%,#FFF4DE 0%,#FFF8EC 50%,#FFFDF7 100%)'}}>
+      <Sparkle x="5%" y="15%" size={12} delay={0}/>
+      <Sparkle x="88%" y="22%" size={9}  delay={0.5}/>
+      <Sparkle x="75%" y="10%" size={7}  delay={1.1}/>
+
+      <div style={{position:'absolute',inset:0,padding:'52px 20px 80px',display:'flex',flexDirection:'column',gap:14,overflowY:'auto'}}>
+
+        {/* ── Top bar ── */}
+        <div style={{display:'flex',alignItems:'center',gap:10}}>
+          <div style={{width:52,height:52,borderRadius:'50%',background:T.cream,border:`3px solid ${T.ink}`,display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 3px 0 rgba(46,90,58,0.2)',overflow:'hidden'}}>
+            <BapMascot size={44} color="sun" mood="happy"/>
+          </div>
+          <div style={{flex:1}}>
+            <div style={{fontSize:12,color:T.inkSoft,fontWeight:600}}>Good morning,</div>
+            <div style={{fontSize:20,fontWeight:700,color:T.ink}}>{name}! 👋</div>
+          </div>
+          {/* Streak */}
+          <div style={{display:'flex',alignItems:'center',gap:4,padding:'7px 12px',borderRadius:999,background:'#FFE6A8',border:`2px solid ${T.ink}`,boxShadow:'0 3px 0 #C89220',fontWeight:700,color:T.sunInk,fontSize:15}}>
+            🔥 {streak}
+          </div>
+          <IconBtn color="cream" size={44} style={{fontSize:18}}>👤</IconBtn>
+        </div>
+
+        {/* ── Play Now card ── */}
+        <div style={{background:'linear-gradient(160deg,#B9E2B2 0%,#7FC089 100%)',borderRadius:28,border:`3px solid ${T.ink}`,boxShadow:'0 6px 0 rgba(46,90,58,0.25),0 16px 28px rgba(46,90,58,0.14)',padding:'18px 18px 20px',position:'relative',overflow:'hidden'}}>
+          <div style={{position:'absolute',right:-8,bottom:-10,opacity:.18,fontSize:130,lineHeight:1}}>🌳</div>
+          <div style={{display:'inline-flex',alignItems:'center',gap:6,padding:'5px 12px',borderRadius:999,background:'rgba(255,255,255,0.75)',border:'1.5px solid rgba(46,90,58,0.2)',fontSize:11,fontWeight:700,color:T.sageInk,letterSpacing:.5,marginBottom:10}}>
+            ☀️ TODAY'S ADVENTURE
+          </div>
+          <div style={{fontSize:22,fontWeight:700,color:'#1F4A28',lineHeight:1.1}}>Number Forest</div>
+          <div style={{fontSize:13,color:'#2F6A3C',marginTop:3,marginBottom:16,fontWeight:600}}>Level 5 · Hear the number</div>
+          {/* Progress */}
+          <div style={{marginBottom:16}}>
+            <div style={{display:'flex',justifyContent:'space-between',fontSize:11,fontWeight:700,color:'#2F6A3C',marginBottom:5}}>
+              <span>Today's goal</span><span>2 of 3 done ⭐⭐</span>
+            </div>
+            <ProgressBar value={2} max={3} color="#fff" h={10}/>
+          </div>
+          <div style={{display:'flex',alignItems:'center',gap:12}}>
+            <BigBtn color="sun" icon="▶" style={{flex:1,height:58,fontSize:20}}>Play Now</BigBtn>
+            <div style={{animation:'bobble 2.4s ease-in-out infinite'}}>
+              <BapMascot size={80} color="sun" mood="celebrate"/>
+            </div>
+          </div>
+        </div>
+
+        {/* ── 2-col shortcuts ── */}
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
+          {/* World Map */}
+          <button style={{padding:'16px 14px',borderRadius:24,background:T.sky,border:`3px solid ${T.ink}`,boxShadow:`0 5px 0 ${T.skySh},0 10px 16px rgba(46,90,58,0.1)`,textAlign:'left',position:'relative',overflow:'hidden',height:110}}>
+            <div style={{position:'absolute',right:6,top:4,fontSize:44,opacity:.85}}>🗺️</div>
+            <div style={{fontSize:11,fontWeight:700,color:T.skyInk,opacity:.75,marginBottom:4}}>3 WORLDS</div>
+            <div style={{fontSize:17,fontWeight:700,color:T.skyInk,lineHeight:1.1}}>World<br/>Map</div>
+          </button>
+          {/* Stickers */}
+          <button style={{padding:'16px 14px',borderRadius:24,background:T.lav,border:`3px solid ${T.ink}`,boxShadow:`0 5px 0 ${T.lavSh},0 10px 16px rgba(46,90,58,0.1)`,textAlign:'left',position:'relative',overflow:'hidden',height:110}}>
+            <div style={{position:'absolute',right:6,top:4,fontSize:44,opacity:.85}}>🌟</div>
+            <div style={{fontSize:11,fontWeight:700,color:T.lavInk,opacity:.75,marginBottom:4}}>12 / 40</div>
+            <div style={{fontSize:17,fontWeight:700,color:T.lavInk,lineHeight:1.1}}>My<br/>Stickers</div>
+          </button>
+        </div>
+
+        {/* ── Weekly dots ── */}
+        <div style={{padding:'12px 14px',borderRadius:20,background:'rgba(255,255,255,0.7)',border:'1.5px solid rgba(46,90,58,0.1)'}}>
+          <div style={{display:'flex',justifyContent:'space-between',fontSize:12,color:T.inkSoft,fontWeight:600,marginBottom:8}}>
+            <span>This week</span><span style={{color:T.correct}}>4 / 5 days ✓</span>
+          </div>
+          <div style={{display:'flex',gap:6}}>
+            {['M','T','W','T','F','S','S'].map((d,i)=>(
+              <div key={i} style={{flex:1,textAlign:'center'}}>
+                <div style={{width:'100%',paddingBottom:'100%',borderRadius:10,background:i<4?T.sun:'#F0EADD',border:`2px solid ${i<4?T.sunSh:'rgba(46,90,58,0.12)'}`,position:'relative',marginBottom:3}}>
+                  {i<4&&<div style={{position:'absolute',inset:0,display:'flex',alignItems:'center',justifyContent:'center',fontSize:13}}>⭐</div>}
+                </div>
+                <div style={{fontSize:9,color:T.inkFaint,fontWeight:700}}>{d}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+      </div>
+      <BottomNav active="home"/>
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════
+// STATE 2 — SESSION COMPLETE
+// ══════════════════════════════════════════════════════════════
+function HomeSessionDone() {
+  const name = 'Bắp';
+  return (
+    <div style={{position:'absolute',inset:0,background:'radial-gradient(ellipse 100% 60% at 50% 0%,#D6ECCE 0%,#E8F4E0 60%,#FFFDF7 100%)'}}>
+      <Sparkle x="10%" y="12%" size={14} delay={0}/>
+      <Sparkle x="80%" y="20%" size={10} delay={.6}/>
+      <Sparkle x="60%" y="8%"  size={8}  delay={1.2}/>
+      <div style={{position:'absolute',inset:0,padding:'52px 20px 80px',display:'flex',flexDirection:'column',gap:14,overflowY:'auto'}}>
+
+        {/* Top bar */}
+        <div style={{display:'flex',alignItems:'center',gap:10}}>
+          <div style={{width:52,height:52,borderRadius:'50%',background:T.cream,border:`3px solid ${T.ink}`,display:'flex',alignItems:'center',justifyContent:'center',overflow:'hidden'}}>
+            <BapMascot size={44} color="sage" mood="celebrate"/>
+          </div>
+          <div style={{flex:1}}>
+            <div style={{fontSize:12,color:T.inkSoft,fontWeight:600}}>You did it,</div>
+            <div style={{fontSize:20,fontWeight:700,color:T.ink}}>{name}! 🎉</div>
+          </div>
+          <div style={{display:'flex',alignItems:'center',gap:4,padding:'7px 12px',borderRadius:999,background:'#FFE6A8',border:`2px solid ${T.ink}`,boxShadow:'0 3px 0 #C89220',fontWeight:700,color:T.sunInk,fontSize:15}}>
+            🔥 4
+          </div>
+          <IconBtn color="cream" size={44} style={{fontSize:18}}>👤</IconBtn>
+        </div>
+
+        {/* Session done card */}
+        <div style={{background:'linear-gradient(160deg,#C4EBB9 0%,#7FC089 100%)',borderRadius:28,border:`3px solid ${T.ink}`,boxShadow:'0 6px 0 rgba(46,90,58,0.25)',padding:'20px 20px 22px',position:'relative',overflow:'hidden'}}>
+          <div style={{position:'absolute',right:12,top:12,fontSize:64,opacity:.25}}>✅</div>
+          <div style={{display:'inline-flex',alignItems:'center',gap:6,padding:'5px 12px',borderRadius:999,background:'rgba(255,255,255,0.8)',border:'1.5px solid rgba(46,90,58,0.2)',fontSize:11,fontWeight:700,color:T.sageInk,letterSpacing:.5,marginBottom:10}}>
+            🎯 SESSION COMPLETE
+          </div>
+          <div style={{fontSize:22,fontWeight:700,color:'#1F4A28',marginBottom:12}}>Great learning today!</div>
+          {/* Stats row */}
+          <div style={{display:'flex',gap:10,marginBottom:16}}>
+            {[['9','Questions'],['⭐⭐⭐','3 stars'],['🪙 15','Coins']].map(([v,l])=>(
+              <div key={l} style={{flex:1,padding:'10px 8px',borderRadius:16,background:'rgba(255,255,255,0.65)',border:'2px solid rgba(46,90,58,0.15)',textAlign:'center'}}>
+                <div style={{fontSize:v.includes('⭐')?18:22,fontWeight:700,color:T.ink,lineHeight:1}}>{v}</div>
+                <div style={{fontSize:10,color:T.inkSoft,fontWeight:600,marginTop:3}}>{l}</div>
+              </div>
+            ))}
+          </div>
+          <div style={{fontSize:13,color:'#2F6A3C',fontWeight:600,marginBottom:4}}>
+            Today's goal ✓ — full 15 min
+          </div>
+          <ProgressBar value={3} max={3} color="#fff" h={10}/>
+        </div>
+
+        {/* Come back tomorrow */}
+        <div style={{background:T.cream,borderRadius:22,border:`2px solid rgba(46,90,58,0.12)`,padding:'14px 16px',display:'flex',alignItems:'center',gap:14}}>
+          <div style={{animation:'bobble 2.4s ease-in-out infinite'}}>
+            <BapMascot size={72} color="sun" mood="sleep"/>
+          </div>
+          <div>
+            <div style={{fontSize:15,fontWeight:700,color:T.ink,marginBottom:2}}>See you tomorrow!</div>
+            <div style={{fontSize:13,color:T.inkSoft,lineHeight:1.4}}>Come back to keep your 🔥 4-day streak</div>
+          </div>
+        </div>
+
+        {/* 2-col explore */}
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
+          <button style={{padding:'14px 12px',borderRadius:22,background:T.lav,border:`3px solid ${T.ink}`,boxShadow:`0 4px 0 ${T.lavSh}`,textAlign:'left',height:100,position:'relative',overflow:'hidden'}}>
+            <div style={{position:'absolute',right:6,top:4,fontSize:40,opacity:.8}}>🌟</div>
+            <div style={{fontSize:11,fontWeight:700,color:T.lavInk,opacity:.75,marginBottom:3}}>12 / 40</div>
+            <div style={{fontSize:16,fontWeight:700,color:T.lavInk}}>Sticker Book</div>
+          </button>
+          <button style={{padding:'14px 12px',borderRadius:22,background:T.sky,border:`3px solid ${T.ink}`,boxShadow:`0 4px 0 ${T.skySh}`,textAlign:'left',height:100,position:'relative',overflow:'hidden'}}>
+            <div style={{position:'absolute',right:6,top:4,fontSize:40,opacity:.8}}>🗺️</div>
+            <div style={{fontSize:11,fontWeight:700,color:T.skyInk,opacity:.75,marginBottom:3}}>5 WORLDS</div>
+            <div style={{fontSize:16,fontWeight:700,color:T.skyInk}}>Explore</div>
+          </button>
+        </div>
+      </div>
+      <BottomNav active="home"/>
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════
+// STATE 3 — NEW STICKER UNLOCKED
+// ══════════════════════════════════════════════════════════════
+function HomeStickerUnlocked() {
+  const [dismissed, setDismissed] = useState(false);
+  const name = 'Bắp';
+  return (
+    <div style={{position:'absolute',inset:0,background:'radial-gradient(ellipse 100% 60% at 50% 0%,#F0EAF8 0%,#F7F3FC 50%,#FFFDF7 100%)'}}>
+      <Sparkle x="15%" y="10%" size={13} delay={0}/>
+      <Sparkle x="82%" y="16%" size={10} delay={.7}/>
+      <div style={{position:'absolute',inset:0,padding:'52px 20px 80px',display:'flex',flexDirection:'column',gap:14,overflowY:'auto'}}>
+
+        {/* Top bar */}
+        <div style={{display:'flex',alignItems:'center',gap:10}}>
+          <div style={{width:52,height:52,borderRadius:'50%',background:T.cream,border:`3px solid ${T.ink}`,display:'flex',alignItems:'center',justifyContent:'center',overflow:'hidden'}}>
+            <BapMascot size={44} color="lavender" mood="excited"/>
+          </div>
+          <div style={{flex:1}}>
+            <div style={{fontSize:12,color:T.inkSoft,fontWeight:600}}>Hi,</div>
+            <div style={{fontSize:20,fontWeight:700,color:T.ink}}>{name}!</div>
+          </div>
+          <div style={{display:'flex',alignItems:'center',gap:4,padding:'7px 12px',borderRadius:999,background:'#FFE6A8',border:`2px solid ${T.ink}`,boxShadow:'0 3px 0 #C89220',fontWeight:700,color:T.sunInk,fontSize:15}}>
+            🔥 3
+          </div>
+          <IconBtn color="cream" size={44} style={{fontSize:18}}>👤</IconBtn>
+        </div>
+
+        {/* NEW STICKER banner */}
+        {!dismissed && (
+          <div style={{
+            background:'linear-gradient(135deg,#E3D2F4 0%,#C5AAE8 100%)',
+            borderRadius:28,border:`3px solid ${T.ink}`,
+            boxShadow:'0 6px 0 rgba(100,60,160,0.25)',
+            padding:'18px 18px 20px',position:'relative',overflow:'hidden',
+            animation:'badge-pop .45s cubic-bezier(.34,1.56,.64,1) both',
+          }}>
+            <button onClick={()=>setDismissed(true)} style={{position:'absolute',top:12,right:12,width:28,height:28,borderRadius:'50%',background:'rgba(255,255,255,0.6)',border:'2px solid rgba(46,90,58,0.2)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:14,color:T.inkSoft}}>✕</button>
+            <div style={{display:'inline-flex',alignItems:'center',gap:6,padding:'5px 12px',borderRadius:999,background:'rgba(255,255,255,0.75)',border:'1.5px solid rgba(100,60,160,0.25)',fontSize:11,fontWeight:700,color:T.lavInk,letterSpacing:.5,marginBottom:12}}>
+              ✨ NEW STICKER UNLOCKED!
+            </div>
+            <div style={{display:'flex',alignItems:'center',gap:16}}>
+              <div style={{width:80,height:80,borderRadius:22,background:'rgba(255,255,255,0.8)',border:`3px solid ${T.ink}`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:48,boxShadow:'0 4px 0 rgba(46,90,58,0.2)',animation:'glow-pulse 1.8s ease-in-out infinite',flexShrink:0}}>
+                🦋
+              </div>
+              <div>
+                <div style={{fontSize:22,fontWeight:700,color:T.ink,lineHeight:1.1}}>Butterfly!</div>
+                <div style={{fontSize:13,color:T.lavInk,marginTop:4,marginBottom:12,fontWeight:600}}>From Number Forest 🌳</div>
+                <BigBtn color="sage" style={{height:44,fontSize:16,padding:'0 16px'}}>View in Book →</BigBtn>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Play card */}
+        <div style={{background:'linear-gradient(160deg,#B9E2B2 0%,#7FC089 100%)',borderRadius:28,border:`3px solid ${T.ink}`,boxShadow:'0 6px 0 rgba(46,90,58,0.25)',padding:'16px 18px 18px',position:'relative',overflow:'hidden'}}>
+          <div style={{position:'absolute',right:-8,bottom:-10,opacity:.18,fontSize:120}}>🌳</div>
+          <div style={{fontSize:11,fontWeight:700,color:T.sageInk,letterSpacing:.5,marginBottom:6,opacity:.8}}>CONTINUE ADVENTURE</div>
+          <div style={{fontSize:20,fontWeight:700,color:'#1F4A28',marginBottom:4}}>Number Forest — Level 5</div>
+          <div style={{display:'flex',alignItems:'center',gap:10}}>
+            <BigBtn color="sun" icon="▶" style={{flex:1,height:52,fontSize:18}}>Play</BigBtn>
+            <div style={{animation:'bobble 2.4s ease-in-out infinite'}}>
+              <BapMascot size={72} color="lavender" mood="excited"/>
+            </div>
+          </div>
+        </div>
+
+        {/* Sticker book card — highlighted */}
+        <button style={{
+          padding:'16px 18px',borderRadius:24,
+          background:T.lav,border:`3px solid ${T.ink}`,
+          boxShadow:`0 5px 0 ${T.lavSh}`,
+          display:'flex',alignItems:'center',gap:14,
+          animation:'glow-pulse 2s ease-in-out infinite',
+        }}>
+          <div style={{fontSize:48}}>📓</div>
+          <div style={{textAlign:'left',flex:1}}>
+            <div style={{fontSize:17,fontWeight:700,color:T.lavInk}}>Sticker Book</div>
+            <div style={{fontSize:13,color:T.lavInk,opacity:.75,marginTop:2}}>13 of 40 collected — 1 new! ✨</div>
+            <div style={{marginTop:8}}><ProgressBar value={13} max={40} color="#8B5FD0" h={8}/></div>
+          </div>
+          <div style={{fontSize:24,color:T.lavInk}}>›</div>
+        </button>
+
+        {/* Weekly dots */}
+        <div style={{padding:'10px 14px',borderRadius:18,background:'rgba(255,255,255,0.65)',border:'1.5px solid rgba(46,90,58,0.1)'}}>
+          <div style={{display:'flex',gap:6}}>
+            {['M','T','W','T','F','S','S'].map((d,i)=>(
+              <div key={i} style={{flex:1,textAlign:'center'}}>
+                <div style={{width:'100%',paddingBottom:'100%',borderRadius:9,background:i<3?T.sun:'#F0EADD',border:`2px solid ${i<3?T.sunSh:'rgba(46,90,58,0.12)'}`,position:'relative',marginBottom:3}}>
+                  {i<3&&<div style={{position:'absolute',inset:0,display:'flex',alignItems:'center',justifyContent:'center',fontSize:12}}>⭐</div>}
+                </div>
+                <div style={{fontSize:9,color:T.inkFaint,fontWeight:700}}>{d}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+      </div>
+      <BottomNav active="home"/>
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════
+// STATE 4 — NEW WORLD UNLOCKED
+// ══════════════════════════════════════════════════════════════
+function HomeWorldUnlocked() {
+  const name = 'Bắp';
+  const [dismissed, setDismissed] = useState(false);
+  return (
+    <div style={{position:'absolute',inset:0,background:'radial-gradient(ellipse 100% 60% at 50% 0%,#D4EAF5 0%,#E7F3FA 60%,#FFFDF7 100%)'}}>
+      <Sparkle x="8%"  y="13%" size={13} delay={0}/>
+      <Sparkle x="78%" y="9%"  size={11} delay={.8}/>
+      <Sparkle x="90%" y="25%" size={8}  delay={.3}/>
+      <div style={{position:'absolute',inset:0,padding:'52px 20px 80px',display:'flex',flexDirection:'column',gap:14,overflowY:'auto'}}>
+
+        {/* Top bar */}
+        <div style={{display:'flex',alignItems:'center',gap:10}}>
+          <div style={{width:52,height:52,borderRadius:'50%',background:T.cream,border:`3px solid ${T.ink}`,display:'flex',alignItems:'center',justifyContent:'center',overflow:'hidden'}}>
+            <BapMascot size={44} color="sky" mood="celebrate"/>
+          </div>
+          <div style={{flex:1}}>
+            <div style={{fontSize:12,color:T.inkSoft,fontWeight:600}}>Wow,</div>
+            <div style={{fontSize:20,fontWeight:700,color:T.ink}}>{name}! 🏆</div>
+          </div>
+          <div style={{display:'flex',alignItems:'center',gap:4,padding:'7px 12px',borderRadius:999,background:'#FFE6A8',border:`2px solid ${T.ink}`,boxShadow:'0 3px 0 #C89220',fontWeight:700,color:T.sunInk,fontSize:15}}>
+            🔥 5
+          </div>
+          <IconBtn color="cream" size={44} style={{fontSize:18}}>👤</IconBtn>
+        </div>
+
+        {/* NEW WORLD banner */}
+        {!dismissed && (
+          <div style={{
+            background:'linear-gradient(135deg,#C4E5F5 0%,#8AC4DE 100%)',
+            borderRadius:28,border:`3px solid ${T.ink}`,
+            boxShadow:'0 6px 0 rgba(46,100,147,0.25)',
+            padding:'18px 18px 20px',position:'relative',overflow:'hidden',
+            animation:'badge-pop .45s cubic-bezier(.34,1.56,.64,1) both',
+          }}>
+            <button onClick={()=>setDismissed(true)} style={{position:'absolute',top:12,right:12,width:28,height:28,borderRadius:'50%',background:'rgba(255,255,255,0.6)',border:'2px solid rgba(46,90,58,0.2)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:14,color:T.inkSoft}}>✕</button>
+            <div style={{display:'inline-flex',alignItems:'center',gap:6,padding:'5px 12px',borderRadius:999,background:'rgba(255,255,255,0.75)',border:'1.5px solid rgba(46,100,147,0.25)',fontSize:11,fontWeight:700,color:T.skyInk,letterSpacing:.5,marginBottom:10}}>
+              🗺️ NEW WORLD UNLOCKED!
+            </div>
+            <div style={{display:'flex',alignItems:'center',gap:14}}>
+              <div style={{width:76,height:76,borderRadius:22,background:'rgba(255,255,255,0.8)',border:`3px solid ${T.ink}`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:44,boxShadow:'0 4px 0 rgba(46,90,58,0.2)',animation:'glow-pulse 1.6s ease-in-out infinite',flexShrink:0}}>
+                🏘️
+              </div>
+              <div>
+                <div style={{fontSize:22,fontWeight:700,color:T.ink,lineHeight:1.1}}>Tens Town</div>
+                <div style={{fontSize:13,color:T.skyInk,marginTop:3,marginBottom:10,fontWeight:600}}>Numbers 10–100 unlocked!</div>
+                <BigBtn color="sky" style={{height:44,fontSize:15,padding:'0 16px',color:T.skyInk}}>Explore World →</BigBtn>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Current world card */}
+        <div style={{background:'linear-gradient(160deg,#B9E2B2 0%,#7FC089 100%)',borderRadius:28,border:`3px solid ${T.ink}`,boxShadow:'0 5px 0 rgba(46,90,58,0.22)',padding:'16px 18px',position:'relative',overflow:'hidden'}}>
+          <div style={{position:'absolute',right:-8,bottom:-10,opacity:.18,fontSize:120}}>🌳</div>
+          <div style={{fontSize:11,fontWeight:700,color:T.sageInk,opacity:.8,letterSpacing:.5,marginBottom:4}}>
+            ✓ NUMBER FOREST — COMPLETE!
+          </div>
+          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:8}}>
+            <div style={{fontSize:19,fontWeight:700,color:'#1F4A28'}}>9/9 Levels</div>
+            <div style={{display:'flex',gap:2}}>
+              {[0,1,2].map(i=><span key={i} style={{fontSize:18}}>⭐</span>)}
+            </div>
+          </div>
+          <ProgressBar value={9} max={9} color="rgba(255,255,255,0.9)" h={10}/>
+        </div>
+
+        {/* New world CTA */}
+        <button style={{
+          padding:'18px 18px',borderRadius:28,
+          background:'linear-gradient(160deg,#C4E5F5 0%,#8AC4DE 100%)',
+          border:`3px solid ${T.ink}`,
+          boxShadow:`0 6px 0 ${T.skySh},0 14px 24px rgba(46,90,58,0.12)`,
+          textAlign:'left',position:'relative',overflow:'hidden',
+          animation:'glow-pulse 2s ease-in-out infinite',
+        }}>
+          <div style={{position:'absolute',right:-8,bottom:-8,opacity:.2,fontSize:120}}>🏘️</div>
+          <div style={{display:'inline-flex',gap:6,padding:'4px 10px',borderRadius:999,background:'rgba(255,255,255,0.8)',border:'1.5px solid rgba(46,90,58,0.2)',fontSize:10,fontWeight:700,color:T.skyInk,letterSpacing:.5,marginBottom:8}}>
+            ⚡ START NOW
+          </div>
+          <div style={{fontSize:21,fontWeight:700,color:T.skyInk,lineHeight:1.1,marginBottom:4}}>Tens Town</div>
+          <div style={{fontSize:13,color:T.skyInk,opacity:.8,marginBottom:14,fontWeight:600}}>10 · 20 · 30 · 100 · more…</div>
+          <BigBtn color="sun" icon="▶" style={{height:52,fontSize:18,padding:'0 22px'}}>Start World 2</BigBtn>
+        </button>
+
+        {/* World progress row */}
+        <div style={{padding:'10px 14px',borderRadius:18,background:'rgba(255,255,255,0.65)',border:'1.5px solid rgba(46,90,58,0.1)'}}>
+          <div style={{fontSize:12,color:T.inkSoft,fontWeight:600,marginBottom:8}}>All worlds</div>
+          <div style={{display:'flex',gap:8}}>
+            {[['🌳','W1','done'],['🏘️','W2','new'],['🌉','W3','lock'],['🍳','W4','lock'],['🏰','W5','lock']].map(([e,l,s])=>(
+              <div key={l} style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',gap:3}}>
+                <div style={{width:36,height:36,borderRadius:11,background:s==='done'?T.sun:s==='new'?T.sky:'#E8DFCE',border:`2px solid ${s==='lock'?'rgba(46,90,58,0.15)':T.ink}`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:18,boxShadow:s!=='lock'?'0 2px 0 rgba(46,90,58,0.18)':'none',animation:s==='new'?'pulse-soft 1.5s ease-in-out infinite':'none'}}>
+                  {s==='lock'?'🔒':e}
+                </div>
+                <div style={{fontSize:9,fontWeight:700,color:s==='lock'?T.inkFaint:T.inkSoft}}>{l}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+      </div>
+      <BottomNav active="home"/>
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════
+// CANVAS
+// ══════════════════════════════════════════════════════════════
+function App() {
+  return (
+    <DesignCanvas title="Bắp Number Adventure — Home Screen · 4 States">
+      <DCSection id="s1" title="Child Home Screen">
+        <DCArtboard id="a1" label="State 1 · Returning Child" width={375} height={780}>
+          <HomeReturning/>
+        </DCArtboard>
+        <DCArtboard id="a2" label="State 2 · Session Complete" width={375} height={780}>
+          <HomeSessionDone/>
+        </DCArtboard>
+        <DCArtboard id="a3" label="State 3 · New Sticker Unlocked" width={375} height={780}>
+          <HomeStickerUnlocked/>
+        </DCArtboard>
+        <DCArtboard id="a4" label="State 4 · New World Unlocked" width={375} height={780}>
+          <HomeWorldUnlocked/>
+        </DCArtboard>
+      </DCSection>
+    </DesignCanvas>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>

@@ -1,0 +1,650 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bắp — Hear & Tap Number Game UI</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; font-family: 'Fredoka', ui-rounded, sans-serif; background: #E8E0D3; -webkit-font-smoothing: antialiased; overflow: hidden; }
+button { cursor: pointer; font-family: inherit; border: none; background: none; }
+@keyframes bobble     { 0%,100%{transform:translateY(0) rotate(0)} 50%{transform:translateY(-7px) rotate(-2deg)} }
+@keyframes pop-in     { 0%{transform:scale(.55);opacity:0} 65%{transform:scale(1.1);opacity:1} 100%{transform:scale(1)} }
+@keyframes shake      { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-7px)} 40%{transform:translateX(7px)} 60%{transform:translateX(-5px)} 80%{transform:translateX(5px)} }
+@keyframes pulse-ring { 0%{box-shadow:0 0 0 0 rgba(255,211,110,.7)} 70%{box-shadow:0 0 0 16px rgba(255,211,110,0)} 100%{box-shadow:0 0 0 0 rgba(255,211,110,0)} }
+@keyframes pulse-soft { 0%,100%{transform:scale(1)} 50%{transform:scale(1.05)} }
+@keyframes sparkle    { 0%,100%{transform:scale(.6) rotate(0);opacity:.35} 50%{transform:scale(1.3) rotate(180deg);opacity:1} }
+@keyframes confetti-fall { 0%{transform:translateY(-16px) rotate(0deg);opacity:1} 100%{transform:translateY(130px) rotate(540deg);opacity:0} }
+@keyframes float-up   { from{transform:translateY(0);opacity:1} to{transform:translateY(-48px);opacity:0} }
+@keyframes press-in   { 0%{transform:translateY(0)} 40%{transform:translateY(5px)} 100%{transform:translateY(0)} }
+@keyframes hint-pulse { 0%,100%{background:#FFF9EC} 50%{background:#FFE6A8} }
+@keyframes slide-fade { from{transform:translateY(16px);opacity:0} to{transform:translateY(0);opacity:1} }
+@keyframes correct-burst { 0%{transform:scale(.9);opacity:0} 50%{transform:scale(1.06);opacity:1} 100%{transform:scale(1)} }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script type="text/babel" src="design-canvas.jsx"></script>
+<script type="text/babel">
+const { useState, useEffect, useMemo } = React;
+
+// ─── TOKENS ──────────────────────────────────────────────────
+const C = {
+  ink:'#2D3A2E', soft:'#6B7A6C', faint:'#A9B4A8',
+  sun:'#FFD36E', sunSh:'#C79528', sunInk:'#5E3A00',
+  sage:'#7FC089', sageSh:'#4D8B58', sageInk:'#1F4A28', sagePale:'#C4EBB9',
+  sky:'#B8DEEF', skySh:'#7DB0C8', skyInk:'#1F4A61',
+  lav:'#D9C7F0', lavSh:'#A58AD0', lavInk:'#3D256D',
+  coral:'#FFA48C', coralSh:'#D67560', coralInk:'#7A2B15',
+  cream:'#FFF8EC', surface:'#FFFDF7',
+  correct:'#5FB36A', correctSh:'#3D8A4A', correctBg:'#EAF7E4',
+  wrong:'#F2795A',   wrongSh:'#C8614A',   wrongBg:'#FFE8DF',
+  hint:'#FFD36E', hintBg:'#FFF4DE',
+};
+
+// ─── MASCOT ──────────────────────────────────────────────────
+function Bap({ size=80, mood='happy', color='sun' }) {
+  const body={sun:'#FFD36E',sage:'#A8D5A2',coral:'#FFA48C',lavender:'#D9C7F0',sky:'#B8DEEF'}[color]||'#FFD36E';
+  const dark={sun:'#E8B23F',sage:'#7FB983',coral:'#E2815E',lavender:'#B39DD1',sky:'#88BED4'}[color]||'#E8B23F';
+  const eye={
+    happy:<><ellipse cx="0" cy="0" rx="6" ry="7" fill={C.ink}/><ellipse cx="-1.5" cy="-2" rx="2" ry="2.5" fill="#fff"/></>,
+    celebrate:<path d="M -6 2 Q 0 -6 6 2" stroke={C.ink} strokeWidth="3" fill="none" strokeLinecap="round"/>,
+    worry:<ellipse cx="0" cy="1" rx="5" ry="5" fill={C.ink}/>,
+    wink:<path d="M -6 0 Q 0 -4 6 0" stroke={C.ink} strokeWidth="3" fill="none" strokeLinecap="round"/>,
+    hint:<><ellipse cx="0" cy="0" rx="6" ry="6" fill={C.ink}/><ellipse cx="2" cy="-2" rx="2" ry="2.5" fill="#fff"/></>,
+    excited:<><ellipse cx="0" cy="0" rx="7" ry="8" fill={C.ink}/><ellipse cx="-2" cy="-2.5" rx="2.5" ry="3" fill="#fff"/></>,
+  };
+  const mouth={
+    happy:<path d="M 35 85 Q 50 98 65 85" stroke={C.ink} strokeWidth="3.5" fill="#C14A2A" strokeLinecap="round"/>,
+    celebrate:<path d="M 32 82 Q 50 105 68 82 Q 50 95 32 82" fill="#C14A2A" stroke={C.ink} strokeWidth="3"/>,
+    worry:<path d="M 38 89 Q 50 81 62 89" stroke={C.ink} strokeWidth="3" fill="none" strokeLinecap="round"/>,
+    wink:<path d="M 40 85 Q 50 92 60 85" stroke={C.ink} strokeWidth="3.5" fill="#C14A2A" strokeLinecap="round"/>,
+    hint:<path d="M 40 85 Q 50 91 60 85" stroke={C.ink} strokeWidth="3" fill="#C14A2A" strokeLinecap="round"/>,
+    excited:<path d="M 30 80 Q 50 108 70 80 Q 50 96 30 80" fill="#C14A2A" stroke={C.ink} strokeWidth="3"/>,
+  };
+  return (
+    <svg viewBox="0 0 120 140" width={size} height={size*140/120} style={{display:'block'}}>
+      <g><ellipse cx="38" cy="18" rx="14" ry="20" fill="#7FB983" transform="rotate(-30 38 18)"/>
+      <ellipse cx="38" cy="18" rx="7" ry="16" fill="#A8D5A2" transform="rotate(-30 38 18)"/>
+      <ellipse cx="76" cy="14" rx="16" ry="22" fill="#5FA36A" transform="rotate(25 76 14)"/>
+      <ellipse cx="76" cy="14" rx="8" ry="18" fill="#A8D5A2" transform="rotate(25 76 14)"/></g>
+      <ellipse cx="60" cy="126" rx="38" ry="6" fill="rgba(46,90,58,0.15)"/>
+      <path d="M60 28 C92 28 100 56 100 82 C100 110 82 126 60 126 C38 126 20 110 20 82 C20 56 28 28 60 28Z" fill={body} stroke={C.ink} strokeWidth="3.5"/>
+      <g opacity=".3" stroke={dark} strokeWidth="2" fill="none" strokeLinecap="round">
+        <path d="M30 62 Q60 56 90 62"/><path d="M28 80 Q60 74 92 80"/><path d="M30 98 Q60 104 90 98"/>
+      </g>
+      <circle cx="30" cy="82" r="7" fill="#FFA48C" opacity=".7"/>
+      <circle cx="90" cy="82" r="7" fill="#FFA48C" opacity=".7"/>
+      <g transform="translate(42 66)">{eye[mood]||eye.happy}</g>
+      <g transform="translate(78 66)">{eye[mood]||eye.happy}</g>
+      {mouth[mood]||mouth.happy}
+    </svg>
+  );
+}
+
+// ─── SPARKLE ─────────────────────────────────────────────────
+function Sparkle({x,y,s=10,d=0,color='#FFD36E'}) {
+  return <div style={{position:'absolute',left:x,top:y,width:s,height:s,pointerEvents:'none',animation:`sparkle ${1.8+d}s ease-in-out ${d}s infinite`,color}}><svg viewBox="0 0 20 20" width="100%" height="100%"><path d="M10 0 L12 8 L20 10 L12 12 L10 20 L8 12 L0 10 L8 8 Z" fill="currentColor"/></svg></div>;
+}
+
+// ─── CONFETTI ────────────────────────────────────────────────
+function Confetti({ count=20 }) {
+  const pieces = useMemo(()=>Array.from({length:count},(_,i)=>({
+    left:Math.random()*100, color:['#FFD36E','#FFA48C','#A8D5A2','#B8DEEF','#D9C7F0','#E6779E'][i%6],
+    size:7+Math.random()*7, dur:1.4+Math.random()*1.2, delay:Math.random()*.6, shape:Math.random()>.5?'50%':'4px',
+  })),[count]);
+  return <div style={{position:'absolute',inset:0,pointerEvents:'none',overflow:'hidden'}}>{pieces.map((p,i)=><div key={i} style={{position:'absolute',left:`${p.left}%`,top:-16,width:p.size,height:p.size,background:p.color,borderRadius:p.shape,animation:`confetti-fall ${p.dur}s ease-in ${p.delay}s forwards`}}/>)}</div>;
+}
+
+// ─── HUD ─────────────────────────────────────────────────────
+function HUD({ hearts=3, progress=2, total=5 }) {
+  return (
+    <div style={{padding:'52px 16px 10px',display:'flex',alignItems:'center',gap:10}}>
+      <button style={{width:44,height:44,borderRadius:'50%',background:C.cream,border:`3px solid ${C.ink}`,boxShadow:'0 3px 0 #D9C38A',display:'flex',alignItems:'center',justifyContent:'center',fontSize:20,color:C.soft,flexShrink:0}}>✕</button>
+      <div style={{flex:1}}>
+        <div style={{height:14,borderRadius:14,background:'rgba(46,90,58,0.1)',border:`2px solid ${C.ink}`,overflow:'hidden'}}>
+          <div style={{height:'100%',width:`${progress/total*100}%`,borderRadius:14,background:C.correct,transition:'width .6s cubic-bezier(.34,1.56,.64,1)',boxShadow:'inset 0 -2px 0 rgba(0,0,0,0.1)'}}/>
+        </div>
+        <div style={{display:'flex',justifyContent:'flex-end',fontSize:10,fontWeight:700,color:C.faint,marginTop:2}}>{progress}/{total}</div>
+      </div>
+      <div style={{display:'flex',gap:3,alignItems:'center',padding:'6px 12px',borderRadius:999,background:'#FFDDE2',border:`2px solid ${C.ink}`,fontSize:14,fontWeight:700,color:'#A33A1D',flexShrink:0}}>
+        ❤️ {hearts}
+      </div>
+    </div>
+  );
+}
+
+// ─── AUDIO BUTTON ────────────────────────────────────────────
+function AudioButton({ size=160, playing=false, label='TAP TO HEAR', color='sun' }) {
+  const c={sun:{bg:C.sun,sh:C.sunSh,ink:C.sunInk},sky:{bg:C.sky,sh:C.skySh,ink:C.skyInk}}[color]||{bg:C.sun,sh:C.sunSh,ink:C.sunInk};
+  return (
+    <div style={{position:'relative',display:'flex',alignItems:'center',justifyContent:'center'}}>
+      {/* Pulse rings */}
+      {playing && <>
+        <div style={{position:'absolute',width:size+28,height:size+28,borderRadius:'50%',border:`3px solid ${c.bg}`,animation:'pulse-ring 1.2s ease-out infinite',opacity:.5}}/>
+        <div style={{position:'absolute',width:size+52,height:size+52,borderRadius:'50%',border:`2px solid ${c.bg}`,animation:'pulse-ring 1.2s ease-out .3s infinite',opacity:.3}}/>
+      </>}
+      <button style={{
+        width:size,height:size,borderRadius:'50%',
+        background:`radial-gradient(circle at 35% 35%, ${c.bg} 0%, ${c.bg}dd 100%)`,
+        border:`4px solid ${C.ink}`,
+        boxShadow:`0 7px 0 ${c.sh}, 0 16px 28px rgba(46,90,58,0.18)`,
+        display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:6,
+        animation: playing ? 'none' : 'pulse-soft 2.2s ease-in-out infinite',
+        transition:'transform .1s, box-shadow .1s',
+      }}>
+        <svg width={size*.35} height={size*.35} viewBox="0 0 24 24" fill="none">
+          <path d="M4 10v4a1 1 0 001 1h3l4 4a1 1 0 001.7-.7V5.7a1 1 0 00-1.7-.7l-4 4H5a1 1 0 00-1 1z" fill={c.ink}/>
+          <path d="M16 8.5Q20 12 16 15.5" stroke={c.ink} strokeWidth="2.5" fill="none" strokeLinecap="round"/>
+          <path d="M18.5 5.5Q24.5 12 18.5 18.5" stroke={c.ink} strokeWidth="2.5" fill="none" strokeLinecap="round"/>
+        </svg>
+        <div style={{fontSize:size*.085,fontWeight:700,color:c.ink,letterSpacing:.6}}>{label}</div>
+      </button>
+    </div>
+  );
+}
+
+// ─── SPEECH BUBBLE ───────────────────────────────────────────
+function SpeechBubble({ text, mood='happy', mascotColor='sun', mascotSize=72 }) {
+  return (
+    <div style={{display:'flex',alignItems:'flex-end',gap:8,padding:'0 20px 10px'}}>
+      <div style={{animation:'bobble 2.6s ease-in-out infinite',flexShrink:0}}>
+        <Bap size={mascotSize} mood={mood} color={mascotColor}/>
+      </div>
+      <div style={{
+        flex:1, background:C.cream, borderRadius:'18px 18px 18px 6px',
+        border:`2.5px solid ${C.ink}`, boxShadow:'0 4px 0 #D9C38A',
+        padding:'11px 16px', fontSize:15, fontWeight:700, color:C.ink,
+        lineHeight:1.35, position:'relative',
+      }}>
+        {text}
+      </div>
+    </div>
+  );
+}
+
+// ─── NUM CARD ────────────────────────────────────────────────
+function NumCard({ n, state='idle', layout='4', style:customStyle={}, onClick }) {
+  // layout = '2' | '3' | '4' — affects sizing
+  const fsMap={'2':100,'3':80,'4':68};
+  const szMap={'2':{w:'46%',h:180},'3':{w:'30%',h:160},'4':{w:'46%',h:148}};
+  const fs = fsMap[layout]||68;
+  const sz = szMap[layout]||szMap['4'];
+
+  const states = {
+    idle:    {bg:'#fff',sh:'rgba(46,90,58,0.22)',border:`3px solid ${C.ink}`,color:C.ink,extra:{}},
+    hover:   {bg:C.cream,sh:'rgba(46,90,58,0.22)',border:`3px solid ${C.ink}`,color:C.ink,extra:{}},
+    correct: {bg:C.correctBg,sh:C.correctSh,border:`3px solid ${C.correct}`,color:C.correct,extra:{animation:'correct-burst .4s cubic-bezier(.34,1.56,.64,1) both'}},
+    wrong:   {bg:C.wrongBg,sh:C.wrongSh,border:`3px solid ${C.wrong}`,color:C.wrong,extra:{animation:'shake .45s ease-in-out both'}},
+    dim:     {bg:'#F0EADD',sh:'rgba(46,90,58,0.1)',border:'3px solid rgba(46,90,58,0.15)',color:C.faint,extra:{opacity:.5}},
+    hint:    {bg:C.hintBg,sh:C.sunSh,border:`3px solid ${C.sun}`,color:C.sunInk,extra:{animation:'hint-pulse 1.2s ease-in-out infinite'}},
+  };
+  const st = states[state]||states.idle;
+
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        width:sz.w, height:sz.h, borderRadius:28, flexShrink:0,
+        background:st.bg, border:st.border, color:st.color,
+        boxShadow:`0 7px 0 ${st.sh}, 0 14px 24px rgba(46,90,58,0.12)`,
+        display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center',
+        fontFamily:'Fredoka', fontWeight:700, fontSize:fs,
+        transition:'transform .1s, box-shadow .1s',
+        position:'relative', overflow:'hidden',
+        ...st.extra, ...customStyle,
+      }}
+    >
+      {n}
+      {/* Corner star on correct */}
+      {state==='correct' && <div style={{position:'absolute',top:8,right:10,fontSize:22}}>⭐</div>}
+      {/* X on wrong */}
+      {state==='wrong' && <div style={{position:'absolute',top:6,right:10,fontSize:20,color:C.wrong}}>✕</div>}
+    </button>
+  );
+}
+
+// ─── DIFFICULTY BADGE ────────────────────────────────────────
+function DiffBadge({ label, color }) {
+  return (
+    <div style={{display:'inline-flex',alignItems:'center',gap:5,padding:'4px 12px',borderRadius:999,background:color+'22',border:`1.5px solid ${color}`,fontSize:11,fontWeight:700,color,letterSpacing:.5}}>
+      {label}
+    </div>
+  );
+}
+
+// ─── BG ──────────────────────────────────────────────────────
+function GameBg({ children }) {
+  return (
+    <div style={{position:'absolute',inset:0,background:'radial-gradient(ellipse 110% 60% at 50% 0%,#D6ECCE 0%,#E8F4E0 45%,#F4FAEE 100%)'}}>
+      <Sparkle x="5%"  y="14%" s={12} d={0}/>
+      <Sparkle x="88%" y="10%" s={9}  d={.7}/>
+      <Sparkle x="72%" y="20%" s={7}  d={1.3}/>
+      {children}
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════
+// VARIANT 1 — EASY (2 options)
+// ══════════════════════════════════════════════════════════════
+function EasyVariant() {
+  const [picked, setPicked] = useState(null);
+  const target = 7, opts = [7, 3];
+  return (
+    <GameBg>
+      <div style={{position:'relative',zIndex:1,height:'100%',display:'flex',flexDirection:'column'}}>
+        <HUD hearts={3} progress={1} total={3}/>
+        {/* Difficulty badge */}
+        <div style={{padding:'0 20px 6px',display:'flex',alignItems:'center',gap:8}}>
+          <DiffBadge label="⭐ EASY" color={C.sageInk}/>
+          <div style={{fontSize:11,color:C.faint,fontWeight:600}}>Round 1 of 3</div>
+        </div>
+
+        <SpeechBubble text="Can you tap the number SEVEN? 🔊" mood="wink" mascotColor="sun" mascotSize={68}/>
+
+        {/* Big audio button */}
+        <div style={{display:'flex',justifyContent:'center',padding:'16px 0 8px'}}>
+          <AudioButton size={148} playing={!picked} label="TAP TO HEAR"/>
+        </div>
+
+        {/* 2 big cards */}
+        <div style={{flex:1,padding:'10px 20px 16px',display:'flex',gap:14,justifyContent:'center',alignItems:'center'}}>
+          {opts.map(n=>(
+            <NumCard key={n} n={n} layout="2"
+              state={picked===n?(n===target?'correct':'wrong'):picked&&n===target?'correct':'idle'}
+              onClick={()=>!picked&&setPicked(n)}/>
+          ))}
+        </div>
+
+        {/* Instruction */}
+        <div style={{padding:'0 20px 20px',textAlign:'center',fontSize:12,fontWeight:700,color:C.sageInk,letterSpacing:.5,opacity:.7}}>
+          TAP THE NUMBER YOU HEARD
+        </div>
+      </div>
+    </GameBg>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════
+// VARIANT 2 — MEDIUM (3 options)
+// ══════════════════════════════════════════════════════════════
+function MediumVariant() {
+  const [picked, setPicked] = useState(null);
+  const target = 15, opts = [12, 15, 9];
+  return (
+    <GameBg>
+      <div style={{position:'relative',zIndex:1,height:'100%',display:'flex',flexDirection:'column'}}>
+        <HUD hearts={3} progress={2} total={5}/>
+        <div style={{padding:'0 20px 6px',display:'flex',alignItems:'center',gap:8}}>
+          <DiffBadge label="⭐⭐ MEDIUM" color={C.skyInk}/>
+          <div style={{fontSize:11,color:C.faint,fontWeight:600}}>Round 2 of 5</div>
+        </div>
+
+        <SpeechBubble text="Tap fifteen! 🔊" mood="happy" mascotColor="sky" mascotSize={68}/>
+
+        <div style={{display:'flex',justifyContent:'center',padding:'12px 0 6px'}}>
+          <AudioButton size={136} label="HEAR IT AGAIN" color="sky"/>
+        </div>
+
+        {/* 3 cards in a row */}
+        <div style={{flex:1,padding:'8px 16px 16px',display:'flex',gap:10,justifyContent:'center',alignItems:'center'}}>
+          {opts.map(n=>(
+            <NumCard key={n} n={n} layout="3"
+              state={picked===n?(n===target?'correct':'wrong'):picked&&n===target?'correct':'idle'}
+              onClick={()=>!picked&&setPicked(n)}/>
+          ))}
+        </div>
+
+        <div style={{padding:'0 20px 20px',textAlign:'center',fontSize:12,fontWeight:700,color:C.skyInk,letterSpacing:.5,opacity:.7}}>
+          WHICH IS FIFTEEN?
+        </div>
+      </div>
+    </GameBg>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════
+// VARIANT 3 — HARD (4 options, visually similar)
+// ══════════════════════════════════════════════════════════════
+function HardVariant() {
+  const [picked, setPicked] = useState(null);
+  const target = 32, opts = [32, 23, 30, 42];
+  return (
+    <GameBg>
+      <div style={{position:'relative',zIndex:1,height:'100%',display:'flex',flexDirection:'column'}}>
+        <HUD hearts={2} progress={3} total={5}/>
+        <div style={{padding:'0 20px 6px',display:'flex',alignItems:'center',gap:8}}>
+          <DiffBadge label="⭐⭐⭐ HARDER" color={C.lavInk}/>
+          <div style={{fontSize:11,color:C.faint,fontWeight:600}}>Round 3 of 5</div>
+        </div>
+
+        <SpeechBubble text="Find thirty-two! Look carefully 👀" mood="hint" mascotColor="lavender" mascotSize={68}/>
+
+        <div style={{display:'flex',justifyContent:'center',padding:'10px 0 6px'}}>
+          <AudioButton size={128} label="REPLAY" color="sun"/>
+        </div>
+
+        {/* 2×2 grid */}
+        <div style={{flex:1,padding:'8px 16px 16px',display:'flex',flexDirection:'column',gap:10,justifyContent:'center'}}>
+          <div style={{display:'flex',gap:10,justifyContent:'center'}}>
+            {opts.slice(0,2).map(n=>(
+              <NumCard key={n} n={n} layout="4"
+                state={picked===n?(n===target?'correct':'wrong'):picked&&n===target?'correct':'idle'}
+                onClick={()=>!picked&&setPicked(n)}/>
+            ))}
+          </div>
+          <div style={{display:'flex',gap:10,justifyContent:'center'}}>
+            {opts.slice(2).map(n=>(
+              <NumCard key={n} n={n} layout="4"
+                state={picked===n?(n===target?'correct':'wrong'):picked&&n===target?'correct':'idle'}
+                onClick={()=>!picked&&setPicked(n)}/>
+            ))}
+          </div>
+        </div>
+
+        <div style={{padding:'0 20px 18px',textAlign:'center',fontSize:12,fontWeight:700,color:C.lavInk,letterSpacing:.5,opacity:.7}}>
+          THIRTY-TWO — LOOK AT BOTH DIGITS
+        </div>
+      </div>
+    </GameBg>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════
+// STATE — DEFAULT (medium, fresh)
+// ══════════════════════════════════════════════════════════════
+function StateDefault() {
+  const target=17, opts=[12,17,9,24];
+  return (
+    <GameBg>
+      <div style={{position:'relative',zIndex:1,height:'100%',display:'flex',flexDirection:'column'}}>
+        <HUD hearts={3} progress={2} total={5}/>
+        <div style={{padding:'0 20px 4px',display:'flex',alignItems:'center',gap:8}}>
+          <DiffBadge label="⭐⭐ MEDIUM" color={C.skyInk}/>
+          <div style={{fontSize:11,color:C.faint,fontWeight:600}}>Round 2 of 5</div>
+        </div>
+
+        <SpeechBubble text="Can you find seventeen? 🔊" mood="happy" mascotColor="sun" mascotSize={68}/>
+
+        <div style={{display:'flex',justifyContent:'center',padding:'10px 0 4px'}}>
+          <AudioButton size={132} playing={true} label="PLAYING…"/>
+        </div>
+
+        <div style={{flex:1,padding:'8px 16px 16px',display:'flex',flexDirection:'column',gap:10,justifyContent:'center'}}>
+          <div style={{display:'flex',gap:10,justifyContent:'center'}}>
+            {opts.slice(0,2).map(n=><NumCard key={n} n={n} layout="4" state="idle"/>)}
+          </div>
+          <div style={{display:'flex',gap:10,justifyContent:'center'}}>
+            {opts.slice(2).map(n=><NumCard key={n} n={n} layout="4" state="idle"/>)}
+          </div>
+        </div>
+
+        <div style={{padding:'0 20px 18px',textAlign:'center',fontSize:12,fontWeight:700,color:C.sageInk,letterSpacing:.5,opacity:.7}}>
+          TAP THE NUMBER YOU HEAR
+        </div>
+      </div>
+    </GameBg>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════
+// STATE — CORRECT
+// ══════════════════════════════════════════════════════════════
+function StateCorrect() {
+  const target=17, opts=[12,17,9,24];
+  return (
+    <GameBg>
+      <Confetti count={28}/>
+      <div style={{position:'relative',zIndex:1,height:'100%',display:'flex',flexDirection:'column'}}>
+        <HUD hearts={3} progress={3} total={5}/>
+
+        <SpeechBubble text="Yes! That's seventeen! Amazing! 🎉" mood="celebrate" mascotColor="sun" mascotSize={76}/>
+
+        {/* Float-up score */}
+        <div style={{position:'absolute',top:200,left:0,right:0,display:'flex',justifyContent:'center',gap:14,zIndex:20,pointerEvents:'none'}}>
+          {['+1 ⭐', '+3 🪙'].map((t,i)=>(
+            <div key={t} style={{fontFamily:'Fredoka',fontWeight:700,fontSize:22,color:C.sunInk,textShadow:'0 2px 0 rgba(46,90,58,0.2)',animation:`float-up 1.4s ease-out ${i*.18}s both`}}>{t}</div>
+          ))}
+        </div>
+
+        <div style={{display:'flex',justifyContent:'center',padding:'10px 0 6px'}}>
+          <AudioButton size={132} label="HEAR IT AGAIN" color="sky"/>
+        </div>
+
+        <div style={{flex:1,padding:'8px 16px 8px',display:'flex',flexDirection:'column',gap:10,justifyContent:'center'}}>
+          <div style={{display:'flex',gap:10,justifyContent:'center'}}>
+            <NumCard n={12} layout="4" state="dim"/>
+            <NumCard n={17} layout="4" state="correct"/>
+          </div>
+          <div style={{display:'flex',gap:10,justifyContent:'center'}}>
+            <NumCard n={9}  layout="4" state="dim"/>
+            <NumCard n={24} layout="4" state="dim"/>
+          </div>
+        </div>
+
+        {/* Continue strip */}
+        <div style={{margin:'0 16px 20px',padding:'14px 18px',borderRadius:22,background:C.correctBg,border:`3px solid ${C.correct}`,boxShadow:`0 5px 0 ${C.correctSh}`,display:'flex',alignItems:'center',gap:12,animation:'slide-fade .3s both'}}>
+          <div style={{fontSize:28}}>⭐</div>
+          <div style={{flex:1}}>
+            <div style={{fontSize:16,fontWeight:700,color:C.sageInk}}>Correct!</div>
+            <div style={{fontSize:12,color:C.soft,marginTop:1}}>3 right in a row 🔥</div>
+          </div>
+          <button style={{padding:'10px 20px',borderRadius:18,background:C.correct,border:`2.5px solid ${C.ink}`,boxShadow:`0 4px 0 ${C.correctSh}`,fontFamily:'Fredoka',fontWeight:700,fontSize:16,color:'#fff'}}>Next →</button>
+        </div>
+      </div>
+    </GameBg>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════
+// STATE — WRONG
+// ══════════════════════════════════════════════════════════════
+function StateWrong() {
+  const target=17, opts=[12,17,9,24];
+  return (
+    <GameBg>
+      <div style={{position:'relative',zIndex:1,height:'100%',display:'flex',flexDirection:'column'}}>
+        <HUD hearts={2} progress={2} total={5}/>
+
+        <SpeechBubble text="Oops! Let's listen again 🔊" mood="worry" mascotColor="sun" mascotSize={68}/>
+
+        <div style={{display:'flex',justifyContent:'center',padding:'10px 0 6px'}}>
+          {/* Audio button pulsing to draw attention */}
+          <div style={{position:'relative'}}>
+            <div style={{position:'absolute',inset:-8,borderRadius:'50%',background:C.sun,animation:'pulse-ring 1s ease-out infinite',opacity:.4}}/>
+            <AudioButton size={132} playing={true} label="LISTEN AGAIN"/>
+          </div>
+        </div>
+
+        <div style={{flex:1,padding:'8px 16px 8px',display:'flex',flexDirection:'column',gap:10,justifyContent:'center'}}>
+          <div style={{display:'flex',gap:10,justifyContent:'center'}}>
+            <NumCard n={12} layout="4" state="wrong"/>
+            <NumCard n={17} layout="4" state="idle"/>
+          </div>
+          <div style={{display:'flex',gap:10,justifyContent:'center'}}>
+            <NumCard n={9}  layout="4" state="idle"/>
+            <NumCard n={24} layout="4" state="idle"/>
+          </div>
+        </div>
+
+        {/* Wrong feedback strip */}
+        <div style={{margin:'0 16px 20px',padding:'13px 16px',borderRadius:22,background:C.wrongBg,border:`3px solid ${C.wrong}`,boxShadow:`0 4px 0 ${C.wrongSh}`,display:'flex',alignItems:'center',gap:12,animation:'slide-fade .3s both'}}>
+          <div style={{fontSize:26}}>💪</div>
+          <div style={{flex:1}}>
+            <div style={{fontSize:15,fontWeight:700,color:C.coralInk}}>Not quite! Try again</div>
+            <div style={{fontSize:12,color:C.soft,marginTop:1}}>Tap the speaker to hear it 🔊</div>
+          </div>
+          <div style={{display:'flex',gap:1}}>
+            {[0,1,2].map(i=><span key={i} style={{fontSize:16,opacity:i<2?1:.25}}>❤️</span>)}
+          </div>
+        </div>
+      </div>
+    </GameBg>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════
+// STATE — HINT
+// ══════════════════════════════════════════════════════════════
+function StateHint() {
+  const target=32, opts=[32,23,30,42];
+  return (
+    <GameBg>
+      <div style={{position:'relative',zIndex:1,height:'100%',display:'flex',flexDirection:'column'}}>
+        <HUD hearts={1} progress={3} total={5}/>
+        <div style={{padding:'0 20px 4px',display:'flex',alignItems:'center',gap:8}}>
+          <DiffBadge label="⭐⭐⭐ HARDER" color={C.lavInk}/>
+        </div>
+
+        {/* Expanded mascot hint */}
+        <div style={{display:'flex',alignItems:'flex-end',gap:8,padding:'0 20px 8px'}}>
+          <div style={{animation:'bobble 2.6s ease-in-out infinite',flexShrink:0}}>
+            <Bap size={80} mood="hint" color="sun"/>
+          </div>
+          <div style={{flex:1,background:C.hintBg,borderRadius:'18px 18px 18px 6px',border:`2.5px solid ${C.sun}`,boxShadow:`0 4px 0 ${C.sunSh}`,padding:'12px 16px',animation:'hint-pulse 1.4s ease-in-out infinite'}}>
+            <div style={{fontSize:11,fontWeight:700,color:C.sunInk,letterSpacing:.5,marginBottom:4}}>💡 HINT</div>
+            <div style={{fontSize:14,fontWeight:700,color:C.ink,lineHeight:1.4}}>
+              Thirty-two = <b style={{fontSize:18}}>3</b> tens + <b style={{fontSize:18}}>2</b> ones
+            </div>
+            <div style={{display:'flex',gap:5,marginTop:8}}>
+              <div style={{padding:'4px 10px',borderRadius:999,background:'rgba(46,90,58,0.1)',fontSize:12,fontWeight:700,color:C.ink}}>3 | 2</div>
+              <div style={{padding:'4px 10px',borderRadius:999,background:C.sun,border:`1.5px solid ${C.sunSh}`,fontSize:12,fontWeight:700,color:C.sunInk}}>= 32</div>
+            </div>
+          </div>
+        </div>
+
+        <div style={{display:'flex',justifyContent:'center',padding:'6px 0 4px'}}>
+          <AudioButton size={116} label="HEAR AGAIN"/>
+        </div>
+
+        {/* Cards — hint highlighted */}
+        <div style={{flex:1,padding:'6px 16px 12px',display:'flex',flexDirection:'column',gap:10,justifyContent:'center'}}>
+          <div style={{display:'flex',gap:10,justifyContent:'center'}}>
+            <NumCard n={32} layout="4" state="hint"/>
+            <NumCard n={23} layout="4" state="idle"/>
+          </div>
+          <div style={{display:'flex',gap:10,justifyContent:'center'}}>
+            <NumCard n={30} layout="4" state="idle"/>
+            <NumCard n={42} layout="4" state="idle"/>
+          </div>
+        </div>
+
+        <div style={{margin:'0 16px 18px',padding:'11px 16px',borderRadius:18,background:'#FFF7E0',border:`2px solid ${C.sun}`,display:'flex',alignItems:'center',gap:10,animation:'slide-fade .3s both'}}>
+          <span style={{fontSize:20}}>💡</span>
+          <div style={{fontSize:13,fontWeight:600,color:C.sunInk}}>The yellow tile is your hint — trust it!</div>
+        </div>
+      </div>
+    </GameBg>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════
+// STATE — NEXT QUESTION TRANSITION
+// ══════════════════════════════════════════════════════════════
+function StateTransition() {
+  const [phase, setPhase] = useState(0); // 0=complete, 1=loading
+
+  return (
+    <GameBg>
+      <div style={{position:'relative',zIndex:1,height:'100%',display:'flex',flexDirection:'column'}}>
+        <HUD hearts={3} progress={4} total={5}/>
+
+        {/* Round complete badge */}
+        <div style={{padding:'4px 20px 0',display:'flex',justifyContent:'center'}}>
+          <div style={{padding:'8px 18px',borderRadius:999,background:C.sun,border:`2.5px solid ${C.ink}`,boxShadow:`0 4px 0 ${C.sunSh}`,fontFamily:'Fredoka',fontWeight:700,fontSize:14,color:C.sunInk,animation:'pop-in .4s cubic-bezier(.34,1.56,.64,1) both'}}>
+            ⭐ Round 4 done! +3 coins 🪙
+          </div>
+        </div>
+
+        <SpeechBubble text="You're on fire! 🔥 Next number coming up…" mood="excited" mascotColor="sun" mascotSize={76}/>
+
+        {/* Outgoing card (fading/scaling out) */}
+        <div style={{display:'flex',justifyContent:'center',padding:'10px 0 6px',opacity:.35,transform:'scale(.9)',transition:'all .5s'}}>
+          <AudioButton size={128} label="SEVENTEEN" color="sky"/>
+        </div>
+
+        <div style={{flex:1,padding:'8px 16px 8px',display:'flex',flexDirection:'column',gap:10,justifyContent:'center',opacity:.3}}>
+          <div style={{display:'flex',gap:10,justifyContent:'center'}}>
+            <NumCard n={12} layout="4" state="dim"/>
+            <NumCard n={17} layout="4" state="correct"/>
+          </div>
+          <div style={{display:'flex',gap:10,justifyContent:'center'}}>
+            <NumCard n={9}  layout="4" state="dim"/>
+            <NumCard n={24} layout="4" state="dim"/>
+          </div>
+        </div>
+
+        {/* Loading next question overlay */}
+        <div style={{position:'absolute',inset:0,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'flex-end',padding:'0 0 80px',pointerEvents:'none'}}>
+          <div style={{
+            padding:'14px 24px',borderRadius:24,
+            background:'rgba(255,253,247,0.95)',border:`3px solid ${C.ink}`,
+            boxShadow:`0 6px 0 rgba(46,90,58,0.18)`,
+            display:'flex',alignItems:'center',gap:12,
+            animation:'slide-fade .35s .5s both',
+          }}>
+            <div style={{display:'flex',gap:6}}>
+              {[0,1,2].map(i=><div key={i} style={{width:10,height:10,borderRadius:'50%',background:C.sage,animation:`pulse-soft 1s ease-in-out ${i*.2}s infinite`}}/>)}
+            </div>
+            <div style={{fontFamily:'Fredoka',fontWeight:700,fontSize:16,color:C.ink}}>Next question loading…</div>
+          </div>
+        </div>
+
+        {/* Progress +1 */}
+        <div style={{padding:'0 20px 20px'}}>
+          <div style={{height:14,borderRadius:14,background:'rgba(46,90,58,0.1)',border:`2px solid ${C.ink}`,overflow:'hidden'}}>
+            <div style={{height:'100%',width:'80%',borderRadius:14,background:C.correct,boxShadow:'inset 0 -2px 0 rgba(0,0,0,0.1)',animation:'pop-in .6s cubic-bezier(.34,1.56,.64,1) .3s both'}}/>
+          </div>
+          <div style={{textAlign:'right',fontSize:10,fontWeight:700,color:C.faint,marginTop:2}}>4/5</div>
+        </div>
+      </div>
+    </GameBg>
+  );
+}
+
+// ─── CANVAS ──────────────────────────────────────────────────
+function App() {
+  return (
+    <DesignCanvas title="Bắp — Hear & Tap Number: Full UI System">
+      <DCSection id="s1" title="Difficulty Variants">
+        <DCArtboard id="d1" label="Easy · 2 Options" width={375} height={720}>
+          <EasyVariant/>
+        </DCArtboard>
+        <DCArtboard id="d2" label="Medium · 3 Options" width={375} height={720}>
+          <MediumVariant/>
+        </DCArtboard>
+        <DCArtboard id="d3" label="Harder · 4 Options (similar numbers)" width={375} height={720}>
+          <HardVariant/>
+        </DCArtboard>
+      </DCSection>
+
+      <DCSection id="s2" title="Interaction States">
+        <DCArtboard id="s1a" label="Default · Waiting for Tap" width={375} height={720}>
+          <StateDefault/>
+        </DCArtboard>
+        <DCArtboard id="s2a" label="Correct Answer ✅" width={375} height={720}>
+          <StateCorrect/>
+        </DCArtboard>
+        <DCArtboard id="s3a" label="Wrong Answer ❌" width={375} height={720}>
+          <StateWrong/>
+        </DCArtboard>
+        <DCArtboard id="s4a" label="Hint State 💡" width={375} height={720}>
+          <StateHint/>
+        </DCArtboard>
+        <DCArtboard id="s5a" label="Next Question Transition ⏭" width={375} height={720}>
+          <StateTransition/>
+        </DCArtboard>
+      </DCSection>
+    </DesignCanvas>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>

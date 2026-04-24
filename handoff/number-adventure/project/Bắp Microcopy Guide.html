@@ -1,0 +1,1395 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bắp Number Adventure — Microcopy Guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #F7F3EC;
+  --surface: #FFFFFF;
+  --ink: #1E2A1F;
+  --ink-soft: #5A6B5C;
+  --ink-faint: #9EAB9F;
+  --outline: rgba(30,42,31,.10);
+  --child: #3E7B4A;
+  --child-bg: #EBF5E7;
+  --child-pale: #D6EDD0;
+  --parent: #2E6F93;
+  --parent-bg: #E8F2F8;
+  --parent-pale: #D4EAF5;
+  --sun: #FFD36E;
+  --coral: #FFA48C;
+  --berry: #E6779E;
+  --lavender: #D9C7F0;
+  --sage: #A8D5A2;
+  --r: 16px;
+  --shadow: 0 2px 0 rgba(30,42,31,.06), 0 6px 16px rgba(30,42,31,.07);
+  --font-kid: 'Fredoka', ui-rounded, system-ui, sans-serif;
+  --font-parent: 'Be Vietnam Pro', system-ui, sans-serif;
+}
+html { scroll-behavior: smooth; }
+body {
+  font-family: var(--font-parent);
+  background: var(--bg);
+  color: var(--ink);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Layout */
+.layout { display: flex; min-height: 100vh; }
+.sidebar {
+  width: 260px; flex-shrink: 0;
+  position: sticky; top: 0; height: 100vh;
+  overflow-y: auto; padding: 28px 0;
+  background: var(--surface);
+  border-right: 1px solid var(--outline);
+  z-index: 100;
+}
+.sidebar::-webkit-scrollbar { width: 0; }
+.sidebar-head { padding: 0 20px 20px; border-bottom: 1px solid var(--outline); margin-bottom: 12px; }
+.sidebar-title { font-family: var(--font-kid); font-size: 20px; font-weight: 700; color: var(--child); }
+.sidebar-sub { font-size: 11px; color: var(--ink-faint); font-weight: 500; margin-top: 2px; }
+.toc-group { padding: 0 12px; margin-bottom: 2px; }
+.toc-label { font-size: 10px; font-weight: 700; letter-spacing: .8px; color: var(--ink-faint); padding: 10px 8px 4px; text-transform: uppercase; }
+.toc-link {
+  display: flex; align-items: center; gap: 8;
+  padding: 7px 10px; border-radius: 10px;
+  font-size: 13px; font-weight: 500; color: var(--ink-soft);
+  cursor: pointer; text-decoration: none;
+  transition: background .15s, color .15s;
+}
+.toc-link:hover { background: var(--child-pale); color: var(--child); }
+.toc-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+
+.main { flex: 1; padding: 48px 56px; max-width: 960px; }
+@media (max-width: 900px) {
+  .sidebar { display: none; }
+  .main { padding: 24px 18px; }
+}
+
+/* Typography */
+h1 { font-family: var(--font-kid); font-size: 36px; font-weight: 700; color: var(--ink); line-height: 1.1; margin-bottom: 8px; }
+.doc-sub { font-size: 15px; color: var(--ink-soft); margin-bottom: 36px; }
+h2 {
+  font-family: var(--font-kid); font-size: 22px; font-weight: 700;
+  color: var(--ink); margin: 44px 0 6px; padding-top: 20px;
+  border-top: 1px solid var(--outline);
+}
+h2:first-of-type { border-top: none; margin-top: 0; }
+h3 { font-size: 15px; font-weight: 700; color: var(--ink); margin: 24px 0 8px; }
+p, li { font-size: 14px; color: var(--ink-soft); line-height: 1.55; }
+ul { padding-left: 18px; margin-bottom: 12px; }
+
+/* Mode badges */
+.badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 10px; border-radius: 999px;
+  font-size: 11px; font-weight: 700; letter-spacing: .4px;
+}
+.badge-child { background: var(--child-bg); color: var(--child); }
+.badge-parent { background: var(--parent-bg); color: var(--parent); }
+
+/* Copy table */
+.copy-table {
+  width: 100%; border-collapse: separate; border-spacing: 0;
+  margin: 12px 0 20px;
+  border: 1px solid var(--outline); border-radius: var(--r); overflow: hidden;
+  box-shadow: var(--shadow);
+}
+.copy-table th {
+  background: #F0EDE5; text-align: left;
+  padding: 10px 14px; font-size: 11px; font-weight: 700;
+  color: var(--ink-faint); letter-spacing: .5px; text-transform: uppercase;
+}
+.copy-table td {
+  padding: 10px 14px; font-size: 13.5px; vertical-align: top;
+  border-top: 1px solid var(--outline); background: var(--surface);
+}
+.copy-table tr:first-child td { border-top: none; }
+.copy-table .key { font-weight: 600; color: var(--ink); white-space: nowrap; font-size: 12px; }
+.copy-table .en { font-family: var(--font-kid); color: var(--child); font-weight: 600; }
+.copy-table .vi { color: var(--parent); font-weight: 500; }
+.copy-table .note { font-size: 11px; color: var(--ink-faint); font-style: italic; }
+
+/* Section card */
+.section-card {
+  background: var(--surface); border-radius: var(--r); border: 1px solid var(--outline);
+  box-shadow: var(--shadow); padding: 20px 22px; margin-bottom: 20px;
+}
+.section-card h3 { margin-top: 0; }
+
+/* Tone box */
+.tone-box {
+  background: #FFF8EC; border-radius: 14px; padding: 16px 18px;
+  border: 1px solid rgba(255,211,110,.35); margin-bottom: 24px;
+}
+.tone-box h4 { font-size: 13px; font-weight: 700; color: #7A4E0E; margin-bottom: 8px; }
+.tone-box ul { margin: 0; }
+.tone-box li { font-size: 13px; color: #5E3A00; }
+
+/* Bilingual example */
+.bi-example {
+  background: linear-gradient(135deg, var(--child-bg), var(--parent-bg));
+  border-radius: 14px; padding: 16px 18px; margin: 14px 0 20px;
+  border: 1px solid rgba(46,90,58,.12);
+}
+.bi-example .label { font-size: 10px; font-weight: 700; letter-spacing: .6px; color: var(--ink-faint); margin-bottom: 4px; }
+.bi-example .text { font-family: var(--font-kid); font-size: 18px; font-weight: 600; color: var(--ink); line-height: 1.3; }
+</style>
+</head>
+<body>
+<div class="layout">
+<!-- Sidebar -->
+<nav class="sidebar">
+  <div class="sidebar-head">
+    <div class="sidebar-title">Bắp Microcopy</div>
+    <div class="sidebar-sub">EN + VI · All Screens</div>
+  </div>
+  <div class="toc-group">
+    <div class="toc-label">Foundations</div>
+    <a class="toc-link" href="#tone"><span class="toc-dot" style="background:var(--sun)"></span> Tone Rules</a>
+  </div>
+  <div class="toc-group">
+    <div class="toc-label">Child Mode</div>
+    <a class="toc-link" href="#splash"><span class="toc-dot" style="background:var(--sage)"></span> Splash & Welcome</a>
+    <a class="toc-link" href="#profile"><span class="toc-dot" style="background:var(--sage)"></span> Profile Setup</a>
+    <a class="toc-link" href="#home"><span class="toc-dot" style="background:var(--sage)"></span> Home Screen</a>
+    <a class="toc-link" href="#world-map"><span class="toc-dot" style="background:var(--sage)"></span> World Map</a>
+    <a class="toc-link" href="#games"><span class="toc-dot" style="background:var(--sage)"></span> Mini-Games</a>
+    <a class="toc-link" href="#rewards"><span class="toc-dot" style="background:var(--sage)"></span> Rewards & Stickers</a>
+    <a class="toc-link" href="#streak"><span class="toc-dot" style="background:var(--sage)"></span> Streak & Daily Goal</a>
+    <a class="toc-link" href="#system"><span class="toc-dot" style="background:var(--sage)"></span> System & Feedback</a>
+  </div>
+  <div class="toc-group">
+    <div class="toc-label">Parent Mode</div>
+    <a class="toc-link" href="#parent-gate"><span class="toc-dot" style="background:var(--parent)"></span> Parent Gate</a>
+    <a class="toc-link" href="#dashboard"><span class="toc-dot" style="background:var(--parent)"></span> Dashboard</a>
+    <a class="toc-link" href="#settings"><span class="toc-dot" style="background:var(--parent)"></span> Settings</a>
+    <a class="toc-link" href="#report"><span class="toc-dot" style="background:var(--parent)"></span> Progress Report</a>
+    <a class="toc-link" href="#modals"><span class="toc-dot" style="background:var(--parent)"></span> Confirmation Modals</a>
+  </div>
+</nav>
+
+<!-- Main -->
+<main class="main">
+
+<h1>Bắp Number Adventure</h1>
+<p class="doc-sub">Microcopy Guide — English + Vietnamese · Grouped by screen & feature</p>
+
+<!-- ════════════════════════════════════════════ -->
+<!-- TONE RULES -->
+<!-- ════════════════════════════════════════════ -->
+<h2 id="tone">Tone Rules</h2>
+
+<div class="tone-box">
+  <h4>Child Mode — Warm & Playful</h4>
+  <ul>
+    <li>Short sentences — 6 words or fewer when possible</li>
+    <li>First person from Bắp: "I" / "We" / "Let's"</li>
+    <li>Never say "wrong" or "fail" — say "almost" or "try again"</li>
+    <li>Use exclamation marks sparingly (1 per screen max)</li>
+    <li>No academic tone — "find the number", not "identify the numeral"</li>
+    <li>Always encouraging — every outcome feels okay</li>
+  </ul>
+</div>
+
+<div class="tone-box">
+  <h4>Parent Mode — Clear & Helpful</h4>
+  <ul>
+    <li>Vietnamese as primary, clean and modern phrasing</li>
+    <li>Respectful, not condescending — parents are partners</li>
+    <li>Specific labels — "15 phút / ngày", not "a little each day"</li>
+    <li>Explain the <em>why</em> briefly — "Khi hết thời gian, bé sẽ thấy màn hình nghỉ ngơi nhẹ nhàng"</li>
+    <li>No guilt or pressure — "Bé đang tiến bộ", not "Bé chưa đạt mục tiêu"</li>
+  </ul>
+</div>
+
+<div class="bi-example">
+  <div class="label">BILINGUAL EXAMPLE</div>
+  <div class="text">Let's play with numbers together!<br>Cùng chơi với các con số nào!</div>
+</div>
+
+<!-- ════════════════════════════════════════════ -->
+<!-- CHILD MODE -->
+<!-- ════════════════════════════════════════════ -->
+
+<!-- SPLASH & WELCOME -->
+<h2 id="splash"><span class="badge badge-child">CHILD</span> Splash & Welcome</h2>
+
+<div class="section-card">
+<h3>Splash Screen</h3>
+<table class="copy-table">
+  <tr><th>Key</th><th>English</th><th>Tiếng Việt</th><th>Notes</th></tr>
+  <tr>
+    <td class="key">app_name</td>
+    <td class="en">Bắp</td>
+    <td class="vi">Bắp</td>
+    <td class="note">Brand name, never translated</td>
+  </tr>
+  <tr>
+    <td class="key">app_tagline</td>
+    <td class="en">NUMBER ADVENTURE</td>
+    <td class="vi">PHIÊU LƯU CON SỐ</td>
+    <td class="note">Caps lock for display only</td>
+  </tr>
+</table>
+
+<h3>Welcome Screen</h3>
+<table class="copy-table">
+  <tr><th>Key</th><th>English</th><th>Tiếng Việt</th><th>Notes</th></tr>
+  <tr>
+    <td class="key">welcome_greeting</td>
+    <td class="en">Hi, I'm Bắp!</td>
+    <td class="vi">Xin chào, mình là Bắp!</td>
+    <td class="note">Mascot speaks in first person</td>
+  </tr>
+  <tr>
+    <td class="key">welcome_sub</td>
+    <td class="en">Let's play with numbers together</td>
+    <td class="vi">Cùng chơi với các con số nào</td>
+    <td class="note"></td>
+  </tr>
+  <tr>
+    <td class="key">welcome_audio_hint</td>
+    <td class="en">tap to hear</td>
+    <td class="vi">chạm để nghe</td>
+    <td class="note">Lowercase, gentle prompt</td>
+  </tr>
+  <tr>
+    <td class="key">welcome_start</td>
+    <td class="en">Start</td>
+    <td class="vi">Bắt đầu</td>
+    <td class="note">Primary CTA</td>
+  </tr>
+  <tr>
+    <td class="key">welcome_existing</td>
+    <td class="en">I already have a profile</td>
+    <td class="vi">Mình đã có hồ sơ rồi</td>
+    <td class="note">Secondary link, child-friendly "mình"</td>
+  </tr>
+</table>
+</div>
+
+<!-- PROFILE SETUP -->
+<h2 id="profile"><span class="badge badge-child">CHILD</span> Profile Setup</h2>
+
+<div class="section-card">
+<table class="copy-table">
+  <tr><th>Key</th><th>English</th><th>Tiếng Việt</th><th>Notes</th></tr>
+  <tr>
+    <td class="key">profile_name_q</td>
+    <td class="en">What's your name?</td>
+    <td class="vi">Bạn tên gì?</td>
+    <td class="note">Step 1 of 3</td>
+  </tr>
+  <tr>
+    <td class="key">profile_age_q</td>
+    <td class="en">How old are you?</td>
+    <td class="vi">Bạn mấy tuổi?</td>
+    <td class="note">Step 2 — age tiles 3/4/5/6</td>
+  </tr>
+  <tr>
+    <td class="key">profile_color_q</td>
+    <td class="en">Pick your Bắp</td>
+    <td class="vi">Chọn Bắp của bạn</td>
+    <td class="note">Step 3 — mascot color</td>
+  </tr>
+  <tr>
+    <td class="key">profile_next</td>
+    <td class="en">Next</td>
+    <td class="vi">Tiếp</td>
+    <td class="note">Steps 1–2</td>
+  </tr>
+  <tr>
+    <td class="key">profile_done</td>
+    <td class="en">Let's Go!</td>
+    <td class="vi">Đi thôi!</td>
+    <td class="note">Final step — excited tone</td>
+  </tr>
+</table>
+</div>
+
+<!-- HOME SCREEN -->
+<h2 id="home"><span class="badge badge-child">CHILD</span> Home Screen</h2>
+
+<div class="section-card">
+<h3>Greeting & Daily Mission</h3>
+<table class="copy-table">
+  <tr><th>Key</th><th>English</th><th>Tiếng Việt</th><th>Notes</th></tr>
+  <tr>
+    <td class="key">home_greeting</td>
+    <td class="en">Hi, {name}!</td>
+    <td class="vi">Chào, {name}!</td>
+    <td class="note">Dynamic name</td>
+  </tr>
+  <tr>
+    <td class="key">home_today_tag</td>
+    <td class="en">TODAY'S ADVENTURE</td>
+    <td class="vi">CUỘC PHIÊU LƯU HÔM NAY</td>
+    <td class="note">Tag badge</td>
+  </tr>
+  <tr>
+    <td class="key">home_session_info</td>
+    <td class="en">3 games · 2 min</td>
+    <td class="vi">3 trò · 2 phút</td>
+    <td class="note">Dynamic count</td>
+  </tr>
+  <tr>
+    <td class="key">home_play</td>
+    <td class="en">Play</td>
+    <td class="vi">Chơi</td>
+    <td class="note">Primary CTA</td>
+  </tr>
+  <tr>
+    <td class="key">home_world_map</td>
+    <td class="en">World Map</td>
+    <td class="vi">Bản đồ</td>
+    <td class="note">Quick tile</td>
+  </tr>
+  <tr>
+    <td class="key">home_stickers</td>
+    <td class="en">Stickers</td>
+    <td class="vi">Nhãn dán</td>
+    <td class="note">Quick tile</td>
+  </tr>
+  <tr>
+    <td class="key">home_week_label</td>
+    <td class="en">This week</td>
+    <td class="vi">Tuần này</td>
+    <td class="note">Progress snapshot</td>
+  </tr>
+  <tr>
+    <td class="key">home_week_progress</td>
+    <td class="en">{n} of {total} days</td>
+    <td class="vi">{n} trên {total} ngày</td>
+    <td class="note">e.g. "4 of 5 days"</td>
+  </tr>
+</table>
+</div>
+
+<!-- WORLD MAP -->
+<h2 id="world-map"><span class="badge badge-child">CHILD</span> World Map & Levels</h2>
+
+<div class="section-card">
+<h3>World Names</h3>
+<table class="copy-table">
+  <tr><th>Key</th><th>English</th><th>Tiếng Việt</th><th>Notes</th></tr>
+  <tr>
+    <td class="key">world_forest</td>
+    <td class="en">Number Forest</td>
+    <td class="vi">Rừng Con Số</td>
+    <td class="note">World 1 · numbers 1–20</td>
+  </tr>
+  <tr>
+    <td class="key">world_tens</td>
+    <td class="en">Tens Town</td>
+    <td class="vi">Phố Hàng Chục</td>
+    <td class="note">World 2 · 10–100</td>
+  </tr>
+  <tr>
+    <td class="key">world_even_odd</td>
+    <td class="en">Even/Odd Bridge</td>
+    <td class="vi">Cầu Chẵn Lẻ</td>
+    <td class="note">World 3</td>
+  </tr>
+  <tr>
+    <td class="key">world_kitchen</td>
+    <td class="en">Math Kitchen</td>
+    <td class="vi">Bếp Toán Học</td>
+    <td class="note">World 4 · add/subtract</td>
+  </tr>
+  <tr>
+    <td class="key">world_castle</td>
+    <td class="en">Big Number Castle</td>
+    <td class="vi">Lâu Đài Số Lớn</td>
+    <td class="note">World 5 · 100–1000</td>
+  </tr>
+</table>
+
+<h3>Level Navigation</h3>
+<table class="copy-table">
+  <tr><th>Key</th><th>English</th><th>Tiếng Việt</th><th>Notes</th></tr>
+  <tr>
+    <td class="key">world_n_label</td>
+    <td class="en">WORLD {n}</td>
+    <td class="vi">THẾ GIỚI {n}</td>
+    <td class="note">Above world name</td>
+  </tr>
+  <tr>
+    <td class="key">world_locked</td>
+    <td class="en">🔒</td>
+    <td class="vi">🔒</td>
+    <td class="note">Icon only, no text needed</td>
+  </tr>
+  <tr>
+    <td class="key">world_unlocked_msg</td>
+    <td class="en">New world open!</td>
+    <td class="vi">Mở thế giới mới!</td>
+    <td class="note">Toast when world unlocks</td>
+  </tr>
+</table>
+</div>
+
+<!-- MINI-GAMES -->
+<h2 id="games"><span class="badge badge-child">CHILD</span> Mini-Games</h2>
+
+<div class="section-card">
+<h3>Hear & Tap</h3>
+<table class="copy-table">
+  <tr><th>Key</th><th>English</th><th>Tiếng Việt</th><th>Notes</th></tr>
+  <tr>
+    <td class="key">hear_instruction</td>
+    <td class="en">TAP WHAT YOU HEAR</td>
+    <td class="vi">CHẠM SỐ BẠN NGHE</td>
+    <td class="note">Game instruction line</td>
+  </tr>
+  <tr>
+    <td class="key">hear_tap_btn</td>
+    <td class="en">TAP TO HEAR</td>
+    <td class="vi">CHẠM ĐỂ NGHE</td>
+    <td class="note">On speaker button</td>
+  </tr>
+  <tr>
+    <td class="key">hear_listen</td>
+    <td class="en">Listen carefully…</td>
+    <td class="vi">Lắng nghe nhé…</td>
+    <td class="note">Alt: before audio plays</td>
+  </tr>
+  <tr>
+    <td class="key">hear_find</td>
+    <td class="en">Find the number!</td>
+    <td class="vi">Tìm con số nào!</td>
+    <td class="note">Alt prompt variation</td>
+  </tr>
+</table>
+
+<h3>Build the Number</h3>
+<table class="copy-table">
+  <tr><th>Key</th><th>English</th><th>Tiếng Việt</th><th>Notes</th></tr>
+  <tr>
+    <td class="key">build_instruction</td>
+    <td class="en">BUILD THE NUMBER</td>
+    <td class="vi">XÂY CON SỐ</td>
+    <td class="note">Game title</td>
+  </tr>
+  <tr>
+    <td class="key">build_make</td>
+    <td class="en">Make this number</td>
+    <td class="vi">Ghép số này</td>
+    <td class="note">Below target number</td>
+  </tr>
+  <tr>
+    <td class="key">build_your</td>
+    <td class="en">YOUR NUMBER</td>
+    <td class="vi">SỐ CỦA BẠN</td>
+    <td class="note">Workspace label</td>
+  </tr>
+  <tr>
+    <td class="key">build_tens</td>
+    <td class="en">Tens</td>
+    <td class="vi">Chục</td>
+    <td class="note">Column label</td>
+  </tr>
+  <tr>
+    <td class="key">build_tens_sub</td>
+    <td class="en">sticks of 10</td>
+    <td class="vi">thanh 10</td>
+    <td class="note">Hint subtitle</td>
+  </tr>
+  <tr>
+    <td class="key">build_ones</td>
+    <td class="en">Ones</td>
+    <td class="vi">Đơn vị</td>
+    <td class="note">Column label</td>
+  </tr>
+  <tr>
+    <td class="key">build_ones_sub</td>
+    <td class="en">single dots</td>
+    <td class="vi">chấm đơn</td>
+    <td class="note">Hint subtitle</td>
+  </tr>
+  <tr>
+    <td class="key">build_check</td>
+    <td class="en">Check</td>
+    <td class="vi">Kiểm tra</td>
+    <td class="note">Submit button</td>
+  </tr>
+  <tr>
+    <td class="key">build_match</td>
+    <td class="en">Yay! ✓</td>
+    <td class="vi">Đúng rồi! ✓</td>
+    <td class="note">When number matches</td>
+  </tr>
+</table>
+
+<h3>Even or Odd</h3>
+<table class="copy-table">
+  <tr><th>Key</th><th>English</th><th>Tiếng Việt</th><th>Notes</th></tr>
+  <tr>
+    <td class="key">evenodd_instruction</td>
+    <td class="en">EVEN or ODD?</td>
+    <td class="vi">CHẴN hay LẺ?</td>
+    <td class="note">Game title</td>
+  </tr>
+  <tr>
+    <td class="key">evenodd_even</td>
+    <td class="en">EVEN</td>
+    <td class="vi">CHẴN</td>
+    <td class="note">Basket label</td>
+  </tr>
+  <tr>
+    <td class="key">evenodd_even_hint</td>
+    <td class="en">pairs</td>
+    <td class="vi">thành đôi</td>
+    <td class="note">Below basket name</td>
+  </tr>
+  <tr>
+    <td class="key">evenodd_odd</td>
+    <td class="en">ODD</td>
+    <td class="vi">LẺ</td>
+    <td class="note">Basket label</td>
+  </tr>
+  <tr>
+    <td class="key">evenodd_odd_hint</td>
+    <td class="en">one left over</td>
+    <td class="vi">dư một</td>
+    <td class="note">Below basket name</td>
+  </tr>
+</table>
+
+<h3>Number Order</h3>
+<table class="copy-table">
+  <tr><th>Key</th><th>English</th><th>Tiếng Việt</th><th>Notes</th></tr>
+  <tr>
+    <td class="key">order_instruction</td>
+    <td class="en">WHAT COMES NEXT?</td>
+    <td class="vi">SỐ NÀO TIẾP THEO?</td>
+    <td class="note">Game title</td>
+  </tr>
+</table>
+
+<h3>Add / Take Away</h3>
+<table class="copy-table">
+  <tr><th>Key</th><th>English</th><th>Tiếng Việt</th><th>Notes</th></tr>
+  <tr>
+    <td class="key">add_instruction</td>
+    <td class="en">HOW MANY TOGETHER?</td>
+    <td class="vi">CÓ TẤT CẢ BAO NHIÊU?</td>
+    <td class="note">Addition prompt</td>
+  </tr>
+  <tr>
+    <td class="key">take_instruction</td>
+    <td class="en">HOW MANY LEFT?</td>
+    <td class="vi">CÒN LẠI BAO NHIÊU?</td>
+    <td class="note">Subtraction prompt</td>
+  </tr>
+</table>
+
+<h3>Universal Game Feedback</h3>
+<table class="copy-table">
+  <tr><th>Key</th><th>English</th><th>Tiếng Việt</th><th>Notes</th></tr>
+  <tr>
+    <td class="key">fb_correct</td>
+    <td class="en">Yes!</td>
+    <td class="vi">Đúng rồi!</td>
+    <td class="note">Quick positive, shown briefly</td>
+  </tr>
+  <tr>
+    <td class="key">fb_almost</td>
+    <td class="en">Almost!</td>
+    <td class="vi">Gần đúng!</td>
+    <td class="note">Wrong answer — never say "wrong"</td>
+  </tr>
+  <tr>
+    <td class="key">fb_try_again</td>
+    <td class="en">Try again</td>
+    <td class="vi">Thử lại nhé</td>
+    <td class="note">Gentle retry prompt</td>
+  </tr>
+  <tr>
+    <td class="key">fb_great_job</td>
+    <td class="en">Great job!</td>
+    <td class="vi">Giỏi lắm!</td>
+    <td class="note">Round-end, 2 stars</td>
+  </tr>
+  <tr>
+    <td class="key">fb_amazing</td>
+    <td class="en">Amazing!</td>
+    <td class="vi">Tuyệt vời!</td>
+    <td class="note">Round-end, 3 stars</td>
+  </tr>
+  <tr>
+    <td class="key">fb_good_try</td>
+    <td class="en">Good try!</td>
+    <td class="vi">Cố gắng tốt!</td>
+    <td class="note">Round-end, 1 star</td>
+  </tr>
+  <tr>
+    <td class="key">fb_you_did_it</td>
+    <td class="en">You did it!</td>
+    <td class="vi">Bạn làm được rồi!</td>
+    <td class="note">Level complete</td>
+  </tr>
+  <tr>
+    <td class="key">fb_lets_go</td>
+    <td class="en">Let's go!</td>
+    <td class="vi">Đi thôi!</td>
+    <td class="note">Transition to next game</td>
+  </tr>
+  <tr>
+    <td class="key">fb_keep_going</td>
+    <td class="en">Keep going!</td>
+    <td class="vi">Tiếp tục nào!</td>
+    <td class="note">Mid-session encouragement</td>
+  </tr>
+</table>
+</div>
+
+<!-- REWARDS & STICKERS -->
+<h2 id="rewards"><span class="badge badge-child">CHILD</span> Rewards & Stickers</h2>
+
+<div class="section-card">
+<h3>Reward Screen</h3>
+<table class="copy-table">
+  <tr><th>Key</th><th>English</th><th>Tiếng Việt</th><th>Notes</th></tr>
+  <tr>
+    <td class="key">reward_3star</td>
+    <td class="en">Amazing, {name}!</td>
+    <td class="vi">Tuyệt vời, {name}!</td>
+    <td class="note">3 stars</td>
+  </tr>
+  <tr>
+    <td class="key">reward_2star</td>
+    <td class="en">Great job, {name}!</td>
+    <td class="vi">Giỏi lắm, {name}!</td>
+    <td class="note">2 stars</td>
+  </tr>
+  <tr>
+    <td class="key">reward_1star</td>
+    <td class="en">Good try, {name}!</td>
+    <td class="vi">Cố gắng tốt, {name}!</td>
+    <td class="note">1 star — still positive</td>
+  </tr>
+  <tr>
+    <td class="key">reward_correct_label</td>
+    <td class="en">Correct</td>
+    <td class="vi">Đúng</td>
+    <td class="note">Stat label</td>
+  </tr>
+  <tr>
+    <td class="key">reward_coins_label</td>
+    <td class="en">Coins</td>
+    <td class="vi">Xu</td>
+    <td class="note">Stat label</td>
+  </tr>
+  <tr>
+    <td class="key">reward_next</td>
+    <td class="en">Next</td>
+    <td class="vi">Tiếp</td>
+    <td class="note">Continue CTA</td>
+  </tr>
+</table>
+
+<h3>Stickers & Unlocks</h3>
+<table class="copy-table">
+  <tr><th>Key</th><th>English</th><th>Tiếng Việt</th><th>Notes</th></tr>
+  <tr>
+    <td class="key">sticker_new</td>
+    <td class="en">NEW STICKER!</td>
+    <td class="vi">NHÃN DÁN MỚI!</td>
+    <td class="note">Pop-up on earn</td>
+  </tr>
+  <tr>
+    <td class="key">sticker_book_title</td>
+    <td class="en">Sticker Book</td>
+    <td class="vi">Sổ Nhãn Dán</td>
+    <td class="note">Screen title</td>
+  </tr>
+  <tr>
+    <td class="key">sticker_count</td>
+    <td class="en">{n} of {total} collected</td>
+    <td class="vi">{n} trên {total} đã sưu tầm</td>
+    <td class="note">Progress subtitle</td>
+  </tr>
+  <tr>
+    <td class="key">unlock_world</td>
+    <td class="en">New world open!</td>
+    <td class="vi">Thế giới mới mở rồi!</td>
+    <td class="note">World unlock celebration</td>
+  </tr>
+  <tr>
+    <td class="key">unlock_game</td>
+    <td class="en">New game unlocked!</td>
+    <td class="vi">Trò mới đã mở!</td>
+    <td class="note">Game type unlock</td>
+  </tr>
+</table>
+</div>
+
+<!-- STREAK & DAILY GOAL -->
+<h2 id="streak"><span class="badge badge-child">CHILD</span> Streak & Daily Goal</h2>
+
+<div class="section-card">
+<table class="copy-table">
+  <tr><th>Key</th><th>English</th><th>Tiếng Việt</th><th>Notes</th></tr>
+  <tr>
+    <td class="key">streak_title</td>
+    <td class="en">Daily Streak</td>
+    <td class="vi">Chuỗi Ngày</td>
+    <td class="note">Screen title</td>
+  </tr>
+  <tr>
+    <td class="key">streak_count</td>
+    <td class="en">{n} days in a row!</td>
+    <td class="vi">{n} ngày liên tiếp!</td>
+    <td class="note">Below big number</td>
+  </tr>
+  <tr>
+    <td class="key">streak_keep</td>
+    <td class="en">Keep going!</td>
+    <td class="vi">Tiếp tục nào!</td>
+    <td class="note">CTA button</td>
+  </tr>
+  <tr>
+    <td class="key">daily_complete</td>
+    <td class="en">Today's goal done!</td>
+    <td class="vi">Xong mục tiêu hôm nay!</td>
+    <td class="note">End-of-session celebration</td>
+  </tr>
+  <tr>
+    <td class="key">daily_rest</td>
+    <td class="en">Time to rest. See you tomorrow!</td>
+    <td class="vi">Nghỉ ngơi nhé. Hẹn mai nha!</td>
+    <td class="note">When time limit reached</td>
+  </tr>
+  <tr>
+    <td class="key">daily_welcome_back</td>
+    <td class="en">Welcome back!</td>
+    <td class="vi">Mừng bạn quay lại!</td>
+    <td class="note">Returning next day</td>
+  </tr>
+</table>
+</div>
+
+<!-- SYSTEM & FEEDBACK -->
+<h2 id="system"><span class="badge badge-child">CHILD</span> System & Feedback</h2>
+
+<div class="section-card">
+<h3>Welcome Message Variations</h3>
+<p style="margin-bottom:12px">Rotate randomly on app open to keep it fresh:</p>
+<table class="copy-table">
+  <tr><th>#</th><th>English</th><th>Tiếng Việt</th></tr>
+  <tr><td class="key">1</td><td class="en">Hi, {name}!</td><td class="vi">Chào, {name}!</td></tr>
+  <tr><td class="key">2</td><td class="en">Hey there!</td><td class="vi">Chào bạn!</td></tr>
+  <tr><td class="key">3</td><td class="en">Ready to play?</td><td class="vi">Sẵn sàng chơi chưa?</td></tr>
+  <tr><td class="key">4</td><td class="en">Bắp missed you!</td><td class="vi">Bắp nhớ bạn!</td></tr>
+  <tr><td class="key">5</td><td class="en">Let's learn today!</td><td class="vi">Hôm nay học gì nào!</td></tr>
+</table>
+
+<h3>Loading & Transitions</h3>
+<table class="copy-table">
+  <tr><th>Key</th><th>English</th><th>Tiếng Việt</th></tr>
+  <tr><td class="key">loading</td><td class="en">Getting ready…</td><td class="vi">Đang chuẩn bị…</td></tr>
+  <tr><td class="key">loading_world</td><td class="en">Entering {world}…</td><td class="vi">Đang vào {world}…</td></tr>
+</table>
+</div>
+
+<!-- ════════════════════════════════════════════ -->
+<!-- PARENT MODE -->
+<!-- ════════════════════════════════════════════ -->
+
+<!-- PARENT GATE -->
+<h2 id="parent-gate"><span class="badge badge-parent">PARENT</span> Parent Gate</h2>
+
+<div class="section-card">
+<table class="copy-table">
+  <tr><th>Key</th><th>English</th><th>Tiếng Việt</th><th>Notes</th></tr>
+  <tr>
+    <td class="key">gate_label</td>
+    <td class="en">PARENT GATE</td>
+    <td class="vi">CỔNG PHỤ HUYNH</td>
+    <td class="note">Small caps label</td>
+  </tr>
+  <tr>
+    <td class="key">gate_title</td>
+    <td class="en">For grown-ups only</td>
+    <td class="vi">Dành cho người lớn</td>
+    <td class="note">Friendly, not stern</td>
+  </tr>
+  <tr>
+    <td class="key">gate_instruction</td>
+    <td class="en">Solve the math to continue</td>
+    <td class="vi">Giải phép tính để tiếp tục</td>
+    <td class="note">Brief instruction</td>
+  </tr>
+  <tr>
+    <td class="key">gate_cancel</td>
+    <td class="en">Cancel</td>
+    <td class="vi">Hủy</td>
+    <td class="note">Dismiss button</td>
+  </tr>
+</table>
+</div>
+
+<!-- DASHBOARD -->
+<h2 id="dashboard"><span class="badge badge-parent">PARENT</span> Dashboard</h2>
+
+<div class="section-card">
+<h3>Header & Navigation</h3>
+<table class="copy-table">
+  <tr><th>Key</th><th>English</th><th>Tiếng Việt</th><th>Notes</th></tr>
+  <tr>
+    <td class="key">dash_mode</td>
+    <td class="en">PARENT</td>
+    <td class="vi">CHA MẸ</td>
+    <td class="note">Mode indicator</td>
+  </tr>
+  <tr>
+    <td class="key">dash_title</td>
+    <td class="en">Dashboard</td>
+    <td class="vi">Bảng điều khiển</td>
+    <td class="note">Screen title</td>
+  </tr>
+  <tr>
+    <td class="key">dash_status</td>
+    <td class="en">● Learning</td>
+    <td class="vi">● Đang học</td>
+    <td class="note">Active status pill</td>
+  </tr>
+  <tr>
+    <td class="key">dash_age</td>
+    <td class="en">{age} years old · Preschool</td>
+    <td class="vi">{age} tuổi · Mẫu giáo</td>
+    <td class="note">Below child name</td>
+  </tr>
+</table>
+
+<h3>Metrics</h3>
+<table class="copy-table">
+  <tr><th>Key</th><th>English</th><th>Tiếng Việt</th><th>Notes</th></tr>
+  <tr>
+    <td class="key">metric_today</td>
+    <td class="en">Today</td>
+    <td class="vi">Hôm nay</td>
+    <td class="note">Card label</td>
+  </tr>
+  <tr>
+    <td class="key">metric_playtime</td>
+    <td class="en">Play time</td>
+    <td class="vi">Thời gian chơi</td>
+    <td class="note">Card subtitle</td>
+  </tr>
+  <tr>
+    <td class="key">metric_streak</td>
+    <td class="en">Streak</td>
+    <td class="vi">Chuỗi ngày</td>
+    <td class="note">Card label</td>
+  </tr>
+  <tr>
+    <td class="key">metric_streak_sub</td>
+    <td class="en">in a row</td>
+    <td class="vi">liên tiếp</td>
+    <td class="note">Card subtitle</td>
+  </tr>
+  <tr>
+    <td class="key">metric_accuracy</td>
+    <td class="en">Accuracy</td>
+    <td class="vi">Độ chính xác</td>
+    <td class="note">Card label</td>
+  </tr>
+  <tr>
+    <td class="key">metric_accuracy_sub</td>
+    <td class="en">this week</td>
+    <td class="vi">tuần này</td>
+    <td class="note">Card subtitle</td>
+  </tr>
+  <tr>
+    <td class="key">metric_stars</td>
+    <td class="en">Stars</td>
+    <td class="vi">Ngôi sao</td>
+    <td class="note">Card label</td>
+  </tr>
+  <tr>
+    <td class="key">metric_stars_sub</td>
+    <td class="en">collected</td>
+    <td class="vi">đã thu thập</td>
+    <td class="note">Card subtitle</td>
+  </tr>
+</table>
+
+<h3>Weekly Activity</h3>
+<table class="copy-table">
+  <tr><th>Key</th><th>English</th><th>Tiếng Việt</th><th>Notes</th></tr>
+  <tr>
+    <td class="key">week_title</td>
+    <td class="en">This week's activity</td>
+    <td class="vi">Hoạt động tuần này</td>
+    <td class="note">Section title</td>
+  </tr>
+  <tr>
+    <td class="key">week_goal</td>
+    <td class="en">goal {n}min/day</td>
+    <td class="vi">mục tiêu {n}ph/ngày</td>
+    <td class="note">Subtitle</td>
+  </tr>
+</table>
+
+<h3>Skills</h3>
+<table class="copy-table">
+  <tr><th>Key</th><th>English</th><th>Tiếng Việt</th><th>Notes</th></tr>
+  <tr>
+    <td class="key">skills_title</td>
+    <td class="en">Skills</td>
+    <td class="vi">Kỹ năng</td>
+    <td class="note">Section title</td>
+  </tr>
+  <tr>
+    <td class="key">skill_recognition</td>
+    <td class="en">Number recognition 1–20</td>
+    <td class="vi">Nhận biết số 1–20</td>
+    <td class="note">Skill name</td>
+  </tr>
+  <tr>
+    <td class="key">skill_tens</td>
+    <td class="en">Tens and hundreds</td>
+    <td class="vi">Số chục và trăm</td>
+    <td class="note">Skill name</td>
+  </tr>
+  <tr>
+    <td class="key">skill_evenodd</td>
+    <td class="en">Even / Odd</td>
+    <td class="vi">Số chẵn / lẻ</td>
+    <td class="note">Skill name</td>
+  </tr>
+  <tr>
+    <td class="key">skill_addsubtract</td>
+    <td class="en">Basic add / subtract</td>
+    <td class="vi">Cộng / Trừ cơ bản</td>
+    <td class="note">Skill name</td>
+  </tr>
+  <tr>
+    <td class="key">badge_strong</td>
+    <td class="en">Strong</td>
+    <td class="vi">Giỏi</td>
+    <td class="note">Skill level badge</td>
+  </tr>
+  <tr>
+    <td class="key">badge_learning</td>
+    <td class="en">Learning</td>
+    <td class="vi">Đang học</td>
+    <td class="note">Skill level badge</td>
+  </tr>
+  <tr>
+    <td class="key">badge_started</td>
+    <td class="en">Just started</td>
+    <td class="vi">Mới bắt đầu</td>
+    <td class="note">Skill level badge</td>
+  </tr>
+  <tr>
+    <td class="key">badge_upcoming</td>
+    <td class="en">Coming soon</td>
+    <td class="vi">Sắp mở</td>
+    <td class="note">Skill level badge</td>
+  </tr>
+</table>
+
+<h3>Menu Items</h3>
+<table class="copy-table">
+  <tr><th>Key</th><th>English</th><th>Tiếng Việt</th><th>Notes</th></tr>
+  <tr>
+    <td class="key">menu_report</td>
+    <td class="en">Detailed report</td>
+    <td class="vi">Báo cáo chi tiết</td>
+    <td class="note"></td>
+  </tr>
+  <tr>
+    <td class="key">menu_report_sub</td>
+    <td class="en">View weekly progress</td>
+    <td class="vi">Xem tiến độ theo tuần</td>
+    <td class="note"></td>
+  </tr>
+  <tr>
+    <td class="key">menu_time</td>
+    <td class="en">Time limit</td>
+    <td class="vi">Giới hạn thời gian</td>
+    <td class="note"></td>
+  </tr>
+  <tr>
+    <td class="key">menu_lang</td>
+    <td class="en">Language & Audio</td>
+    <td class="vi">Ngôn ngữ & Âm thanh</td>
+    <td class="note"></td>
+  </tr>
+  <tr>
+    <td class="key">menu_lang_sub</td>
+    <td class="en">EN for child · VI for parent</td>
+    <td class="vi">EN cho bé · VI cho cha mẹ</td>
+    <td class="note"></td>
+  </tr>
+  <tr>
+    <td class="key">menu_settings</td>
+    <td class="en">Settings</td>
+    <td class="vi">Cài đặt</td>
+    <td class="note"></td>
+  </tr>
+  <tr>
+    <td class="key">menu_settings_sub</td>
+    <td class="en">Profile, security</td>
+    <td class="vi">Hồ sơ, bảo mật</td>
+    <td class="note"></td>
+  </tr>
+</table>
+</div>
+
+<!-- SETTINGS -->
+<h2 id="settings"><span class="badge badge-parent">PARENT</span> Settings</h2>
+
+<div class="section-card">
+<h3>Time Settings</h3>
+<table class="copy-table">
+  <tr><th>Key</th><th>English</th><th>Tiếng Việt</th><th>Notes</th></tr>
+  <tr>
+    <td class="key">time_daily</td>
+    <td class="en">Daily limit</td>
+    <td class="vi">Giới hạn mỗi ngày</td>
+    <td class="note">Panel title</td>
+  </tr>
+  <tr>
+    <td class="key">time_daily_sub</td>
+    <td class="en">When time runs out, a gentle rest screen appears</td>
+    <td class="vi">Khi hết thời gian, bé sẽ thấy màn hình nghỉ ngơi nhẹ nhàng</td>
+    <td class="note">Reassuring explanation</td>
+  </tr>
+  <tr>
+    <td class="key">time_quiet</td>
+    <td class="en">Quiet hours</td>
+    <td class="vi">Giờ yên tĩnh</td>
+    <td class="note">Panel title</td>
+  </tr>
+  <tr>
+    <td class="key">time_quiet_sub</td>
+    <td class="en">App won't open during this time</td>
+    <td class="vi">Không mở app trong khoảng này</td>
+    <td class="note">Explanation</td>
+  </tr>
+  <tr>
+    <td class="key">time_difficulty</td>
+    <td class="en">Difficulty</td>
+    <td class="vi">Độ khó</td>
+    <td class="note">Panel title</td>
+  </tr>
+  <tr>
+    <td class="key">diff_easy</td>
+    <td class="en">Easy</td>
+    <td class="vi">Dễ</td>
+    <td class="note"></td>
+  </tr>
+  <tr>
+    <td class="key">diff_medium</td>
+    <td class="en">Medium</td>
+    <td class="vi">Vừa</td>
+    <td class="note"></td>
+  </tr>
+  <tr>
+    <td class="key">diff_hard</td>
+    <td class="en">Hard</td>
+    <td class="vi">Khó</td>
+    <td class="note"></td>
+  </tr>
+</table>
+
+<h3>Language Settings</h3>
+<table class="copy-table">
+  <tr><th>Key</th><th>English</th><th>Tiếng Việt</th><th>Notes</th></tr>
+  <tr>
+    <td class="key">lang_kid_title</td>
+    <td class="en">Child screen</td>
+    <td class="vi">Màn hình cho bé</td>
+    <td class="note">Panel title</td>
+  </tr>
+  <tr>
+    <td class="key">lang_kid_sub</td>
+    <td class="en">Audio prompts</td>
+    <td class="vi">Lời nhắc âm thanh</td>
+    <td class="note">Panel subtitle</td>
+  </tr>
+  <tr>
+    <td class="key">lang_en</td>
+    <td class="en">English</td>
+    <td class="vi">Tiếng Anh</td>
+    <td class="note"></td>
+  </tr>
+  <tr>
+    <td class="key">lang_en_sub</td>
+    <td class="en">English numbers</td>
+    <td class="vi">Số tiếng Anh</td>
+    <td class="note">Radio option hint</td>
+  </tr>
+  <tr>
+    <td class="key">lang_vi</td>
+    <td class="en">Vietnamese</td>
+    <td class="vi">Tiếng Việt</td>
+    <td class="note"></td>
+  </tr>
+  <tr>
+    <td class="key">lang_vi_sub</td>
+    <td class="en">Vietnamese numbers</td>
+    <td class="vi">Số tiếng Việt</td>
+    <td class="note">Radio option hint</td>
+  </tr>
+  <tr>
+    <td class="key">lang_bi</td>
+    <td class="en">Bilingual</td>
+    <td class="vi">Song ngữ</td>
+    <td class="note"></td>
+  </tr>
+  <tr>
+    <td class="key">lang_bi_sub</td>
+    <td class="en">Both languages</td>
+    <td class="vi">Cả hai ngôn ngữ</td>
+    <td class="note">Radio option hint</td>
+  </tr>
+  <tr>
+    <td class="key">lang_parent_title</td>
+    <td class="en">Parent screen</td>
+    <td class="vi">Màn hình cha mẹ</td>
+    <td class="note">Panel title</td>
+  </tr>
+</table>
+
+<h3>Audio Settings</h3>
+<table class="copy-table">
+  <tr><th>Key</th><th>English</th><th>Tiếng Việt</th><th>Notes</th></tr>
+  <tr>
+    <td class="key">audio_title</td>
+    <td class="en">Audio</td>
+    <td class="vi">Âm thanh</td>
+    <td class="note">Tab & panel title</td>
+  </tr>
+  <tr>
+    <td class="key">audio_sub</td>
+    <td class="en">Effects and background music</td>
+    <td class="vi">Hiệu ứng và nhạc nền</td>
+    <td class="note">Panel subtitle</td>
+  </tr>
+  <tr>
+    <td class="key">audio_sfx</td>
+    <td class="en">Sound effects</td>
+    <td class="vi">Hiệu ứng âm thanh</td>
+    <td class="note">Toggle label</td>
+  </tr>
+  <tr>
+    <td class="key">audio_music</td>
+    <td class="en">Soft background music</td>
+    <td class="vi">Nhạc nền nhẹ</td>
+    <td class="note">Toggle label</td>
+  </tr>
+  <tr>
+    <td class="key">audio_voice</td>
+    <td class="en">Voice guidance</td>
+    <td class="vi">Giọng nói hướng dẫn</td>
+    <td class="note">Toggle label</td>
+  </tr>
+  <tr>
+    <td class="key">audio_voice_style</td>
+    <td class="en">Number voice</td>
+    <td class="vi">Giọng đọc số</td>
+    <td class="note">Panel title for Hear & Tap</td>
+  </tr>
+</table>
+</div>
+
+<!-- PROGRESS REPORT -->
+<h2 id="report"><span class="badge badge-parent">PARENT</span> Progress Report</h2>
+
+<div class="section-card">
+<table class="copy-table">
+  <tr><th>Key</th><th>English</th><th>Tiếng Việt</th><th>Notes</th></tr>
+  <tr>
+    <td class="key">report_title</td>
+    <td class="en">{name}'s report</td>
+    <td class="vi">Báo cáo của {name}</td>
+    <td class="note">Screen title</td>
+  </tr>
+  <tr>
+    <td class="key">report_summary</td>
+    <td class="en">WEEK SUMMARY</td>
+    <td class="vi">TÓM TẮT TUẦN</td>
+    <td class="note">Card label</td>
+  </tr>
+  <tr>
+    <td class="key">report_playtime</td>
+    <td class="en">Play time — 7 days</td>
+    <td class="vi">Thời gian chơi 7 ngày</td>
+    <td class="note">Chart title</td>
+  </tr>
+  <tr>
+    <td class="key">report_by_game</td>
+    <td class="en">By mini-game</td>
+    <td class="vi">Theo mini-game</td>
+    <td class="note">Section title</td>
+  </tr>
+  <tr>
+    <td class="key">report_plays</td>
+    <td class="en">{n} plays</td>
+    <td class="vi">{n} lượt chơi</td>
+    <td class="note">Per-game stat</td>
+  </tr>
+  <tr>
+    <td class="key">report_tip_label</td>
+    <td class="en">TIP</td>
+    <td class="vi">GỢI Ý</td>
+    <td class="note">Recommendation card label</td>
+  </tr>
+</table>
+
+<h3>Recommendation Copy Examples</h3>
+<table class="copy-table">
+  <tr><th>Key</th><th>English</th><th>Tiếng Việt</th></tr>
+  <tr>
+    <td class="key">rec_count_home</td>
+    <td class="en">Count objects around the house together (e.g. 12 marbles, 20 spoons)</td>
+    <td class="vi">Cùng bé đếm đồ vật quanh nhà (ví dụ: 12 viên bi, 20 cái thìa)</td>
+  </tr>
+  <tr>
+    <td class="key">rec_evenodd</td>
+    <td class="en">Play more Even/Odd to strengthen the concept</td>
+    <td class="vi">Chơi thêm mini-game Even/Odd để củng cố khái niệm</td>
+  </tr>
+  <tr>
+    <td class="key">rec_duration</td>
+    <td class="en">10–15 minutes per day is enough for age 4</td>
+    <td class="vi">Duy trì 10–15 phút/ngày là đủ cho độ tuổi 4</td>
+  </tr>
+</table>
+</div>
+
+<!-- CONFIRMATION MODALS -->
+<h2 id="modals"><span class="badge badge-parent">PARENT</span> Confirmation Modals</h2>
+
+<div class="section-card">
+<h3>Exit Game</h3>
+<table class="copy-table">
+  <tr><th>Key</th><th>English</th><th>Tiếng Việt</th><th>Notes</th></tr>
+  <tr>
+    <td class="key">modal_exit_title</td>
+    <td class="en">Leave this game?</td>
+    <td class="vi">Rời trò chơi?</td>
+    <td class="note">Modal title</td>
+  </tr>
+  <tr>
+    <td class="key">modal_exit_body</td>
+    <td class="en">Progress for this round won't be saved.</td>
+    <td class="vi">Tiến trình lượt này sẽ không được lưu.</td>
+    <td class="note">Explanation — factual, not scary</td>
+  </tr>
+  <tr>
+    <td class="key">modal_exit_confirm</td>
+    <td class="en">Leave</td>
+    <td class="vi">Rời đi</td>
+    <td class="note">Destructive action</td>
+  </tr>
+  <tr>
+    <td class="key">modal_exit_cancel</td>
+    <td class="en">Keep playing</td>
+    <td class="vi">Chơi tiếp</td>
+    <td class="note">Primary / safe action</td>
+  </tr>
+</table>
+
+<h3>Reset Profile</h3>
+<table class="copy-table">
+  <tr><th>Key</th><th>English</th><th>Tiếng Việt</th><th>Notes</th></tr>
+  <tr>
+    <td class="key">modal_reset_title</td>
+    <td class="en">Reset all progress?</td>
+    <td class="vi">Xóa toàn bộ tiến trình?</td>
+    <td class="note">Modal title</td>
+  </tr>
+  <tr>
+    <td class="key">modal_reset_body</td>
+    <td class="en">Stars, stickers, and streak will be cleared. This can't be undone.</td>
+    <td class="vi">Ngôi sao, nhãn dán và chuỗi ngày sẽ bị xóa. Không thể hoàn tác.</td>
+    <td class="note">Clear consequences</td>
+  </tr>
+  <tr>
+    <td class="key">modal_reset_confirm</td>
+    <td class="en">Reset</td>
+    <td class="vi">Xóa</td>
+    <td class="note">Destructive</td>
+  </tr>
+  <tr>
+    <td class="key">modal_reset_cancel</td>
+    <td class="en">Keep data</td>
+    <td class="vi">Giữ lại</td>
+    <td class="note">Safe action</td>
+  </tr>
+</table>
+
+<h3>Change Difficulty</h3>
+<table class="copy-table">
+  <tr><th>Key</th><th>English</th><th>Tiếng Việt</th><th>Notes</th></tr>
+  <tr>
+    <td class="key">modal_diff_title</td>
+    <td class="en">Change difficulty?</td>
+    <td class="vi">Đổi độ khó?</td>
+    <td class="note">Modal title</td>
+  </tr>
+  <tr>
+    <td class="key">modal_diff_body</td>
+    <td class="en">New games will use the updated level. Current progress stays.</td>
+    <td class="vi">Trò chơi mới sẽ dùng mức độ mới. Tiến trình hiện tại vẫn giữ.</td>
+    <td class="note">Reassuring</td>
+  </tr>
+  <tr>
+    <td class="key">modal_diff_confirm</td>
+    <td class="en">Change</td>
+    <td class="vi">Đổi</td>
+    <td class="note"></td>
+  </tr>
+  <tr>
+    <td class="key">modal_diff_cancel</td>
+    <td class="en">Cancel</td>
+    <td class="vi">Hủy</td>
+    <td class="note"></td>
+  </tr>
+</table>
+
+<h3>Time Limit Reached (shown to child)</h3>
+<table class="copy-table">
+  <tr><th>Key</th><th>English</th><th>Tiếng Việt</th><th>Notes</th></tr>
+  <tr>
+    <td class="key">modal_time_title</td>
+    <td class="en">Time to rest!</td>
+    <td class="vi">Nghỉ ngơi thôi!</td>
+    <td class="note">Warm, not punitive</td>
+  </tr>
+  <tr>
+    <td class="key">modal_time_body</td>
+    <td class="en">You played so well today. See you tomorrow!</td>
+    <td class="vi">Hôm nay bạn chơi giỏi lắm. Hẹn mai nha!</td>
+    <td class="note">Ends on positive note</td>
+  </tr>
+  <tr>
+    <td class="key">modal_time_btn</td>
+    <td class="en">Bye bye!</td>
+    <td class="vi">Tạm biệt!</td>
+    <td class="note">Dismiss button</td>
+  </tr>
+</table>
+</div>
+
+<div style="text-align:center; padding: 40px 0 20px; font-size: 12px; color: var(--ink-faint);">
+  Bắp Number Adventure · Microcopy Guide · EN + VI
+</div>
+
+</main>
+</div>
+</body>
+</html>

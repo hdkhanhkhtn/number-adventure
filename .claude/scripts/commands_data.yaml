@@ -1,0 +1,98 @@
+- name: brainstorm
+  description: 💡 Brainstorm Router — Route to ideation workflows
+  category: planning
+  variants:
+  - name: fast
+    description: ⚡ Quick Ideation — Rapid idea generation
+  - name: hard
+    description: ⚡⚡⚡ Deep Ideation — Research-backed exploration
+  - name: team
+    description: 🔺 Team Brainstorm — Golden Triangle adversarial collaboration for
+      maximum quality ideation
+- name: cook
+  description: 🍳 Cook Router — Route to feature implementation workflows
+  category: engineering
+  variants:
+  - name: fast
+    description: ⚡ Quick Feature — Rapid feature implementation
+  - name: focus
+    description: 🔒 Focused Feature — Complete development with enforced context optimization
+  - name: hard
+    description: ⚡⚡⚡ Full Feature — Complete feature development lifecycle
+  - name: team
+    description: 🔺 Team Feature — Golden Triangle parallel agent collaboration for
+      maximum quality
+- name: debug
+  description: 🐛 Debug Router — Route to debugging workflows
+  category: debugging
+  variants:
+  - name: fast
+    description: ⚡ Quick Debug — Fast diagnosis for simple bugs
+  - name: focus
+    description: 🔒 Focused Debug — Deep investigation with enforced context optimization
+  - name: hard
+    description: ⚡⚡⚡ Full Debug — Deep investigation for complex issues
+  - name: team
+    description: 🔺 Team Debug — Golden Triangle adversarial collaboration for maximum
+      quality investigation
+- name: docs
+  description: 📝 Docs - Full Documentation Suite (executes ALL sub-commands sequentially)
+  category: documentation
+  variants:
+  - name: audit
+    description: Audit Docs - Generate 4 audit folders with structured sub-files
+  - name: business
+    description: Business Docs - Generate 4 business folders with structured sub-files
+  - name: core
+    description: Core Docs - Generate 5 knowledge folders with evidence-backed sub-files
+      for comprehensive technical documentation
+- name: fix
+  description: 🔧 Fix Router — Route to issue resolution workflows
+  category: debugging
+  variants:
+  - name: fast
+    description: ⚡ Quick Fix — Rapid issue resolution
+  - name: focus
+    description: 🔒 Focused Fix — Complete issue resolution with enforced context optimization
+  - name: hard
+    description: ⚡⚡⚡ Full Fix — Complete issue resolution with research
+  - name: team
+    description: 🔺 Team Fix — Golden Triangle adversarial collaboration for maximum
+      quality issue resolution
+- name: plan
+  description: 📋 Plan Router — Route to planning workflows
+  category: planning
+  variants:
+  - name: fast
+    description: ⚡ Quick Plan — Fast planning without deep research
+  - name: focus
+    description: 🔒 Focused Plan — Research-backed planning with enforced context optimization
+  - name: hard
+    description: ⚡⚡⚡ Full Plan — Research-backed comprehensive planning
+  - name: team
+    description: 🔺 Team Plan — Golden Triangle adversarial collaboration for maximum
+      quality planning
+- name: review
+  description: 🔍 Review Router — Route to code review workflows
+  category: validation
+  variants:
+  - name: fast
+    description: ⚡ Quick Review — Fast PR/file review
+  - name: hard
+    description: ⚡⚡⚡ Full Review — Deep code analysis with architecture review
+  - name: team
+    description: 🔺 Team Review — Golden Triangle adversarial collaboration for maximum
+      quality code review
+- name: test
+  description: 🧪 Test Router — Route to testing workflows
+  category: validation
+  variants:
+  - name: fast
+    description: ⚡ Quick Test — Fast testing for specific scope
+  - name: focus
+    description: 🔒 Focused Test — Comprehensive QA with enforced context optimization
+  - name: hard
+    description: ⚡⚡⚡ Full Test — Comprehensive QA with quality gates
+  - name: team
+    description: 🔺 Team Test — Golden Triangle adversarial collaboration for maximum
+      quality testing

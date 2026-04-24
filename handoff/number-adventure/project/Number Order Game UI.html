@@ -1,0 +1,720 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bắp — Number Order & Missing Number Game UI</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; font-family: 'Fredoka', ui-rounded, sans-serif; background: #E8E0D3; -webkit-font-smoothing: antialiased; overflow: hidden; }
+button { cursor: pointer; font-family: inherit; border: none; background: none; }
+@keyframes bobble      { 0%,100%{transform:translateY(0) rotate(0)} 50%{transform:translateY(-7px) rotate(-2deg)} }
+@keyframes pop-in      { 0%{transform:scale(.55);opacity:0} 65%{transform:scale(1.1);opacity:1} 100%{transform:scale(1)} }
+@keyframes shake       { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-7px)} 40%{transform:translateX(7px)} 60%{transform:translateX(-5px)} 80%{transform:translateX(5px)} }
+@keyframes pulse-soft  { 0%,100%{transform:scale(1)} 50%{transform:scale(1.05)} }
+@keyframes pulse-ring  { 0%{box-shadow:0 0 0 0 rgba(255,211,110,.7)} 70%{box-shadow:0 0 0 14px rgba(255,211,110,0)} 100%{box-shadow:0 0 0 0 rgba(255,211,110,0)} }
+@keyframes sparkle     { 0%,100%{transform:scale(.6) rotate(0);opacity:.35} 50%{transform:scale(1.3) rotate(180deg);opacity:1} }
+@keyframes confetti-fall { 0%{transform:translateY(-16px) rotate(0deg);opacity:1} 100%{transform:translateY(140px) rotate(540deg);opacity:0} }
+@keyframes float-up    { from{transform:translateY(0);opacity:1} to{transform:translateY(-50px);opacity:0} }
+@keyframes train-chug  { 0%,100%{transform:translateX(0)} 50%{transform:translateX(3px)} }
+@keyframes slot-bounce { 0%{transform:scale(1)} 40%{transform:scale(1.12)} 70%{transform:scale(.96)} 100%{transform:scale(1)} }
+@keyframes hint-glow   { 0%,100%{box-shadow:0 0 0 0 rgba(255,211,110,.5)} 50%{box-shadow:0 0 0 10px rgba(255,211,110,0)} }
+@keyframes slide-up    { from{transform:translateY(18px);opacity:0} to{transform:translateY(0);opacity:1} }
+@keyframes track-dash  { to{stroke-dashoffset:-20} }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script type="text/babel" src="design-canvas.jsx"></script>
+<script type="text/babel">
+const { useState, useMemo } = React;
+
+// ─── TOKENS ──────────────────────────────────────────────────
+const C = {
+  ink:'#2D3A2E', soft:'#6B7A6C', faint:'#A9B4A8',
+  sun:'#FFD36E', sunSh:'#C79528', sunInk:'#5E3A00',
+  sage:'#7FC089', sageSh:'#4D8B58', sageInk:'#1F4A28', sagePale:'#C4EBB9',
+  sky:'#B8DEEF', skySh:'#7DB0C8', skyInk:'#1F4A61', skyBg:'#E4F2FA',
+  lav:'#D9C7F0', lavSh:'#A58AD0', lavInk:'#3D256D', lavBg:'#EEE8F8',
+  coral:'#FFA48C', coralSh:'#D67560', coralInk:'#7A2B15', coralBg:'#FFF0EA',
+  cream:'#FFF8EC', surface:'#FFFDF7',
+  correct:'#5FB36A', correctSh:'#3D8A4A', correctBg:'#EAF7E4',
+  wrong:'#F2795A', wrongSh:'#C8614A', wrongBg:'#FFE8DF',
+  hint:'#FFD36E', hintBg:'#FFF4DE',
+  berry:'#E6779E', berrySh:'#B44B7A',
+};
+
+// ─── MASCOT ──────────────────────────────────────────────────
+function Bap({ size=72, mood='happy', color='sun' }) {
+  const body={sun:'#FFD36E',sage:'#A8D5A2',coral:'#FFA48C',lavender:'#D9C7F0',sky:'#B8DEEF'}[color]||'#FFD36E';
+  const dark={sun:'#E8B23F',sage:'#7FB983',coral:'#E2815E',lavender:'#B39DD1',sky:'#88BED4'}[color]||'#E8B23F';
+  const eye={
+    happy:<><ellipse cx="0" cy="0" rx="6" ry="7" fill={C.ink}/><ellipse cx="-1.5" cy="-2" rx="2" ry="2.5" fill="#fff"/></>,
+    celebrate:<path d="M -6 2 Q 0 -6 6 2" stroke={C.ink} strokeWidth="3" fill="none" strokeLinecap="round"/>,
+    worry:<ellipse cx="0" cy="1" rx="5" ry="5" fill={C.ink}/>,
+    hint:<><ellipse cx="0" cy="0" rx="6" ry="6" fill={C.ink}/><ellipse cx="2" cy="-2" rx="2" ry="2.5" fill="#fff"/></>,
+    excited:<><ellipse cx="0" cy="0" rx="7" ry="8" fill={C.ink}/><ellipse cx="-2" cy="-2.5" rx="2.5" ry="3" fill="#fff"/></>,
+  };
+  const mouth={
+    happy:<path d="M 35 85 Q 50 98 65 85" stroke={C.ink} strokeWidth="3.5" fill="#C14A2A" strokeLinecap="round"/>,
+    celebrate:<path d="M 32 82 Q 50 105 68 82 Q 50 95 32 82" fill="#C14A2A" stroke={C.ink} strokeWidth="3"/>,
+    worry:<path d="M 38 89 Q 50 81 62 89" stroke={C.ink} strokeWidth="3" fill="none" strokeLinecap="round"/>,
+    hint:<path d="M 40 85 Q 50 91 60 85" stroke={C.ink} strokeWidth="3" fill="#C14A2A" strokeLinecap="round"/>,
+    excited:<path d="M 30 80 Q 50 108 70 80 Q 50 96 30 80" fill="#C14A2A" stroke={C.ink} strokeWidth="3"/>,
+  };
+  return (
+    <svg viewBox="0 0 120 140" width={size} height={size*140/120} style={{display:'block'}}>
+      <g><ellipse cx="38" cy="18" rx="14" ry="20" fill="#7FB983" transform="rotate(-30 38 18)"/>
+      <ellipse cx="38" cy="18" rx="7" ry="16" fill="#A8D5A2" transform="rotate(-30 38 18)"/>
+      <ellipse cx="76" cy="14" rx="16" ry="22" fill="#5FA36A" transform="rotate(25 76 14)"/>
+      <ellipse cx="76" cy="14" rx="8" ry="18" fill="#A8D5A2" transform="rotate(25 76 14)"/></g>
+      <ellipse cx="60" cy="126" rx="38" ry="6" fill="rgba(46,90,58,0.15)"/>
+      <path d="M60 28 C92 28 100 56 100 82 C100 110 82 126 60 126 C38 126 20 110 20 82 C20 56 28 28 60 28Z" fill={body} stroke={C.ink} strokeWidth="3.5"/>
+      <g opacity=".3" stroke={dark} strokeWidth="2" fill="none" strokeLinecap="round">
+        <path d="M30 62 Q60 56 90 62"/><path d="M28 80 Q60 74 92 80"/><path d="M30 98 Q60 104 90 98"/>
+      </g>
+      <circle cx="30" cy="82" r="7" fill="#FFA48C" opacity=".7"/>
+      <circle cx="90" cy="82" r="7" fill="#FFA48C" opacity=".7"/>
+      <g transform="translate(42 66)">{eye[mood]||eye.happy}</g>
+      <g transform="translate(78 66)">{eye[mood]||eye.happy}</g>
+      {mouth[mood]||mouth.happy}
+    </svg>
+  );
+}
+
+// ─── SHARED ──────────────────────────────────────────────────
+function Sparkle({x,y,s=10,d=0}) {
+  return <div style={{position:'absolute',left:x,top:y,width:s,height:s,pointerEvents:'none',animation:`sparkle ${1.8+d}s ease-in-out ${d}s infinite`}}><svg viewBox="0 0 20 20" width="100%" height="100%"><path d="M10 0L12 8 20 10 12 12 10 20 8 12 0 10 8 8Z" fill="#FFD36E"/></svg></div>;
+}
+function Confetti({count=22}) {
+  const pieces=useMemo(()=>Array.from({length:count},(_,i)=>({left:Math.random()*100,color:['#FFD36E','#FFA48C','#A8D5A2','#B8DEEF','#D9C7F0','#E6779E'][i%6],size:6+Math.random()*7,dur:1.3+Math.random()*1.2,delay:Math.random()*.6,shape:Math.random()>.5?'50%':'3px'})),[count]);
+  return <div style={{position:'absolute',inset:0,pointerEvents:'none',overflow:'hidden'}}>{pieces.map((p,i)=><div key={i} style={{position:'absolute',left:`${p.left}%`,top:-14,width:p.size,height:p.size,background:p.color,borderRadius:p.shape,animation:`confetti-fall ${p.dur}s ease-in ${p.delay}s forwards`}}/>)}</div>;
+}
+function HUD({hearts=3,progress=2,total=5,color=C.correct}) {
+  return (
+    <div style={{padding:'52px 16px 8px',display:'flex',alignItems:'center',gap:10}}>
+      <button style={{width:44,height:44,borderRadius:'50%',background:C.cream,border:`3px solid ${C.ink}`,boxShadow:'0 3px 0 #D9C38A',display:'flex',alignItems:'center',justifyContent:'center',fontSize:20,color:C.soft,flexShrink:0}}>✕</button>
+      <div style={{flex:1}}>
+        <div style={{height:14,borderRadius:14,background:'rgba(46,90,58,0.1)',border:`2px solid ${C.ink}`,overflow:'hidden'}}>
+          <div style={{height:'100%',width:`${progress/total*100}%`,borderRadius:14,background:color,transition:'width .6s cubic-bezier(.34,1.56,.64,1)'}}/>
+        </div>
+      </div>
+      <div style={{padding:'6px 12px',borderRadius:999,background:'#FFDDE2',border:`2px solid ${C.ink}`,fontSize:14,fontWeight:700,color:'#A33A1D',flexShrink:0}}>❤️ {hearts}</div>
+    </div>
+  );
+}
+function Bubble({text,mood='happy',color='sun',size=68}) {
+  return (
+    <div style={{display:'flex',alignItems:'flex-end',gap:8,padding:'0 18px 10px'}}>
+      <div style={{animation:'bobble 2.5s ease-in-out infinite',flexShrink:0}}><Bap size={size} mood={mood} color={color}/></div>
+      <div style={{flex:1,background:C.cream,borderRadius:'16px 16px 16px 5px',border:`2.5px solid ${C.ink}`,boxShadow:'0 4px 0 #D9C38A',padding:'10px 14px',fontSize:14,fontWeight:700,color:C.ink,lineHeight:1.4}}>{text}</div>
+    </div>
+  );
+}
+function DiffBadge({label,color}) {
+  return <div style={{display:'inline-flex',alignItems:'center',gap:4,padding:'4px 11px',borderRadius:999,background:color+'22',border:`1.5px solid ${color}`,fontSize:11,fontWeight:700,color,letterSpacing:.5}}>{label}</div>;
+}
+
+// ─── ANSWER OPTION CARD ───────────────────────────────────────
+function OptionCard({n, state='idle', onClick, size='md'}) {
+  const sz={sm:{w:72,h:82,fs:34},md:{w:88,h:100,fs:46},lg:{w:104,h:118,fs:56}}[size]||{w:88,h:100,fs:46};
+  const s={
+    idle:    {bg:'#fff',sh:'rgba(46,90,58,0.2)', border:`3px solid ${C.ink}`,color:C.ink,anim:'none'},
+    correct: {bg:C.correctBg,sh:C.correctSh,border:`3px solid ${C.correct}`,color:C.correct,anim:'pop-in .4s cubic-bezier(.34,1.56,.64,1) both'},
+    wrong:   {bg:C.wrongBg,sh:C.wrongSh,border:`3px solid ${C.wrong}`,color:C.wrong,anim:'shake .45s ease-in-out both'},
+    hint:    {bg:C.hintBg,sh:C.sunSh,border:`3px solid ${C.sun}`,color:C.sunInk,anim:'hint-glow 1.2s ease-in-out infinite'},
+    dim:     {bg:'#F0EADD',sh:'rgba(46,90,58,0.1)',border:'3px solid rgba(46,90,58,0.15)',color:C.faint,anim:'none'},
+    placed:  {bg:C.sagePale,sh:C.sageSh,border:`3px solid ${C.correct}`,color:C.sageInk,anim:'slot-bounce .4s cubic-bezier(.34,1.56,.64,1) both'},
+  }[state]||{bg:'#fff',sh:'rgba(46,90,58,0.2)',border:`3px solid ${C.ink}`,color:C.ink,anim:'none'};
+  return (
+    <button onClick={onClick} style={{width:sz.w,height:sz.h,borderRadius:24,background:s.bg,border:s.border,color:s.color,boxShadow:`0 6px 0 ${s.sh},0 12px 20px rgba(46,90,58,0.1)`,fontFamily:'Fredoka',fontWeight:700,fontSize:sz.fs,display:'flex',alignItems:'center',justifyContent:'center',animation:s.anim,position:'relative',flexShrink:0}}>
+      {n}
+      {state==='correct'&&<div style={{position:'absolute',top:4,right:6,fontSize:16}}>⭐</div>}
+      {state==='wrong'&&<div style={{position:'absolute',top:4,right:6,fontSize:14,color:C.wrong}}>✕</div>}
+    </button>
+  );
+}
+
+// ─── SEQUENCE SLOT ───────────────────────────────────────────
+function SeqSlot({n, empty=false, state='idle', size=72, fontSize=36}) {
+  const s={
+    filled: {bg:'#fff',sh:'rgba(46,90,58,0.18)',border:`2.5px solid ${C.ink}`},
+    empty:  {bg:'rgba(255,255,255,0.5)',sh:'transparent',border:`3px dashed ${C.sunSh}`,animation:'pulse-soft 1.4s ease-in-out infinite'},
+    correct:{bg:C.correctBg,sh:C.correctSh,border:`3px solid ${C.correct}`,animation:'pop-in .4s cubic-bezier(.34,1.56,.64,1) both'},
+    wrong:  {bg:C.wrongBg,sh:C.wrongSh,border:`3px solid ${C.wrong}`,animation:'shake .45s ease-in-out both'},
+    hint:   {bg:C.hintBg,sh:C.sunSh,border:`3px solid ${C.sun}`,animation:'hint-glow 1.2s ease-in-out infinite'},
+  }[empty?'empty':state]||{bg:'#fff',sh:'rgba(46,90,58,0.18)',border:`2.5px solid ${C.ink}`};
+  return (
+    <div style={{width:size,height:size,borderRadius:18,background:s.bg,border:s.border,boxShadow:`0 5px 0 ${s.sh}`,display:'flex',alignItems:'center',justifyContent:'center',fontFamily:'Fredoka',fontWeight:700,fontSize,color:empty?C.sunInk:state==='correct'?C.correct:state==='wrong'?C.wrong:C.ink,animation:s.animation,flexShrink:0,position:'relative'}}>
+      {empty ? '?' : n}
+      {state==='correct'&&!empty&&<div style={{position:'absolute',top:-8,right:-6,fontSize:16}}>⭐</div>}
+    </div>
+  );
+}
+
+// ─── ARROW ───────────────────────────────────────────────────
+function Arrow({color=C.faint,size=16}) {
+  return <div style={{fontSize:size,color,fontWeight:700,flexShrink:0,lineHeight:1,marginTop:2}}>→</div>;
+}
+
+// ══════════════════════════════════════════════════════════════
+// 1 — TRAIN THEME: Simple 1-step (18,19,__,21)
+// ══════════════════════════════════════════════════════════════
+function TrainSimple() {
+  const [picked,setPicked]=useState(null);
+  const seq=[18,19,'?',21], target=20, opts=[20,22,17,15];
+  return (
+    <div style={{position:'absolute',inset:0,background:'radial-gradient(ellipse 110% 55% at 50% 0%,#C8E8F8 0%,#DFF1F0 40%,#F0FAEE 100%)'}}>
+      <Sparkle x="8%"  y="13%" s={11} d={0}/>
+      <Sparkle x="85%" y="9%"  s={8}  d={.7}/>
+      {/* Sky background elements */}
+      <div style={{position:'absolute',top:80,left:'5%',width:70,height:34,background:'rgba(255,255,255,0.65)',borderRadius:999,filter:'blur(3px)'}}/>
+      <div style={{position:'absolute',top:70,left:'52%',width:50,height:26,background:'rgba(255,255,255,0.55)',borderRadius:999,filter:'blur(2px)'}}/>
+
+      <div style={{position:'relative',zIndex:1,height:'100%',display:'flex',flexDirection:'column'}}>
+        <HUD hearts={3} progress={1} total={4} color={C.sky}/>
+        <div style={{padding:'0 18px 4px',display:'flex',alignItems:'center',gap:8}}>
+          <DiffBadge label="🚂 NUMBER TRAIN" color={C.skyInk}/>
+          <div style={{fontSize:11,color:C.faint,fontWeight:600}}>Count by 1s</div>
+        </div>
+
+        <Bubble text="Which number is missing from the train? 🚂" mood="happy" color="sky" size={64}/>
+
+        {/* TRAIN */}
+        <div style={{padding:'8px 16px 6px',overflowX:'hidden'}}>
+          {/* Track */}
+          <svg width="100%" height="18" style={{display:'block',marginBottom:4}}>
+            <line x1="0" y1="9" x2="100%" y2="9" stroke={C.ink} strokeWidth="3" strokeDasharray="12 6" style={{animation:'track-dash 1s linear infinite'}}/>
+            {[0,10,20,30,40,50,60,70,80,90].map(x=>(
+              <rect key={x} x={`${x}%`} y="12" width="4" height="6" fill={C.ink} rx="1"/>
+            ))}
+          </svg>
+          <div style={{display:'flex',alignItems:'center',gap:6,justifyContent:'center'}}>
+            {/* Locomotive */}
+            <div style={{flexShrink:0,animation:'train-chug .6s ease-in-out infinite'}}>
+              <div style={{width:60,height:54,borderRadius:'14px 22px 10px 10px',background:C.coral,border:`3px solid ${C.ink}`,boxShadow:`0 4px 0 ${C.coralSh}`,position:'relative',display:'flex',alignItems:'center',justifyContent:'center'}}>
+                <div style={{fontSize:22}}>🚂</div>
+                {/* Wheels */}
+                <div style={{position:'absolute',bottom:-9,left:6,width:14,height:14,borderRadius:'50%',background:C.ink}}/>
+                <div style={{position:'absolute',bottom:-9,right:6,width:14,height:14,borderRadius:'50%',background:C.ink}}/>
+                {/* Smoke */}
+                <div style={{position:'absolute',top:-12,right:6,fontSize:16,opacity:.5,animation:'float-up 1.2s ease-out infinite'}}>💨</div>
+              </div>
+            </div>
+
+            {/* Train cars */}
+            {seq.map((n,i)=>{
+              const isEmpty=n==='?';
+              const filledN = isEmpty && picked ? picked : null;
+              const slotState = isEmpty ? (picked?(picked===target?'correct':'wrong'):'empty') : 'filled';
+              return (
+                <React.Fragment key={i}>
+                  <div style={{width:8,height:6,background:C.ink,borderRadius:2,flexShrink:0,marginTop:20}}/>
+                  <div style={{flexShrink:0}}>
+                    <div style={{
+                      width:68,height:58,borderRadius:14,
+                      background:isEmpty?(picked?(picked===target?C.correctBg:C.wrongBg):'rgba(255,255,255,0.5)'):C.sun,
+                      border:`3px ${isEmpty&&!picked?'dashed':'solid'} ${isEmpty?(picked?(picked===target?C.correct:C.wrong):C.sunSh):C.ink}`,
+                      boxShadow:`0 4px 0 ${isEmpty?(picked?C.correctSh:C.sunSh):C.sunSh}`,
+                      display:'flex',alignItems:'center',justifyContent:'center',
+                      fontFamily:'Fredoka',fontWeight:700,fontSize:isEmpty?30:32,
+                      color:isEmpty?(picked?(picked===target?C.correct:C.wrong):C.sunInk):C.sunInk,
+                      animation:isEmpty&&!picked?'pulse-soft 1.5s ease-in-out infinite':isEmpty&&picked?'pop-in .4s both':'none',
+                      position:'relative',
+                    }}>
+                      {isEmpty?(picked||'?'):n}
+                      {isEmpty&&picked===target&&<div style={{position:'absolute',top:-8,right:-4,fontSize:16}}>⭐</div>}
+                    </div>
+                    <div style={{display:'flex',justifyContent:'space-around',marginTop:2}}>
+                      {[0,1].map(j=><div key={j} style={{width:14,height:14,borderRadius:'50%',background:C.ink}}/>)}
+                    </div>
+                  </div>
+                </React.Fragment>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Instruction */}
+        <div style={{textAlign:'center',fontSize:12,fontWeight:700,color:C.skyInk,letterSpacing:.5,padding:'4px 0 8px',opacity:.8}}>
+          TAP THE MISSING NUMBER BELOW
+        </div>
+
+        {/* Options */}
+        <div style={{flex:1,padding:'8px 16px',display:'flex',justifyContent:'center',alignItems:'center',gap:12}}>
+          {opts.map(n=>(
+            <OptionCard key={n} n={n} size="md"
+              state={picked===n?(n===target?'correct':'wrong'):'idle'}
+              onClick={()=>!picked&&setPicked(n)}/>
+          ))}
+        </div>
+
+        {picked===target&&<div style={{margin:'0 16px 20px',padding:'12px 16px',borderRadius:20,background:C.correctBg,border:`2.5px solid ${C.correct}`,boxShadow:`0 4px 0 ${C.correctSh}`,display:'flex',alignItems:'center',gap:10,animation:'slide-up .3s both'}}><span style={{fontSize:22}}>🎉</span><div style={{flex:1,fontSize:15,fontWeight:700,color:C.sageInk}}>20 is right! The train rolls on! 🚂</div><button style={{padding:'8px 16px',borderRadius:16,background:C.correct,border:`2.5px solid ${C.ink}`,boxShadow:`0 3px 0 ${C.correctSh}`,fontFamily:'Fredoka',fontWeight:700,fontSize:15,color:'#fff'}}>Next →</button></div>}
+        {picked&&picked!==target&&<div style={{margin:'0 16px 20px',padding:'12px 16px',borderRadius:20,background:C.wrongBg,border:`2.5px solid ${C.wrong}`,display:'flex',alignItems:'center',gap:10,animation:'shake .4s both'}}><span style={{fontSize:22}}>💪</span><div style={{flex:1,fontSize:14,fontWeight:700,color:C.coralInk}}>Try again! Count from 19… 19, ??</div></div>}
+      </div>
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════
+// 2 — STEPPING STONES: Count by tens (10, 20, __, 40)
+// ══════════════════════════════════════════════════════════════
+function SteppingTens() {
+  const [picked,setPicked]=useState(null);
+  const seq=[10,20,'?',40], target=30, opts=[25,30,35,50];
+  return (
+    <div style={{position:'absolute',inset:0,background:'radial-gradient(ellipse 110% 55% at 50% 0%,#D6ECCE 0%,#E8F4E0 45%,#F0FAEE 100%)'}}>
+      <Sparkle x="7%"  y="12%" s={11} d={0}/>
+      <Sparkle x="87%" y="11%" s={9}  d={.8}/>
+      {/* Water/river at bottom */}
+      <div style={{position:'absolute',bottom:0,left:0,right:0,height:120,background:'linear-gradient(180deg,transparent 0%,#BFE8D8 40%,#A8D8C8 100%)',borderTop:'2px solid rgba(168,216,200,0.5)'}}/>
+      {/* Water ripples */}
+      {[15,40,65,85].map(x=><div key={x} style={{position:'absolute',bottom:20+Math.random()*40,left:`${x}%`,width:30,height:8,borderRadius:999,background:'rgba(255,255,255,0.3)',transform:'rotate(-2deg)'}}/>)}
+
+      <div style={{position:'relative',zIndex:1,height:'100%',display:'flex',flexDirection:'column'}}>
+        <HUD hearts={3} progress={2} total={5} color={C.sage}/>
+        <div style={{padding:'0 18px 4px',display:'flex',alignItems:'center',gap:8}}>
+          <DiffBadge label="🪨 STEPPING STONES" color={C.sageInk}/>
+          <div style={{fontSize:11,color:C.faint,fontWeight:600}}>Count by 10s</div>
+        </div>
+
+        <Bubble text="Jump to the missing stone! Count by tens! 🦘" mood="happy" color="sage" size={64}/>
+
+        {/* Stepping stones */}
+        <div style={{padding:'10px 16px 8px',position:'relative',height:160}}>
+          {/* Frog mascot */}
+          <div style={{position:'absolute',top:8,left:'8%',fontSize:28,animation:'bobble 1.8s ease-in-out infinite'}}>🐸</div>
+
+          {/* Path arrows */}
+          <svg width="100%" height="140" style={{position:'absolute',inset:0}}>
+            {[25,45,64].map((x,i)=>(
+              <path key={i} d={`M ${x}% 95 Q ${x+8}% 60 ${x+16}% 95`} stroke="rgba(168,213,162,.6)" strokeWidth="3" fill="none" strokeDasharray="6 4"/>
+            ))}
+          </svg>
+
+          {/* Stone row */}
+          <div style={{position:'absolute',bottom:0,left:0,right:0,display:'flex',justifyContent:'space-around',alignItems:'flex-end',padding:'0 8px'}}>
+            {seq.map((n,i)=>{
+              const isEmpty=n==='?';
+              const slotSt=isEmpty?(picked?(picked===target?'correct':'wrong'):'empty'):'filled';
+              return (
+                <div key={i} style={{display:'flex',flexDirection:'column',alignItems:'center',gap:0}}>
+                  {/* Frog on current stone */}
+                  {i===0&&<div style={{fontSize:20,marginBottom:2}}>🐸</div>}
+                  {/* Stone */}
+                  <div style={{
+                    width:72,height:72,borderRadius:22,
+                    background:isEmpty?(picked?(picked===target?C.correctBg:C.wrongBg):'rgba(255,255,255,0.6)'):C.sun,
+                    border:`3px ${isEmpty&&!picked?'dashed':'solid'} ${isEmpty?(picked?(picked===target?C.correct:C.wrong):C.sunSh):C.ink}`,
+                    boxShadow:`0 5px 0 ${isEmpty?(picked?(picked===target?C.correctSh:'rgba(46,90,58,0.2)'):C.sunSh):C.sunSh}, 0 8px 12px rgba(46,90,58,0.15)`,
+                    display:'flex',alignItems:'center',justifyContent:'center',
+                    fontFamily:'Fredoka',fontWeight:700,fontSize:isEmpty?30:30,
+                    color:isEmpty?(picked?(picked===target?C.correct:C.wrong):C.sunInk):C.sunInk,
+                    animation:isEmpty&&!picked?'pulse-soft 1.5s ease-in-out infinite':isEmpty&&picked?'pop-in .4s both':'none',
+                    position:'relative',
+                  }}>
+                    {isEmpty?(picked||'?'):n}
+                    {isEmpty&&picked===target&&<div style={{position:'absolute',top:-10,right:-4,fontSize:16}}>⭐</div>}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        <div style={{textAlign:'center',fontSize:12,fontWeight:700,color:C.sageInk,letterSpacing:.5,paddingBottom:8,opacity:.8}}>
+          +10 each step — PICK THE MISSING STONE
+        </div>
+
+        {/* Options — 2×2 */}
+        <div style={{flex:1,padding:'6px 16px',display:'flex',flexDirection:'column',gap:10,justifyContent:'center'}}>
+          <div style={{display:'flex',justifyContent:'center',gap:12}}>
+            {opts.slice(0,2).map(n=><OptionCard key={n} n={n} size="md" state={picked===n?(n===target?'correct':'wrong'):'idle'} onClick={()=>!picked&&setPicked(n)}/>)}
+          </div>
+          <div style={{display:'flex',justifyContent:'center',gap:12}}>
+            {opts.slice(2).map(n=><OptionCard key={n} n={n} size="md" state={picked===n?(n===target?'correct':'wrong'):'idle'} onClick={()=>!picked&&setPicked(n)}/>)}
+          </div>
+        </div>
+
+        {picked===target&&<div style={{margin:'0 16px 18px',padding:'12px 16px',borderRadius:20,background:C.correctBg,border:`2.5px solid ${C.correct}`,boxShadow:`0 4px 0 ${C.correctSh}`,display:'flex',alignItems:'center',gap:10,animation:'slide-up .3s both'}}><span style={{fontSize:22}}>🐸</span><div style={{flex:1,fontSize:14,fontWeight:700,color:C.sageInk}}>Jump! 30 is right!</div><button style={{padding:'8px 16px',borderRadius:16,background:C.correct,border:`2.5px solid ${C.ink}`,boxShadow:`0 3px 0 ${C.correctSh}`,fontFamily:'Fredoka',fontWeight:700,fontSize:15,color:'#fff'}}>Next →</button></div>}
+        {picked&&picked!==target&&<div style={{margin:'0 16px 18px',padding:'12px 16px',borderRadius:20,background:C.wrongBg,border:`2.5px solid ${C.wrong}`,display:'flex',alignItems:'center',gap:10,animation:'shake .4s both'}}><span style={{fontSize:22}}>💪</span><div style={{flex:1,fontSize:14,fontWeight:700,color:C.coralInk}}>Not quite! 20 + 10 = ?</div></div>}
+      </div>
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════
+// 3 — RAINBOW PATH: Count by hundreds (100, 200, __, 400)
+// ══════════════════════════════════════════════════════════════
+function RainbowHundreds() {
+  const [picked,setPicked]=useState(null);
+  const seq=[100,200,'?',400], target=300, opts=[250,300,350,500];
+  const rainbowColors=['#FF8F74','#FFC94A','#A8D5A2','#8AC4DE','#B9A4E0'];
+  return (
+    <div style={{position:'absolute',inset:0,background:'radial-gradient(ellipse 110% 55% at 50% 0%,#E8D0F4 0%,#F0E4FA 45%,#FAF0FF 100%)'}}>
+      <Sparkle x="8%"  y="10%" s={12} d={0}   color="#FFD36E"/>
+      <Sparkle x="82%" y="8%"  s={9}  d={.8}  color="#B9A4E0"/>
+      <Sparkle x="55%" y="16%" s={7}  d={1.4} color="#8AC4DE"/>
+
+      <div style={{position:'relative',zIndex:1,height:'100%',display:'flex',flexDirection:'column'}}>
+        <HUD hearts={3} progress={3} total={5} color={C.lav}/>
+        <div style={{padding:'0 18px 4px',display:'flex',alignItems:'center',gap:8}}>
+          <DiffBadge label="🌈 RAINBOW PATH" color={C.lavInk}/>
+          <div style={{fontSize:11,color:C.faint,fontWeight:600}}>Count by 100s</div>
+        </div>
+
+        <Bubble text="Hop along the rainbow! What's the missing number?" mood="hint" color="lavender" size={64}/>
+
+        {/* Rainbow arc path */}
+        <div style={{padding:'6px 14px 4px',position:'relative',height:150}}>
+          <svg width="100%" height="140" style={{position:'absolute',top:0,left:0}}>
+            {/* Rainbow arcs */}
+            {rainbowColors.map((c,i)=>(
+              <path key={i} d={`M 20 120 Q ${187} ${20-i*12} ${347} 120`} stroke={c} strokeWidth={6-i*.5} fill="none" opacity={.35+i*.08}/>
+            ))}
+            {/* Main path */}
+            <path d="M 20 120 Q 187 30 347 120" stroke="rgba(46,90,58,0.15)" strokeWidth="2" fill="none" strokeDasharray="8 5"/>
+          </svg>
+
+          {/* Number bubbles along arc */}
+          {seq.map((n,i)=>{
+            const positions=[{x:'6%',y:82},{x:'30%',y:30},{x:'62%',y:18},{x:'88%',y:52}];
+            const pos=positions[i];
+            const isEmpty=n==='?';
+            return (
+              <div key={i} style={{position:'absolute',left:pos.x,top:pos.y,transform:'translate(-50%,-50%)'}}>
+                <div style={{
+                  width:60,height:60,borderRadius:'50%',
+                  background:isEmpty?(picked?(picked===target?C.correctBg:C.wrongBg):'rgba(255,255,255,0.7)'):rainbowColors[i%5],
+                  border:`3px ${isEmpty&&!picked?'dashed':'solid'} ${isEmpty?(picked?(picked===target?C.correct:C.wrong):C.lavSh):C.ink}`,
+                  boxShadow:`0 4px 0 ${isEmpty?C.lavSh:C.lavSh}`,
+                  display:'flex',alignItems:'center',justifyContent:'center',
+                  fontFamily:'Fredoka',fontWeight:700,fontSize:isEmpty?20:18,
+                  color:isEmpty?(picked?(picked===target?C.correct:C.wrong):C.lavInk):C.ink,
+                  animation:isEmpty&&!picked?'pulse-soft 1.5s ease-in-out infinite':isEmpty&&picked?'pop-in .4s both':'none',
+                }}>
+                  {isEmpty?(picked||'?'):n}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        <div style={{textAlign:'center',fontSize:12,fontWeight:700,color:C.lavInk,letterSpacing:.5,paddingBottom:8,opacity:.8}}>
+          +100 each bubble — TAP THE MISSING ONE
+        </div>
+
+        {/* 2×2 options */}
+        <div style={{flex:1,padding:'6px 16px',display:'flex',flexDirection:'column',gap:10,justifyContent:'center'}}>
+          <div style={{display:'flex',justifyContent:'center',gap:12}}>
+            {opts.slice(0,2).map(n=><OptionCard key={n} n={n} size="md" state={picked===n?(n===target?'correct':'wrong'):'idle'} onClick={()=>!picked&&setPicked(n)}/>)}
+          </div>
+          <div style={{display:'flex',justifyContent:'center',gap:12}}>
+            {opts.slice(2).map(n=><OptionCard key={n} n={n} size="md" state={picked===n?(n===target?'correct':'wrong'):'idle'} onClick={()=>!picked&&setPicked(n)}/>)}
+          </div>
+        </div>
+
+        {picked===target&&<div style={{margin:'0 16px 18px',padding:'12px 16px',borderRadius:20,background:C.lavBg,border:`2.5px solid ${C.lav}`,boxShadow:`0 4px 0 ${C.lavSh}`,display:'flex',alignItems:'center',gap:10,animation:'slide-up .3s both'}}><span style={{fontSize:22}}>🌈</span><div style={{flex:1,fontSize:14,fontWeight:700,color:C.lavInk}}>300! Rainbow complete!</div><button style={{padding:'8px 16px',borderRadius:16,background:C.lav,border:`2.5px solid ${C.ink}`,boxShadow:`0 3px 0 ${C.lavSh}`,fontFamily:'Fredoka',fontWeight:700,fontSize:15,color:C.ink}}>Next →</button></div>}
+        {picked&&picked!==target&&<div style={{margin:'0 16px 18px',padding:'12px 16px',borderRadius:20,background:C.wrongBg,border:`2.5px solid ${C.wrong}`,display:'flex',alignItems:'center',gap:10}}><span style={{fontSize:22}}>💡</span><div style={{flex:1,fontSize:14,fontWeight:700,color:C.coralInk}}>200 + 100 = ?</div></div>}
+      </div>
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════
+// 4 — MISSING FINAL (8, 9, 10, __)
+// ══════════════════════════════════════════════════════════════
+function MissingFinal() {
+  const [picked,setPicked]=useState(null);
+  const seq=[8,9,10,'?'], target=11, opts=[11,12,13];
+  return (
+    <div style={{position:'absolute',inset:0,background:'radial-gradient(ellipse 110% 55% at 50% 0%,#FFE8B8 0%,#FFF2CC 40%,#FFF9E6 100%)'}}>
+      <Sparkle x="7%"  y="12%" s={10} d={0}/>
+      <Sparkle x="86%" y="9%"  s={8}  d={.7}/>
+
+      <div style={{position:'relative',zIndex:1,height:'100%',display:'flex',flexDirection:'column'}}>
+        <HUD hearts={3} progress={2} total={4} color={C.sun}/>
+        <div style={{padding:'0 18px 4px',display:'flex',alignItems:'center',gap:8}}>
+          <DiffBadge label="🔢 WHAT COMES NEXT?" color={C.sunInk}/>
+        </div>
+
+        <Bubble text="What number comes at the end? 🎯" mood="happy" color="sun" size={64}/>
+
+        {/* Clean linear sequence */}
+        <div style={{padding:'10px 16px 8px',display:'flex',alignItems:'center',gap:10,justifyContent:'center'}}>
+          {seq.map((n,i)=>(
+            <React.Fragment key={i}>
+              {i>0&&<Arrow color={C.sunSh} size={18}/>}
+              <SeqSlot
+                n={n==='?'?(picked||'?'):n}
+                empty={n==='?'&&!picked}
+                state={n==='?'&&picked?(picked===target?'correct':'wrong'):'filled'}
+                size={78} fontSize={n==='?'?30:36}
+              />
+            </React.Fragment>
+          ))}
+        </div>
+
+        <div style={{textAlign:'center',padding:'4px 0 8px',fontSize:11,fontWeight:700,color:C.sunInk,letterSpacing:.5,opacity:.8}}>
+          KEEP COUNTING — WHAT COMES NEXT?
+        </div>
+
+        {/* 3 large options */}
+        <div style={{flex:1,padding:'8px 16px',display:'flex',justifyContent:'center',alignItems:'center',gap:14}}>
+          {opts.map(n=>(
+            <OptionCard key={n} n={n} size="lg"
+              state={picked===n?(n===target?'correct':'wrong'):'idle'}
+              onClick={()=>!picked&&setPicked(n)}/>
+          ))}
+        </div>
+
+        {picked===target&&<div style={{margin:'0 16px 20px',padding:'12px 16px',borderRadius:20,background:C.correctBg,border:`2.5px solid ${C.correct}`,boxShadow:`0 4px 0 ${C.correctSh}`,display:'flex',alignItems:'center',gap:10,animation:'slide-up .3s both'}}><span style={{fontSize:22}}>⭐</span><div style={{flex:1,fontSize:15,fontWeight:700,color:C.sageInk}}>11 is next! Counting pro! 🏆</div><button style={{padding:'8px 16px',borderRadius:16,background:C.correct,border:`2.5px solid ${C.ink}`,boxShadow:`0 3px 0 ${C.correctSh}`,fontFamily:'Fredoka',fontWeight:700,fontSize:15,color:'#fff'}}>Next →</button></div>}
+        {picked&&picked!==target&&<div style={{margin:'0 16px 20px',padding:'12px 16px',borderRadius:20,background:C.wrongBg,border:`2.5px solid ${C.wrong}`,display:'flex',alignItems:'center',gap:10,animation:'shake .4s both'}}><span style={{fontSize:22}}>💪</span><div style={{flex:1,fontSize:14,fontWeight:700,color:C.coralInk}}>Count up from 10… 10, ??</div></div>}
+      </div>
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════
+// 5 — PUT IN ORDER (tap to sort)
+// ══════════════════════════════════════════════════════════════
+function PutInOrder() {
+  const target=[5,8,12,17,23];
+  const [placed,setPlaced]=useState([12,null,5,null,null]);
+  const remaining=[8,17,23];
+  const correct=placed.every((v,i)=>v===target[i]);
+
+  const placeNext=(n)=>{
+    const idx=placed.findIndex(v=>v===null);
+    if(idx===-1)return;
+    const next=[...placed];
+    next[idx]=n;
+    setPlaced(next);
+  };
+
+  return (
+    <div style={{position:'absolute',inset:0,background:'radial-gradient(ellipse 110% 55% at 50% 0%,#D4EAF5 0%,#E4F2FA 40%,#F0F8FF 100%)'}}>
+      {correct&&<Confetti count={24}/>}
+      <Sparkle x="8%"  y="11%" s={10} d={0}/>
+      <Sparkle x="84%" y="10%" s={8}  d={.9}/>
+
+      <div style={{position:'relative',zIndex:1,height:'100%',display:'flex',flexDirection:'column'}}>
+        <HUD hearts={3} progress={4} total={5} color={C.sky}/>
+        <div style={{padding:'0 18px 4px',display:'flex',alignItems:'center',gap:8}}>
+          <DiffBadge label="🔀 PUT IN ORDER" color={C.skyInk}/>
+          <div style={{fontSize:11,color:C.faint,fontWeight:600}}>Smallest → Biggest</div>
+        </div>
+
+        <Bubble text="Tap the numbers to put them in order! ↗️" mood={correct?'celebrate':'happy'} color="sky" size={64}/>
+
+        {/* Order slots */}
+        <div style={{padding:'10px 14px 6px'}}>
+          <div style={{display:'flex',alignItems:'center',gap:6,justifyContent:'center',marginBottom:6}}>
+            <div style={{fontSize:11,fontWeight:700,color:C.skyInk,letterSpacing:.5}}>SMALLEST</div>
+            <div style={{flex:1,height:2,background:'rgba(46,90,58,0.1)',borderRadius:1}}/>
+            <div style={{fontSize:11,fontWeight:700,color:C.skyInk,letterSpacing:.5}}>BIGGEST</div>
+          </div>
+          <div style={{display:'flex',gap:6,justifyContent:'center'}}>
+            {placed.map((v,i)=>(
+              <React.Fragment key={i}>
+                {i>0&&<Arrow color={C.faint} size={12}/>}
+                <SeqSlot
+                  n={v||''}
+                  empty={v===null}
+                  state={correct?'correct':v?'filled':'empty'}
+                  size={58} fontSize={v?24:20}
+                />
+              </React.Fragment>
+            ))}
+          </div>
+        </div>
+
+        <div style={{textAlign:'center',fontSize:12,fontWeight:700,color:C.skyInk,letterSpacing:.5,padding:'4px 0 6px',opacity:.8}}>
+          TAP A NUMBER BELOW TO PLACE IT
+        </div>
+
+        {/* Number bank */}
+        <div style={{flex:1,padding:'10px 16px',display:'flex',flexDirection:'column',gap:14}}>
+          <div style={{padding:'14px',borderRadius:22,background:'rgba(255,255,255,0.6)',border:'2px dashed rgba(46,90,58,0.2)',display:'flex',gap:12,justifyContent:'center',alignItems:'center',minHeight:80}}>
+            {remaining.map(n=>(
+              <OptionCard key={n} n={n} size="md"
+                state={placed.includes(n)?'dim':'idle'}
+                onClick={()=>!placed.includes(n)&&placeNext(n)}/>
+            ))}
+            {/* Pre-placed ones shown as dim */}
+            {placed.filter(v=>v&&remaining.includes(v)).map(n=>(
+              <OptionCard key={n+'-placed'} n={n} size="md" state="dim"/>
+            ))}
+          </div>
+          <div style={{textAlign:'center',fontSize:12,color:C.faint,fontWeight:600}}>
+            Tap to place • {placed.filter(Boolean).length} of 5 placed
+          </div>
+        </div>
+
+        {correct&&<div style={{margin:'0 16px 18px',padding:'12px 16px',borderRadius:20,background:C.correctBg,border:`2.5px solid ${C.correct}`,boxShadow:`0 4px 0 ${C.correctSh}`,display:'flex',alignItems:'center',gap:10,animation:'slide-up .3s both'}}><span style={{fontSize:22}}>🏆</span><div style={{flex:1,fontSize:15,fontWeight:700,color:C.sageInk}}>Perfect order! You're a number champion!</div><button style={{padding:'8px 16px',borderRadius:16,background:C.correct,border:`2.5px solid ${C.ink}`,boxShadow:`0 3px 0 ${C.correctSh}`,fontFamily:'Fredoka',fontWeight:700,fontSize:15,color:'#fff'}}>Finish! 🎉</button></div>}
+      </div>
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════
+// FEEDBACK: CORRECT
+// ══════════════════════════════════════════════════════════════
+function StateCorrect() {
+  const seq=[14,15,16,17,18];
+  return (
+    <div style={{position:'absolute',inset:0,background:'radial-gradient(ellipse 110% 55% at 50% 0%,#C8E8F8 0%,#DFF1F0 40%,#EAF7E4 100%)'}}>
+      <Confetti count={26}/>
+      <Sparkle x="6%"  y="12%" s={12} d={0}/>
+      <Sparkle x="85%" y="8%"  s={10} d={.6}/>
+      <Sparkle x="50%" y="16%" s={8}  d={1.2}/>
+
+      <div style={{position:'relative',zIndex:1,height:'100%',display:'flex',flexDirection:'column'}}>
+        <HUD hearts={3} progress={3} total={5} color={C.correct}/>
+
+        <Bubble text="WOW! You found 16! Amazing job! 🎉🎉" mood="celebrate" color="sun" size={76}/>
+
+        {/* Sequence with filled correct slot */}
+        <div style={{padding:'10px 14px 6px',display:'flex',alignItems:'center',justifyContent:'center',gap:8}}>
+          {seq.map((n,i)=>(
+            <React.Fragment key={i}>
+              {i>0&&<Arrow color={C.sagePale} size={16}/>}
+              <SeqSlot n={n} state={i===2?'correct':'filled'} size={72} fontSize={32}/>
+            </React.Fragment>
+          ))}
+        </div>
+
+        {/* Float-up rewards */}
+        <div style={{position:'relative',height:50,overflow:'visible'}}>
+          {['+1 ⭐','+3 🪙','✓'].map((t,i)=>(
+            <div key={t} style={{position:'absolute',left:`${28+i*22}%`,top:0,fontFamily:'Fredoka',fontWeight:700,fontSize:18,color:C.sunInk,textShadow:'0 2px 0 rgba(46,90,58,0.2)',animation:`float-up 1.4s ease-out ${i*.18}s both`,whiteSpace:'nowrap'}}>{t}</div>
+          ))}
+        </div>
+
+        {/* Option cards dimmed */}
+        <div style={{padding:'4px 16px 10px',display:'flex',justifyContent:'center',gap:12}}>
+          {[14,16,18,20].map(n=><OptionCard key={n} n={n} size="md" state={n===16?'correct':'dim'}/>)}
+        </div>
+
+        {/* Big continue strip */}
+        <div style={{margin:'0 16px 20px',padding:'16px 20px',borderRadius:24,background:'linear-gradient(135deg,#C4EBB9 0%,#7FC089 100%)',border:`3px solid ${C.ink}`,boxShadow:`0 6px 0 ${C.sageSh}`,display:'flex',alignItems:'center',gap:14,animation:'slide-up .3s both'}}>
+          <div style={{fontSize:36}}>⭐</div>
+          <div style={{flex:1}}>
+            <div style={{fontSize:18,fontWeight:700,color:'#1F4A28'}}>Correct! +1 star</div>
+            <div style={{fontSize:13,color:C.sageInk,marginTop:2}}>3 correct in a row 🔥</div>
+          </div>
+          <button style={{padding:'12px 22px',borderRadius:20,background:C.sun,border:`3px solid ${C.ink}`,boxShadow:`0 5px 0 ${C.sunSh}`,fontFamily:'Fredoka',fontWeight:700,fontSize:18,color:C.sunInk}}>Next →</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════
+// FEEDBACK: HINT
+// ══════════════════════════════════════════════════════════════
+function StateHint() {
+  const seq=[10,20,'?',40], target=30;
+  return (
+    <div style={{position:'absolute',inset:0,background:'radial-gradient(ellipse 110% 55% at 50% 0%,#FFF0C8 0%,#FFF7E0 40%,#FFFBF0 100%)'}}>
+      <div style={{position:'relative',zIndex:1,height:'100%',display:'flex',flexDirection:'column'}}>
+        <HUD hearts={1} progress={2} total={5} color={C.sun}/>
+        <div style={{padding:'0 18px 4px',display:'flex',alignItems:'center',gap:8}}>
+          <DiffBadge label="💡 HINT TIME" color={C.sunInk}/>
+        </div>
+
+        {/* Expanded hint bubble */}
+        <div style={{display:'flex',alignItems:'flex-end',gap:8,padding:'0 18px 10px'}}>
+          <div style={{animation:'bobble 2.5s ease-in-out infinite',flexShrink:0}}><Bap size={72} mood="hint" color="sun"/></div>
+          <div style={{flex:1,background:C.hintBg,borderRadius:'16px 16px 16px 5px',border:`2.5px solid ${C.sun}`,boxShadow:`0 4px 0 ${C.sunSh}`,padding:'12px 16px',animation:'hint-glow 1.4s ease-in-out infinite'}}>
+            <div style={{fontSize:11,fontWeight:700,color:C.sunInk,letterSpacing:.5,marginBottom:6}}>💡 HERE'S A HINT!</div>
+            <div style={{fontSize:14,fontWeight:700,color:C.ink,lineHeight:1.5,marginBottom:8}}>
+              10 → +10 → 20 → +10 → <b style={{fontSize:18,color:C.sunInk}}>??</b>
+            </div>
+            {/* Visual +10 blocks */}
+            <div style={{display:'flex',alignItems:'center',gap:4}}>
+              {[10,20].map((n,i)=>(
+                <React.Fragment key={n}>
+                  {i>0&&<div style={{fontSize:12,color:C.sunInk,fontWeight:700}}>+10 →</div>}
+                  <div style={{width:38,height:38,borderRadius:10,background:C.sun,border:`2px solid ${C.ink}`,display:'flex',alignItems:'center',justifyContent:'center',fontFamily:'Fredoka',fontWeight:700,fontSize:16,color:C.sunInk}}>{n}</div>
+                </React.Fragment>
+              ))}
+              <div style={{fontSize:12,color:C.sunInk,fontWeight:700}}>+10 →</div>
+              <div style={{width:38,height:38,borderRadius:10,background:C.hintBg,border:`2px dashed ${C.sunSh}`,display:'flex',alignItems:'center',justifyContent:'center',fontFamily:'Fredoka',fontWeight:700,fontSize:20,color:C.sunInk,animation:'pulse-soft 1.4s ease-in-out infinite'}}>?</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Sequence */}
+        <div style={{padding:'6px 14px 6px',display:'flex',alignItems:'center',justifyContent:'center',gap:10}}>
+          {seq.map((n,i)=>(
+            <React.Fragment key={i}>
+              {i>0&&<Arrow color={C.sunSh} size={16}/>}
+              <SeqSlot n={n==='?'?'?':n} empty={n==='?'} state={n==='?'?'hint':'filled'} size={70} fontSize={28}/>
+            </React.Fragment>
+          ))}
+        </div>
+
+        <div style={{textAlign:'center',fontSize:12,fontWeight:700,color:C.sunInk,letterSpacing:.5,padding:'4px 0 8px',opacity:.8}}>
+          THE HINT TILE IS GLOWING — TRUST IT!
+        </div>
+
+        {/* Options with hint tile highlighted */}
+        <div style={{flex:1,padding:'8px 16px',display:'flex',justifyContent:'center',alignItems:'center',gap:12}}>
+          {[25,30,35,50].map(n=>(
+            <OptionCard key={n} n={n} size="md" state={n===30?'hint':'idle'}/>
+          ))}
+        </div>
+
+        <div style={{margin:'0 16px 18px',padding:'11px 16px',borderRadius:18,background:C.hintBg,border:`2px solid ${C.sun}`,display:'flex',alignItems:'center',gap:10}}>
+          <span style={{fontSize:20}}>💡</span>
+          <div style={{fontSize:13,fontWeight:600,color:C.sunInk}}>The yellow tile is Bắp's hint — try it!</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── CANVAS ──────────────────────────────────────────────────
+function App() {
+  return (
+    <DesignCanvas title="Bắp — Number Order & Missing Number: Full UI System">
+      <DCSection id="s1" title="Missing Number Variants">
+        <DCArtboard id="v1" label="🚂 Train · Count by 1s (18,19,__,21)" width={375} height={720}>
+          <TrainSimple/>
+        </DCArtboard>
+        <DCArtboard id="v2" label="🪨 Stepping Stones · Count by 10s" width={375} height={720}>
+          <SteppingTens/>
+        </DCArtboard>
+        <DCArtboard id="v3" label="🌈 Rainbow Path · Count by 100s" width={375} height={720}>
+          <RainbowHundreds/>
+        </DCArtboard>
+        <DCArtboard id="v4" label="🎯 Missing Final (8,9,10,__)" width={375} height={720}>
+          <MissingFinal/>
+        </DCArtboard>
+      </DCSection>
+      <DCSection id="s2" title="Put in Order">
+        <DCArtboard id="v5" label="🔀 Put in Order — Tap to Sort" width={375} height={720}>
+          <PutInOrder/>
+        </DCArtboard>
+      </DCSection>
+      <DCSection id="s3" title="Feedback States">
+        <DCArtboard id="f1" label="✅ Correct Answer — Celebration" width={375} height={720}>
+          <StateCorrect/>
+        </DCArtboard>
+        <DCArtboard id="f2" label="💡 Hint State — Guided" width={375} height={720}>
+          <StateHint/>
+        </DCArtboard>
+      </DCSection>
+    </DesignCanvas>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>

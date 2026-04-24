@@ -1,0 +1,580 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bắp — Sticker Collection Screen</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; font-family: 'Fredoka', ui-rounded, sans-serif; background: #E8E0D3; -webkit-font-smoothing: antialiased; overflow: hidden; }
+button { cursor: pointer; font-family: inherit; border: none; background: none; }
+@keyframes bobble      { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
+@keyframes pop-in      { 0%{transform:scale(.5) rotate(-6deg);opacity:0} 65%{transform:scale(1.12) rotate(1deg);opacity:1} 100%{transform:scale(1) rotate(0)} }
+@keyframes pulse-soft  { 0%,100%{transform:scale(1)} 50%{transform:scale(1.06)} }
+@keyframes sparkle     { 0%,100%{transform:scale(.6) rotate(0);opacity:.3} 50%{transform:scale(1.4) rotate(180deg);opacity:1} }
+@keyframes confetti-fall{ 0%{transform:translateY(-14px) rotate(0);opacity:1} 100%{transform:translateY(140px) rotate(540deg);opacity:0} }
+@keyframes new-badge   { 0%{transform:scale(0) rotate(-20deg);opacity:0} 60%{transform:scale(1.18) rotate(3deg)} 100%{transform:scale(1) rotate(0);opacity:1} }
+@keyframes shimmer     { 0%{background-position:-200% 0} 100%{background-position:200% 0} }
+@keyframes glow-ring   { 0%{box-shadow:0 0 0 0 rgba(255,211,110,.7)} 70%{box-shadow:0 0 0 14px rgba(255,211,110,0)} 100%{box-shadow:0 0 0 0 rgba(255,211,110,0)} }
+@keyframes slide-up    { from{transform:translateY(20px);opacity:0} to{transform:translateY(0);opacity:1} }
+@keyframes float-up    { from{transform:translateY(0);opacity:1} to{transform:translateY(-50px);opacity:0} }
+@keyframes wiggle      { 0%,100%{transform:rotate(0)} 25%{transform:rotate(-6deg)} 75%{transform:rotate(6deg)} }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script type="text/babel" src="design-canvas.jsx"></script>
+<script type="text/babel">
+const { useState, useMemo } = React;
+
+const C = {
+  ink:'#2D3A2E', soft:'#6B7A6C', faint:'#A9B4A8',
+  sun:'#FFD36E',  sunSh:'#C79528',  sunInk:'#5E3A00',
+  sage:'#7FC089', sageSh:'#4D8B58', sageInk:'#1F4A28', sagePale:'#C4EBB9', sageBg:'#EAF7E4',
+  sky:'#8AC4DE',  skySh:'#5A96B1',  skyInk:'#1F4A61',  skyBg:'#E4F2FA',
+  lav:'#D9C7F0',  lavSh:'#A58AD0',  lavInk:'#3D256D',  lavBg:'#EEE8F8',
+  coral:'#FFA48C',coralSh:'#D67560',coralInk:'#7A2B15',coralBg:'#FFF0EA',
+  berry:'#E6779E',berrySh:'#B44B7A',berryBg:'#FDEDF3',
+  gold:'#FFC94A', goldSh:'#A87820',
+  cream:'#FFF8EC',surface:'#FFFDF7',
+  correct:'#5FB36A',correctSh:'#3D8A4A',
+};
+
+// ─── ALL STICKER DATA ─────────────────────────────────────────
+const CATEGORIES = [
+  {
+    id:'forest', label:'Number Forest', emoji:'🌳', color:C.sage, sh:C.sageSh, bg:C.sageBg, ink:C.sageInk,
+    stickers:[
+      {id:'s1',  e:'🌳', name:'Oak Tree',   rarity:'common', unlockHint:'Complete Level 1'},
+      {id:'s2',  e:'🍄', name:'Mushroom',   rarity:'common', unlockHint:'Complete Level 2'},
+      {id:'s3',  e:'🌷', name:'Pink Tulip', rarity:'common', unlockHint:'Complete Level 3'},
+      {id:'s4',  e:'🦋', name:'Flutter',    rarity:'rare',   unlockHint:'3⭐ Level 4'},
+      {id:'s5',  e:'🐝', name:'Buzzy Bee',  rarity:'common', unlockHint:'Complete Level 5'},
+      {id:'s6',  e:'🐞', name:'Dotsy',      rarity:'common', unlockHint:'Complete Level 6'},
+      {id:'s7',  e:'🍎', name:'Red Apple',  rarity:'common', unlockHint:'Complete Level 7'},
+      {id:'s8',  e:'🌻', name:'Sunflower',  rarity:'rare',   unlockHint:'3⭐ Level 8'},
+      {id:'s9',  e:'🦊', name:'Fox Friend', rarity:'epic',   unlockHint:'Complete World 1!'},
+    ]
+  },
+  {
+    id:'tens', label:'Tens Town', emoji:'🏘️', color:C.sky, sh:C.skySh, bg:C.skyBg, ink:C.skyInk,
+    stickers:[
+      {id:'t1', e:'🚂', name:'Number Train',  rarity:'common', unlockHint:'Complete Level 1'},
+      {id:'t2', e:'🏘️', name:'Town House',   rarity:'common', unlockHint:'Complete Level 2'},
+      {id:'t3', e:'🎡', name:'Ferris Wheel', rarity:'rare',   unlockHint:'3⭐ Level 3'},
+      {id:'t4', e:'🌉', name:'Big Bridge',   rarity:'common', unlockHint:'Complete Level 4'},
+      {id:'t5', e:'🏪', name:'Sweet Shop',   rarity:'common', unlockHint:'Complete Level 5'},
+      {id:'t6', e:'🎪', name:'Big Tent',     rarity:'rare',   unlockHint:'3⭐ Level 6'},
+    ]
+  },
+  {
+    id:'trophies', label:'Trophies', emoji:'🏆', color:C.gold, sh:C.goldSh, bg:'#FFF7E0', ink:C.sunInk,
+    stickers:[
+      {id:'tr1', e:'🥇', name:'Gold Star',    rarity:'epic',   unlockHint:'Complete any world'},
+      {id:'tr2', e:'🏆', name:'Champion Cup', rarity:'epic',   unlockHint:'3⭐ all levels in a world'},
+      {id:'tr3', e:'🎖️', name:'Medal',        rarity:'rare',   unlockHint:'7-day streak'},
+      {id:'tr4', e:'🌟', name:'Super Star',   rarity:'epic',   unlockHint:'Collect 20 stickers'},
+    ]
+  },
+  {
+    id:'magic', label:'Magic', emoji:'✨', color:C.lav, sh:C.lavSh, bg:C.lavBg, ink:C.lavInk,
+    stickers:[
+      {id:'m1', e:'🌈', name:'Rainbow',    rarity:'rare',   unlockHint:'Play 5 days in a row'},
+      {id:'m2', e:'🔮', name:'Magic Ball', rarity:'epic',   unlockHint:'Secret!'},
+      {id:'m3', e:'🦄', name:'Unicorn',    rarity:'epic',   unlockHint:'Secret!'},
+      {id:'m4', e:'⭐', name:'Wishing Star',rarity:'rare',  unlockHint:'Earn 50 stars'},
+      {id:'m5', e:'🌙', name:'Moon Charm', rarity:'common', unlockHint:'Play at night'},
+    ]
+  },
+];
+
+const OWNED = new Set(['s1','s2','s3','s4','s5','s6','s7','t1','t2','t3','tr1','m1']);
+const RARITY_COLORS = {
+  common: { bg:'#F0EADD', label:'Common', c:C.faint },
+  rare:   { bg:'#D4EAF5', label:'Rare',   c:C.skyInk },
+  epic:   { bg:'#E3D2F4', label:'Epic!',  c:C.lavInk },
+};
+
+// ─── MASCOT ──────────────────────────────────────────────────
+function Bap({ size=64, mood='happy', color='sun' }) {
+  const body={sun:'#FFD36E',sage:'#A8D5A2',coral:'#FFA48C',lavender:'#D9C7F0',sky:'#B8DEEF'}[color]||'#FFD36E';
+  const dark={sun:'#E8B23F',sage:'#7FB983',coral:'#E2815E',lavender:'#B39DD1',sky:'#88BED4'}[color]||'#E8B23F';
+  const eye={happy:<><ellipse cx="0" cy="0" rx="6" ry="7" fill={C.ink}/><ellipse cx="-1.5" cy="-2" rx="2" ry="2.5" fill="#fff"/></>,celebrate:<path d="M -6 2 Q 0 -6 6 2" stroke={C.ink} strokeWidth="3" fill="none" strokeLinecap="round"/>,excited:<><ellipse cx="0" cy="0" rx="7" ry="8" fill={C.ink}/><ellipse cx="-2" cy="-2.5" rx="2.5" ry="3" fill="#fff"/></>,};
+  const mouth={happy:<path d="M 35 85 Q 50 98 65 85" stroke={C.ink} strokeWidth="3.5" fill="#C14A2A" strokeLinecap="round"/>,celebrate:<path d="M 30 80 Q 50 108 70 80 Q 50 97 30 80" fill="#C14A2A" stroke={C.ink} strokeWidth="3"/>,excited:<path d="M 28 80 Q 50 112 72 80 Q 50 99 28 80" fill="#C14A2A" stroke={C.ink} strokeWidth="3.5"/>,};
+  return (
+    <svg viewBox="0 0 120 140" width={size} height={size*140/120} style={{display:'block'}}>
+      <g><ellipse cx="38" cy="18" rx="14" ry="20" fill="#7FB983" transform="rotate(-30 38 18)"/><ellipse cx="38" cy="18" rx="7" ry="16" fill="#A8D5A2" transform="rotate(-30 38 18)"/><ellipse cx="76" cy="14" rx="16" ry="22" fill="#5FA36A" transform="rotate(25 76 14)"/><ellipse cx="76" cy="14" rx="8" ry="18" fill="#A8D5A2" transform="rotate(25 76 14)"/></g>
+      <ellipse cx="60" cy="126" rx="38" ry="6" fill="rgba(46,90,58,0.15)"/>
+      <path d="M60 28 C92 28 100 56 100 82 C100 110 82 126 60 126 C38 126 20 110 20 82 C20 56 28 28 60 28Z" fill={body} stroke={C.ink} strokeWidth="3.5"/>
+      <g opacity=".3" stroke={dark} strokeWidth="2" fill="none" strokeLinecap="round"><path d="M30 62 Q60 56 90 62"/><path d="M28 80 Q60 74 92 80"/><path d="M30 98 Q60 104 90 98"/></g>
+      <circle cx="30" cy="82" r="7" fill="#FFA48C" opacity=".7"/><circle cx="90" cy="82" r="7" fill="#FFA48C" opacity=".7"/>
+      <g transform="translate(42 66)">{eye[mood]||eye.happy}</g><g transform="translate(78 66)">{eye[mood]||eye.happy}</g>
+      {mouth[mood]||mouth.happy}
+    </svg>
+  );
+}
+
+function Sparkle({x,y,s=10,d=0,color='#FFD36E'}) {
+  return <div style={{position:'absolute',left:x,top:y,width:s,height:s,pointerEvents:'none',animation:`sparkle ${1.8+d}s ease-in-out ${d}s infinite`,color}}><svg viewBox="0 0 20 20" width="100%" height="100%"><path d="M10 0L12 8 20 10 12 12 10 20 8 12 0 10 8 8Z" fill="currentColor"/></svg></div>;
+}
+function Confetti({count=20}) {
+  const p=useMemo(()=>Array.from({length:count},(_,i)=>({left:Math.random()*100,color:['#FFD36E','#FFA48C','#A8D5A2','#B8DEEF','#D9C7F0','#E6779E'][i%6],size:6+Math.random()*7,dur:1.3+Math.random()*1.2,delay:Math.random()*.6,shape:Math.random()>.5?'50%':'3px'})),[count]);
+  return <div style={{position:'absolute',inset:0,pointerEvents:'none',overflow:'hidden'}}>{p.map((x,i)=><div key={i} style={{position:'absolute',left:`${x.left}%`,top:-14,width:x.size,height:x.size,background:x.color,borderRadius:x.shape,animation:`confetti-fall ${x.dur}s ease-in ${x.delay}s forwards`}}/>)}</div>;
+}
+
+// ─── STICKER CELL ─────────────────────────────────────────────
+function StickerCell({ sticker, owned, isNew=false, onTap }) {
+  const rc = RARITY_COLORS[sticker.rarity]||RARITY_COLORS.common;
+  return (
+    <button onClick={()=>onTap&&onTap(sticker)} style={{
+      aspectRatio:'1', borderRadius:20, position:'relative',
+      background: owned ? (isNew ? `linear-gradient(135deg,#FFF4DE,#FFE6A8)` : '#fff') : 'rgba(46,90,58,0.06)',
+      border: owned
+        ? (isNew ? `3px solid ${C.sun}` : `2px solid rgba(46,90,58,0.12)`)
+        : `2px dashed rgba(46,90,58,0.18)`,
+      boxShadow: owned
+        ? (isNew ? `0 4px 0 ${C.sunSh},0 8px 16px rgba(199,149,40,0.18)` : '0 2px 6px rgba(46,90,58,0.08)')
+        : 'none',
+      display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:3,
+      animation: owned && !isNew ? `pop-in .3s cubic-bezier(.34,1.56,.64,1) both` : isNew ? 'new-badge .5s cubic-bezier(.34,1.56,.64,1) both' : 'none',
+      overflow:'hidden',
+    }}>
+      {/* Rarity dot top-left for owned */}
+      {owned && sticker.rarity !== 'common' && (
+        <div style={{position:'absolute',top:5,left:5,width:8,height:8,borderRadius:'50%',background:sticker.rarity==='epic'?C.lav:C.sky,border:`1px solid ${C.ink}`}}/>
+      )}
+      {/* NEW badge */}
+      {isNew && (
+        <div style={{position:'absolute',top:-1,right:-1,padding:'3px 8px',borderRadius:'0 16px 0 10px',background:C.berry,fontFamily:'Fredoka',fontWeight:700,fontSize:9,color:'#fff',letterSpacing:.4,border:`1.5px solid ${C.ink}`}}>NEW!</div>
+      )}
+      {owned ? (
+        <>
+          <div style={{fontSize:36,lineHeight:1,animation:isNew?'pulse-soft 1.5s ease-in-out infinite':'none'}}>{sticker.e}</div>
+          <div style={{fontSize:9,fontWeight:700,color:C.soft,textAlign:'center',maxWidth:'90%',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{sticker.name}</div>
+        </>
+      ) : (
+        <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:2}}>
+          <div style={{fontSize:20,opacity:.25,filter:'grayscale(1)'}}>{sticker.e}</div>
+          <div style={{fontSize:14,opacity:.3}}>🔒</div>
+        </div>
+      )}
+    </button>
+  );
+}
+
+// ─── PROGRESS RING ────────────────────────────────────────────
+function ProgressRing({ pct=0.4, color=C.sage, size=52, label, count, total }) {
+  const r=20, circ=2*Math.PI*r;
+  return (
+    <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:3}}>
+      <div style={{position:'relative',width:size,height:size}}>
+        <svg width={size} height={size} viewBox="0 0 52 52">
+          <circle cx="26" cy="26" r={r} fill="none" stroke="rgba(46,90,58,0.1)" strokeWidth="5"/>
+          <circle cx="26" cy="26" r={r} fill="none" stroke={color} strokeWidth="5" strokeLinecap="round"
+            strokeDasharray={`${pct*circ} ${circ}`} transform="rotate(-90 26 26)" style={{transition:'stroke-dasharray .5s'}}/>
+          <text x="26" y="30" textAnchor="middle" fontFamily="Fredoka" fontWeight="700" fontSize="12" fill={color}>{count}</text>
+        </svg>
+      </div>
+      <div style={{fontSize:9,fontWeight:700,color:C.faint,textAlign:'center',lineHeight:1.2}}>{label}</div>
+    </div>
+  );
+}
+
+// ─── CATEGORY TAB BAR ─────────────────────────────────────────
+function TabBar({ cats, active, onSelect }) {
+  return (
+    <div style={{display:'flex',gap:6,padding:'0 16px 10px',overflowX:'auto'}}>
+      {[{id:'all',label:'All',emoji:'📓',color:C.lav},{...cats[0]},{...cats[1]},{...cats[2]},{...cats[3]}].map(cat=>(
+        <button key={cat.id} onClick={()=>onSelect(cat.id)} style={{
+          display:'flex',alignItems:'center',gap:5,padding:'7px 14px',borderRadius:999,flexShrink:0,
+          background:active===cat.id?cat.color:'rgba(255,255,255,0.7)',
+          border:`2px solid ${active===cat.id?C.ink:'rgba(46,90,58,0.15)'}`,
+          boxShadow:active===cat.id?`0 3px 0 rgba(46,90,58,0.2)`:'none',
+          fontFamily:'Fredoka',fontWeight:700,fontSize:13,
+          color:active===cat.id?C.ink:C.soft,
+          transition:'all .15s',
+        }}>
+          <span style={{fontSize:14}}>{cat.emoji}</span>
+          {cat.id==='all'?'All':cat.label.split(' ')[0]}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+// ─── STICKER DETAIL MODAL ────────────────────────────────────
+function StickerModal({ sticker, owned, onClose }) {
+  if (!sticker) return null;
+  const rc = RARITY_COLORS[sticker.rarity];
+  return (
+    <div style={{position:'absolute',inset:0,zIndex:100,background:'rgba(46,90,58,0.5)',backdropFilter:'blur(8px)',display:'flex',alignItems:'flex-end'}}>
+      <div style={{
+        background:C.cream,borderRadius:'28px 28px 0 0',padding:'24px 24px 36px',width:'100%',
+        boxShadow:'0 -12px 32px rgba(0,0,0,0.2)',animation:'slide-up .3s cubic-bezier(.34,1.56,.64,1) both',
+        border:`2px solid rgba(46,90,58,0.12)`,borderBottom:'none',
+      }}>
+        <div style={{width:40,height:4,background:'rgba(46,90,58,0.2)',borderRadius:4,margin:'0 auto 20px'}}/>
+        <div style={{display:'flex',alignItems:'center',gap:18,marginBottom:18}}>
+          {/* Big sticker */}
+          <div style={{
+            width:96,height:96,borderRadius:26,flexShrink:0,
+            background:owned?'#fff':'rgba(46,90,58,0.06)',
+            border:`3px solid ${owned?C.ink:'rgba(46,90,58,0.2)'}`,
+            boxShadow:owned?`0 5px 0 rgba(46,90,58,0.2)`:'none',
+            display:'flex',alignItems:'center',justifyContent:'center',fontSize:58,
+            animation:owned?'pop-in .4s both':'none',
+          }}>
+            {owned?sticker.e:'🔒'}
+          </div>
+          <div style={{flex:1}}>
+            <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:6}}>
+              <div style={{padding:'3px 10px',borderRadius:999,background:rc.bg,border:`1.5px solid ${rc.c}`,fontSize:11,fontWeight:700,color:rc.c}}>
+                {rc.label}
+              </div>
+              {owned && <div style={{fontSize:16}}>✅</div>}
+            </div>
+            <div style={{fontFamily:'Fredoka',fontWeight:700,fontSize:24,color:C.ink,lineHeight:1,marginBottom:4}}>{sticker.name}</div>
+            <div style={{fontSize:13,color:C.soft}}>{owned?'Collected! ✨':sticker.unlockHint}</div>
+          </div>
+        </div>
+        {!owned && (
+          <div style={{padding:'12px 16px',borderRadius:18,background:C.skyBg,border:`2px solid ${C.sky}`,marginBottom:16,display:'flex',alignItems:'center',gap:10}}>
+            <span style={{fontSize:20}}>💡</span>
+            <div>
+              <div style={{fontSize:12,fontWeight:700,color:C.skyInk,marginBottom:2}}>HOW TO UNLOCK</div>
+              <div style={{fontSize:13,color:C.soft}}>{sticker.unlockHint}</div>
+            </div>
+          </div>
+        )}
+        <button onClick={onClose} style={{
+          width:'100%',height:52,borderRadius:20,
+          background:owned?C.sage:'rgba(46,90,58,0.08)',
+          border:`2.5px solid ${C.ink}`,
+          boxShadow:owned?`0 4px 0 ${C.sageSh}`:'none',
+          fontFamily:'Fredoka',fontWeight:700,fontSize:18,
+          color:owned?'#fff':C.soft,
+        }}>{owned?'Back to Collection ✨':'Close'}</button>
+      </div>
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════
+// SCREEN 1 — PARTIALLY FILLED (main state)
+// ══════════════════════════════════════════════════════════════
+function MainCollection() {
+  const [activeTab, setActiveTab] = useState('all');
+  const [selected, setSelected] = useState(null);
+  const totalOwned = OWNED.size;
+  const totalAll = CATEGORIES.reduce((a,c)=>a+c.stickers.length,0);
+
+  const displayStickers = activeTab==='all'
+    ? CATEGORIES.flatMap(c=>c.stickers.map(s=>({...s,catColor:c.color})))
+    : CATEGORIES.find(c=>c.id===activeTab)?.stickers.map(s=>({...s,catColor:CATEGORIES.find(c2=>c2.id===activeTab).color}))||[];
+
+  return (
+    <div style={{position:'absolute',inset:0,background:'radial-gradient(ellipse 110% 55% at 50% 0%,#EEE3F8 0%,#F4EEFA 40%,#FAF0FF 100%)'}}>
+      <Sparkle x="8%"  y="13%" s={11} d={0}   color="#D9C7F0"/>
+      <Sparkle x="85%" y="10%" s={9}  d={.7}  color="#FFD36E"/>
+      <Sparkle x="55%" y="6%"  s={7}  d={1.3} color="#A8D5A2"/>
+
+      <div style={{position:'relative',zIndex:1,height:'100%',display:'flex',flexDirection:'column'}}>
+
+        {/* Header */}
+        <div style={{padding:'52px 18px 12px',display:'flex',alignItems:'center',gap:12}}>
+          <button style={{width:44,height:44,borderRadius:'50%',background:C.cream,border:`3px solid ${C.ink}`,boxShadow:'0 3px 0 #D9C38A',display:'flex',alignItems:'center',justifyContent:'center',fontSize:20,color:C.soft}}>‹</button>
+          <div style={{flex:1}}>
+            <div style={{fontFamily:'Fredoka',fontWeight:700,fontSize:22,color:C.ink}}>Sticker Book 📓</div>
+            <div style={{fontSize:12,color:C.soft,fontWeight:600}}>{totalOwned} of {totalAll} collected</div>
+          </div>
+          <div style={{animation:'bobble 2.5s ease-in-out infinite'}}><Bap size={52} mood="happy" color="lavender"/></div>
+        </div>
+
+        {/* Overall progress */}
+        <div style={{padding:'0 18px 10px',display:'flex',gap:10,alignItems:'center'}}>
+          <div style={{flex:1,height:12,borderRadius:12,background:'rgba(46,90,58,0.1)',border:`2px solid ${C.ink}`,overflow:'hidden'}}>
+            <div style={{height:'100%',width:`${totalOwned/totalAll*100}%`,borderRadius:12,background:`linear-gradient(90deg,${C.lav},${C.berry})`,transition:'width .5s'}}/>
+          </div>
+          <div style={{fontSize:13,fontWeight:700,color:C.lavInk,whiteSpace:'nowrap'}}>{Math.round(totalOwned/totalAll*100)}%</div>
+        </div>
+
+        {/* Per-world mini-rings */}
+        <div style={{padding:'0 18px 10px',display:'flex',justifyContent:'space-around'}}>
+          {CATEGORIES.map(cat=>{
+            const catOwned=cat.stickers.filter(s=>OWNED.has(s.id)).length;
+            return <ProgressRing key={cat.id} pct={catOwned/cat.stickers.length} color={cat.color} size={52} label={cat.emoji} count={catOwned} total={cat.stickers.length}/>;
+          })}
+        </div>
+
+        {/* Tabs */}
+        <TabBar cats={CATEGORIES} active={activeTab} onSelect={setActiveTab}/>
+
+        {/* Sticker grid */}
+        <div style={{flex:1,padding:'0 16px 20px',overflowY:'auto'}}>
+          {activeTab==='all' ? (
+            CATEGORIES.map(cat=>{
+              const catOwned=cat.stickers.filter(s=>OWNED.has(s.id)).length;
+              return (
+                <div key={cat.id} style={{marginBottom:20}}>
+                  <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:8,padding:'6px 10px',borderRadius:12,background:cat.bg,border:`1.5px solid ${cat.color}`}}>
+                    <span style={{fontSize:16}}>{cat.emoji}</span>
+                    <div style={{fontFamily:'Fredoka',fontWeight:700,fontSize:15,color:cat.ink}}>{cat.label}</div>
+                    <div style={{marginLeft:'auto',fontSize:11,fontWeight:700,color:cat.ink,opacity:.7}}>{catOwned}/{cat.stickers.length}</div>
+                  </div>
+                  <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:8}}>
+                    {cat.stickers.map((s,i)=>(
+                      <StickerCell key={s.id} sticker={s} owned={OWNED.has(s.id)} onTap={setSelected}/>
+                    ))}
+                  </div>
+                </div>
+              );
+            })
+          ) : (
+            <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:10}}>
+              {displayStickers.map((s,i)=>(
+                <StickerCell key={s.id} sticker={s} owned={OWNED.has(s.id)} onTap={setSelected}/>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {selected && <StickerModal sticker={selected} owned={OWNED.has(selected.id)} onClose={()=>setSelected(null)}/>}
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════
+// SCREEN 2 — EMPTY / JUST STARTED
+// ══════════════════════════════════════════════════════════════
+function EmptyCollection() {
+  return (
+    <div style={{position:'absolute',inset:0,background:'radial-gradient(ellipse 110% 55% at 50% 0%,#EEE3F8 0%,#F4EEFA 40%,#FAF0FF 100%)'}}>
+      <div style={{position:'relative',zIndex:1,height:'100%',display:'flex',flexDirection:'column'}}>
+        <div style={{padding:'52px 18px 12px',display:'flex',alignItems:'center',gap:12}}>
+          <button style={{width:44,height:44,borderRadius:'50%',background:C.cream,border:`3px solid ${C.ink}`,boxShadow:'0 3px 0 #D9C38A',display:'flex',alignItems:'center',justifyContent:'center',fontSize:20,color:C.soft}}>‹</button>
+          <div style={{flex:1}}>
+            <div style={{fontFamily:'Fredoka',fontWeight:700,fontSize:22,color:C.ink}}>Sticker Book 📓</div>
+            <div style={{fontSize:12,color:C.soft,fontWeight:600}}>0 of 24 collected</div>
+          </div>
+        </div>
+
+        {/* Empty progress bar */}
+        <div style={{padding:'0 18px 16px'}}>
+          <div style={{height:12,borderRadius:12,background:'rgba(46,90,58,0.1)',border:`2px solid ${C.ink}`,overflow:'hidden'}}>
+            <div style={{width:'0%'}}/>
+          </div>
+        </div>
+
+        {/* Mascot + empty state message */}
+        <div style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'0 32px',gap:16}}>
+          <div style={{animation:'bobble 2.5s ease-in-out infinite'}}>
+            <Bap size={120} mood="excited" color="lavender"/>
+          </div>
+          <div style={{textAlign:'center'}}>
+            <div style={{fontFamily:'Fredoka',fontWeight:700,fontSize:26,color:C.ink,lineHeight:1.1,marginBottom:8}}>Your book is empty!</div>
+            <div style={{fontSize:15,color:C.soft,lineHeight:1.5}}>Play games and earn 3⭐ to collect magical stickers! ✨</div>
+          </div>
+          {/* Preview locked stickers teaser */}
+          <div style={{background:'rgba(255,255,255,0.7)',borderRadius:24,border:`2px dashed rgba(46,90,58,0.2)`,padding:'14px 20px',width:'100%',display:'flex',justifyContent:'center',gap:10}}>
+            {CATEGORIES[0].stickers.slice(0,5).map(s=>(
+              <div key={s.id} style={{width:44,height:44,borderRadius:14,background:'rgba(46,90,58,0.06)',border:`2px dashed rgba(46,90,58,0.15)`,display:'flex',alignItems:'center',justifyContent:'center'}}>
+                <div style={{fontSize:22,opacity:.2,filter:'grayscale(1)'}}>{s.e}</div>
+              </div>
+            ))}
+            <div style={{display:'flex',alignItems:'center',justifyContent:'center',width:44,height:44,borderRadius:14,fontSize:13,color:C.faint,fontWeight:700}}>+19</div>
+          </div>
+        </div>
+
+        {/* CTA */}
+        <div style={{padding:'16px 18px 28px'}}>
+          <button style={{width:'100%',height:58,borderRadius:22,background:C.lav,border:`3px solid ${C.ink}`,boxShadow:`0 5px 0 ${C.lavSh}`,fontFamily:'Fredoka',fontWeight:700,fontSize:20,color:'#fff'}}>
+            ▶ Play to Earn Stickers!
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════
+// SCREEN 3 — NEW STICKER HIGHLIGHTED
+// ══════════════════════════════════════════════════════════════
+function NewStickerHighlight() {
+  const [selected, setSelected] = useState(null);
+  const newSticker = CATEGORIES[0].stickers[3]; // Flutter butterfly
+  const OWNED_PLUS = new Set([...OWNED, 's4']); // just earned s4
+
+  return (
+    <div style={{position:'absolute',inset:0,background:'radial-gradient(ellipse 110% 55% at 50% 0%,#EEE3F8 0%,#F4EEFA 40%,#FAF0FF 100%)'}}>
+      <Confetti count={18}/>
+      <Sparkle x="8%"  y="13%" s={11} d={0}   color="#E6779E"/>
+      <Sparkle x="85%" y="10%" s={9}  d={.7}  color="#FFD36E"/>
+
+      <div style={{position:'relative',zIndex:1,height:'100%',display:'flex',flexDirection:'column'}}>
+        <div style={{padding:'52px 18px 12px',display:'flex',alignItems:'center',gap:12}}>
+          <button style={{width:44,height:44,borderRadius:'50%',background:C.cream,border:`3px solid ${C.ink}`,boxShadow:'0 3px 0 #D9C38A',display:'flex',alignItems:'center',justifyContent:'center',fontSize:20,color:C.soft}}>‹</button>
+          <div style={{flex:1}}>
+            <div style={{fontFamily:'Fredoka',fontWeight:700,fontSize:22,color:C.ink}}>Sticker Book 📓</div>
+            <div style={{fontSize:12,color:C.soft,fontWeight:600}}>{OWNED_PLUS.size} of 24 collected</div>
+          </div>
+          <div style={{animation:'bobble 2.5s ease-in-out infinite'}}><Bap size={52} mood="celebrate" color="sun"/></div>
+        </div>
+
+        {/* Progress bar */}
+        <div style={{padding:'0 18px 8px',display:'flex',gap:10,alignItems:'center'}}>
+          <div style={{flex:1,height:12,borderRadius:12,background:'rgba(46,90,58,0.1)',border:`2px solid ${C.ink}`,overflow:'hidden'}}>
+            <div style={{height:'100%',width:`${OWNED_PLUS.size/24*100}%`,borderRadius:12,background:`linear-gradient(90deg,${C.lav},${C.berry})`}}/>
+          </div>
+          <div style={{fontSize:13,fontWeight:700,color:C.lavInk}}>{OWNED_PLUS.size}/24</div>
+        </div>
+
+        {/* NEW banner */}
+        <div style={{
+          margin:'0 16px 10px',padding:'10px 16px',borderRadius:20,
+          background:`linear-gradient(135deg,${C.berry}22,${C.lav}44)`,
+          border:`2.5px solid ${C.berry}`,
+          display:'flex',alignItems:'center',gap:12,
+          animation:'slide-up .35s both',
+        }}>
+          <div style={{fontSize:32,animation:'wiggle 1s ease-in-out infinite'}}>{newSticker.e}</div>
+          <div style={{flex:1}}>
+            <div style={{fontSize:11,fontWeight:700,color:C.berry,letterSpacing:.5,marginBottom:2}}>✨ JUST UNLOCKED!</div>
+            <div style={{fontFamily:'Fredoka',fontWeight:700,fontSize:18,color:C.ink}}>{newSticker.name}</div>
+            <div style={{fontSize:12,color:C.soft}}>Rare sticker · Number Forest</div>
+          </div>
+          <button onClick={()=>setSelected(newSticker)} style={{padding:'8px 14px',borderRadius:14,background:C.berry,border:`2px solid ${C.ink}`,boxShadow:`0 3px 0 ${C.berrySh}`,fontFamily:'Fredoka',fontWeight:700,fontSize:13,color:'#fff'}}>View</button>
+        </div>
+
+        {/* Grid — new sticker glowing */}
+        <div style={{flex:1,overflowY:'auto',padding:'0 16px 20px'}}>
+          <div style={{fontSize:12,fontWeight:700,color:C.soft,letterSpacing:.5,marginBottom:8}}>🌳 NUMBER FOREST</div>
+          <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:8}}>
+            {CATEGORIES[0].stickers.map((s,i)=>(
+              <StickerCell key={s.id} sticker={s} owned={OWNED_PLUS.has(s.id)} isNew={s.id==='s4'} onTap={setSelected}/>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {selected && <StickerModal sticker={selected} owned={OWNED_PLUS.has(selected.id)} onClose={()=>setSelected(null)}/>}
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════
+// SCREEN 4 — FULL SET COMPLETION
+// ══════════════════════════════════════════════════════════════
+function FullSetComplete() {
+  const ALL_OWNED = new Set(CATEGORIES[0].stickers.map(s=>s.id));
+  return (
+    <div style={{position:'absolute',inset:0,background:'radial-gradient(ellipse 110% 55% at 50% 0%,#C4EBB9 0%,#D6ECCE 40%,#EAF7E4 100%)'}}>
+      <Confetti count={30}/>
+      <Sparkle x="7%"  y="12%" s={13} d={0}   color="#FFD36E"/>
+      <Sparkle x="86%" y="9%"  s={11} d={.6}  color="#E6779E"/>
+      <Sparkle x="50%" y="6%"  s={9}  d={1.2} color="#D9C7F0"/>
+      <Sparkle x="25%" y="20%" s={8}  d={.9}  color="#B8DEEF"/>
+      <Sparkle x="75%" y="18%" s={7}  d={1.5} color="#FFA48C"/>
+
+      <div style={{position:'relative',zIndex:1,height:'100%',display:'flex',flexDirection:'column'}}>
+        <div style={{padding:'52px 18px 12px',display:'flex',alignItems:'center',gap:12}}>
+          <button style={{width:44,height:44,borderRadius:'50%',background:C.cream,border:`3px solid ${C.ink}`,boxShadow:'0 3px 0 #D9C38A',display:'flex',alignItems:'center',justifyContent:'center',fontSize:20,color:C.soft}}>‹</button>
+          <div style={{flex:1}}>
+            <div style={{fontFamily:'Fredoka',fontWeight:700,fontSize:22,color:C.ink}}>Sticker Book 📓</div>
+            <div style={{fontSize:12,color:C.sageInk,fontWeight:700}}>✅ Number Forest — COMPLETE!</div>
+          </div>
+          <div style={{animation:'bobble 2s ease-in-out infinite'}}><Bap size={52} mood="celebrate" color="sage"/></div>
+        </div>
+
+        {/* Full progress badge */}
+        <div style={{
+          margin:'0 16px 12px',padding:'14px 18px',borderRadius:22,
+          background:'linear-gradient(135deg,#FFD36E 0%,#FFC94A 100%)',
+          border:`3px solid ${C.ink}`,boxShadow:`0 5px 0 ${C.sunSh}`,
+          display:'flex',alignItems:'center',gap:14,
+          animation:'pop-in .5s both',
+        }}>
+          <div style={{fontSize:44,animation:'pulse-soft 1.5s ease-in-out infinite'}}>🏆</div>
+          <div>
+            <div style={{fontFamily:'Fredoka',fontWeight:700,fontSize:20,color:C.sunInk,lineHeight:1}}>FULL SET!</div>
+            <div style={{fontSize:13,color:C.sunInk,opacity:.8}}>You found all 9 Number Forest stickers!</div>
+          </div>
+          <div style={{marginLeft:'auto',fontFamily:'Fredoka',fontWeight:700,fontSize:24,color:C.sunInk}}>9/9</div>
+        </div>
+
+        {/* All stickers revealed + glowing */}
+        <div style={{flex:1,overflowY:'auto',padding:'0 16px 12px'}}>
+          <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:10}}>
+            {CATEGORIES[0].stickers.map((s,i)=>(
+              <button key={s.id} style={{
+                aspectRatio:'1',borderRadius:22,
+                background:`linear-gradient(135deg,${CATEGORIES[0].bg} 0%,#fff 100%)`,
+                border:`2.5px solid ${CATEGORIES[0].color}`,
+                boxShadow:`0 4px 0 ${CATEGORIES[0].sh},0 8px 16px rgba(46,90,58,0.1)`,
+                display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:5,
+                animation:`pop-in .4s cubic-bezier(.34,1.56,.64,1) ${i*.06}s both`,
+                position:'relative',overflow:'hidden',
+              }}>
+                <div style={{position:'absolute',inset:0,background:'linear-gradient(135deg,rgba(255,255,255,0.4) 0%,transparent 60%)',pointerEvents:'none'}}/>
+                <div style={{fontSize:42,lineHeight:1}}>{s.e}</div>
+                <div style={{fontSize:10,fontWeight:700,color:CATEGORIES[0].ink,textAlign:'center',maxWidth:'88%',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{s.name}</div>
+                <div style={{
+                  position:'absolute',top:4,right:4,
+                  padding:'2px 6px',borderRadius:999,fontSize:9,fontWeight:700,
+                  background:RARITY_COLORS[s.rarity].bg,color:RARITY_COLORS[s.rarity].c,
+                  border:`1px solid ${RARITY_COLORS[s.rarity].c}`,
+                }}>{RARITY_COLORS[s.rarity].label}</div>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Next world teaser */}
+        <div style={{padding:'0 16px 20px'}}>
+          <div style={{padding:'12px 16px',borderRadius:20,background:C.skyBg,border:`2px solid ${C.sky}`,display:'flex',alignItems:'center',gap:12,marginBottom:12}}>
+            <span style={{fontSize:28}}>🏘️</span>
+            <div style={{flex:1}}>
+              <div style={{fontSize:13,fontWeight:700,color:C.skyInk}}>6 new stickers in Tens Town!</div>
+              <div style={{fontSize:11,color:C.soft}}>Complete Tens Town levels to collect them</div>
+            </div>
+            <span style={{fontSize:16,color:C.sky}}>›</span>
+          </div>
+          <button style={{width:'100%',height:54,borderRadius:20,background:C.sage,border:`3px solid ${C.ink}`,boxShadow:`0 5px 0 ${C.sageSh}`,fontFamily:'Fredoka',fontWeight:700,fontSize:19,color:'#fff',animation:'pulse-soft 2s ease-in-out infinite'}}>
+            ▶ Play Tens Town!
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── CANVAS ───────────────────────────────────────────────────
+function App() {
+  return (
+    <DesignCanvas title="Bắp — Sticker Collection Screen System">
+      <DCSection id="s1" title="Collection States">
+        <DCArtboard id="c1" label="📓 Partially Filled (default)" width={375} height={720}>
+          <MainCollection/>
+        </DCArtboard>
+        <DCArtboard id="c2" label="⬜ Empty — Just Started" width={375} height={720}>
+          <EmptyCollection/>
+        </DCArtboard>
+        <DCArtboard id="c3" label="✨ New Sticker Highlighted" width={375} height={720}>
+          <NewStickerHighlight/>
+        </DCArtboard>
+        <DCArtboard id="c4" label="🏆 Full Set Celebration" width={375} height={720}>
+          <FullSetComplete/>
+        </DCArtboard>
+      </DCSection>
+    </DesignCanvas>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>

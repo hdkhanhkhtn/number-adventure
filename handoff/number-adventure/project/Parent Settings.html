@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Parent Settings — Bắp Number Adventure</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  background: #B8B0A0; min-height: 100vh;
+  display: flex; align-items: flex-start; justify-content: center;
+  font-family: 'Be Vietnam Pro', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased; padding: 24px 0;
+}
+:root {
+  --ink:       #1F2A1F; --ink-soft:  #6B7A6C; --ink-faint: #A9B4A8;
+  --surface:   #F5F3ED; --card: #FFFFFF;
+  --ol:        rgba(46,90,58,0.10); --ol-md: rgba(46,90,58,0.18);
+  --sage:      #5FB36A; --sage-pale: #EDF7EC; --sage-mid: #A8D5A2;
+  --sun:       #FFD36E; --sun-ink: #7A4E0E; --sun-pale: #FFF8EC;
+  --sky:       #8AC4DE; --sky-pale: #E4F2FA; --sky-ink: #1F4A61;
+  --lav:       #B9A4E0; --lav-pale: #F0EBFA; --lav-ink: #5D3F94;
+  --coral:     #FFA48C; --coral-pale: #FFF0EA; --coral-ink: #7A2B15;
+  --danger:    #E05050; --danger-pale: #FEF0F0; --danger-mid: #F5AAAA;
+}
+button { font-family: inherit; border: none; background: none; cursor: pointer; color: inherit; }
+.scroll { overflow-y: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+.scroll::-webkit-scrollbar { display: none; }
+input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; height: 6px; border-radius: 6px; outline: none; cursor: pointer; }
+input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 22px; height: 22px; border-radius: 50%; background: var(--ink); border: 3px solid #fff; box-shadow: 0 1px 4px rgba(0,0,0,0.2); cursor: pointer; }
+input[type=text] { font-family: inherit; }
+@keyframes pop-in   { 0%{transform:scale(0.88);opacity:0} 65%{transform:scale(1.03)} 100%{transform:scale(1);opacity:1} }
+@keyframes fade-in  { from{opacity:0} to{opacity:1} }
+@keyframes slide-up { from{transform:translateY(18px);opacity:0} to{transform:translateY(0);opacity:1} }
+@keyframes sheet-up { from{transform:translateY(100%)} to{transform:translateY(0)} }
+.fade-in  { animation: fade-in  0.22s ease both; }
+.slide-up { animation: slide-up 0.25s ease both; }
+
+/* Tweaks */
+#tweaks-panel {
+  display:none; position:fixed; bottom:24px; right:24px; z-index:9999;
+  background:#fff; border-radius:20px; border:1.5px solid rgba(0,0,0,0.08);
+  box-shadow:0 8px 32px rgba(0,0,0,0.14); padding:18px 20px; width:230px;
+  font-size:13px;
+}
+#tweaks-panel.open { display:block; }
+#tweaks-panel h3 { font-size:13px; font-weight:700; color:#1F2A1F; margin-bottom:14px; }
+.tweak-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:11px; }
+.tweak-row label { color:#6B7A6C; font-weight:500; font-size:12px; }
+.tw-select { padding:4px 8px; border-radius:8px; border:1.5px solid rgba(0,0,0,0.1); font-family:inherit; font-size:12px; background:#fff; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel">
+const { useState, useEffect, useRef } = React;
+
+// ── DEFAULTS ──────────────────────────────────────────────────
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "childName": "Bắp",
+  "lang": "en"
+}/*EDITMODE-END*/;
+
+const SETTINGS_DEFAULTS = {
+  // Learning
+  langMode:      'en',       // 'en' | 'vi' | 'bi'
+  audio:          true,
+  hints:          true,
+  adaptive:       true,
+  startLevel:     2,
+  // Session
+  dailyLimit:     15,        // minutes
+  dailyGoal:      10,
+  freePlay:       true,
+  quietHours:     true,
+  quietStart:     '20:00',
+  quietEnd:       '07:30',
+  // Rewards
+  celebIntensity: 'full',    // 'none' | 'subtle' | 'full'
+  stickers:       true,
+  sfxVolume:      70,
+  // Profile
+  childName:      'Bắp',
+  childAge:       4,
+  avatarColor:    'sun',
+};
+
+const AVATAR_COLORS = [
+  { id:'sun',     hex:'#FFD36E', label:'Golden' },
+  { id:'sage',    hex:'#A8D5A2', label:'Mint'   },
+  { id:'sky',     hex:'#B8DEEF', label:'Sky'    },
+  { id:'coral',   hex:'#FFA48C', label:'Coral'  },
+  { id:'lavender',hex:'#D9C7F0', label:'Lilac'  },
+];
+
+// ── UI PRIMITIVES ─────────────────────────────────────────────
+function SectionLabel({ children, style={} }) {
+  return (
+    <div style={{ fontSize:10, fontWeight:700, color:'var(--ink-faint)', letterSpacing:1.2, textTransform:'uppercase', marginBottom:8, paddingLeft:2, ...style }}>
+      {children}
+    </div>
+  );
+}
+
+function SettingCard({ children, style={} }) {
+  return (
+    <div style={{ background:'var(--card)', borderRadius:18, border:'1px solid var(--ol)', overflow:'hidden', ...style }}>
+      {children}
+    </div>
+  );
+}
+
+function Row({ icon, label, sub, right, last, danger }) {
+  return (
+    <div style={{
+      display:'flex', alignItems:'center', gap:12, padding:'14px 16px',
+      borderBottom: last ? 'none' : '1px solid var(--ol)',
+    }}>
+      {icon && (
+        <div style={{ width:34, height:34, borderRadius:11, background:'var(--surface)', flexShrink:0,
+          display:'flex', alignItems:'center', justifyContent:'center', fontSize:17 }}>{icon}</div>
+      )}
+      <div style={{ flex:1, minWidth:0 }}>
+        <div style={{ fontSize:14, fontWeight:600, color: danger ? 'var(--danger)' : 'var(--ink)', lineHeight:1.2 }}>{label}</div>
+        {sub && <div style={{ fontSize:11, color:'var(--ink-faint)', marginTop:2, lineHeight:1.4 }}>{sub}</div>}
+      </div>
+      {right && <div style={{ flexShrink:0 }}>{right}</div>}
+    </div>
+  );
+}
+
+function Toggle({ on, onChange }) {
+  return (
+    <button
+      onClick={() => onChange(!on)}
+      style={{
+        width:46, height:28, borderRadius:999, padding:3, border:'none', cursor:'pointer',
+        background: on ? 'var(--sage)' : '#D8D2C0',
+        display:'flex', alignItems:'center',
+        justifyContent: on ? 'flex-end' : 'flex-start',
+        transition:'background 0.2s, justify-content 0s',
+        flexShrink:0,
+      }}>
+      <div style={{ width:22, height:22, borderRadius:'50%', background:'#fff', boxShadow:'0 1px 4px rgba(0,0,0,0.18)', transition:'none' }}/>
+    </button>
+  );
+}
+
+function ChipPicker({ options, value, onChange, accentColor='var(--ink)' }) {
+  return (
+    <div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
+      {options.map(o => {
+        const active = value === o.id;
+        return (
+          <button key={o.id} onClick={() => onChange(o.id)} style={{
+            padding:'8px 14px', borderRadius:999, fontSize:13, fontWeight:600,
+            background: active ? 'var(--ink)' : 'var(--surface)',
+            color: active ? '#fff' : 'var(--ink-soft)',
+            border: active ? 'none' : '1px solid var(--ol)',
+            transition:'all 0.15s',
+          }}>{o.label}</button>
+        );
+      })}
+    </div>
+  );
+}
+
+function Stepper({ value, min=1, max=10, onChange, unit='' }) {
+  return (
+    <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+      <button onClick={() => onChange(Math.max(min, value-1))} style={{
+        width:32, height:32, borderRadius:10,
+        background:'var(--surface)', border:'1.5px solid var(--ol)',
+        fontSize:18, fontWeight:700, color:'var(--ink)',
+        display:'flex', alignItems:'center', justifyContent:'center',
+        opacity: value <= min ? 0.35 : 1,
+      }}>−</button>
+      <div style={{ minWidth:36, textAlign:'center', fontSize:17, fontWeight:700, color:'var(--ink)' }}>
+        {value}{unit}
+      </div>
+      <button onClick={() => onChange(Math.min(max, value+1))} style={{
+        width:32, height:32, borderRadius:10,
+        background:'var(--surface)', border:'1.5px solid var(--ol)',
+        fontSize:18, fontWeight:700, color:'var(--ink)',
+        display:'flex', alignItems:'center', justifyContent:'center',
+        opacity: value >= max ? 0.35 : 1,
+      }}>+</button>
+    </div>
+  );
+}
+
+function MinuteChips({ options, value, onChange }) {
+  return (
+    <div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
+      {options.map(m => {
+        const active = value === m;
+        return (
+          <button key={m} onClick={() => onChange(m)} style={{
+            padding:'8px 14px', borderRadius:999, fontSize:13, fontWeight:700,
+            background: active ? 'var(--ink)' : 'var(--surface)',
+            color: active ? '#fff' : 'var(--ink-soft)',
+            border: active ? 'none' : '1px solid var(--ol)',
+            transition:'all 0.15s',
+          }}>{m} min</button>
+        );
+      })}
+    </div>
+  );
+}
+
+function VolumeSlider({ value, onChange }) {
+  const track = `linear-gradient(to right, var(--ink) ${value}%, rgba(46,90,58,0.12) ${value}%)`;
+  return (
+    <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+      <span style={{ fontSize:16 }}>🔈</span>
+      <input type="range" min="0" max="100" value={value}
+        onChange={e => onChange(+e.target.value)}
+        style={{ flex:1, background: track }}/>
+      <span style={{ fontSize:16 }}>🔊</span>
+      <div style={{ fontSize:13, fontWeight:700, color:'var(--ink)', minWidth:32, textAlign:'right' }}>{value}%</div>
+    </div>
+  );
+}
+
+// ── MINI MASCOT ───────────────────────────────────────────────
+function MascotAvatar({ size=52, color='#FFD36E' }) {
+  const dark = { '#FFD36E':'#E8B23F','#A8D5A2':'#7FB983','#B8DEEF':'#88BED4','#FFA48C':'#E2815E','#D9C7F0':'#B39DD1' }[color] || '#E8B23F';
+  return (
+    <svg viewBox="0 0 120 140" width={size} height={size*140/120}>
+      <ellipse cx="38" cy="18" rx="14" ry="20" fill="#7FB983" transform="rotate(-30 38 18)"/>
+      <ellipse cx="38" cy="18" rx="7"  ry="16" fill="#A8D5A2" transform="rotate(-30 38 18)"/>
+      <ellipse cx="76" cy="14" rx="16" ry="22" fill="#5FA36A" transform="rotate(25 76 14)"/>
+      <ellipse cx="76" cy="14" rx="8"  ry="18" fill="#A8D5A2" transform="rotate(25 76 14)"/>
+      <ellipse cx="60" cy="126" rx="38" ry="6" fill="rgba(46,90,58,0.15)"/>
+      <path d="M60 28C92 28 100 56 100 82C100 110 82 126 60 126C38 126 20 110 20 82C20 56 28 28 60 28Z"
+        fill={color} stroke="#2D3A2E" strokeWidth="3.5"/>
+      <line x1="30" y1="72" x2="90" y2="72" stroke={dark} strokeWidth="2" opacity="0.4"/>
+      <line x1="28" y1="82" x2="92" y2="82" stroke={dark} strokeWidth="2" opacity="0.4"/>
+      <line x1="30" y1="92" x2="90" y2="92" stroke={dark} strokeWidth="2" opacity="0.4"/>
+      <g transform="translate(40,62)">
+        <ellipse cx="0" cy="0" rx="6" ry="7" fill="#2D3A2E"/>
+        <ellipse cx="-1.5" cy="-2" rx="2" ry="2.5" fill="#fff"/>
+      </g>
+      <g transform="translate(80,62)">
+        <ellipse cx="0" cy="0" rx="6" ry="7" fill="#2D3A2E"/>
+        <ellipse cx="-1.5" cy="-2" rx="2" ry="2.5" fill="#fff"/>
+      </g>
+      <path d="M42 80Q60 94 78 80" stroke="#2D3A2E" strokeWidth="3.5" fill="#C14A2A" strokeLinecap="round" strokeLinejoin="round"/>
+      <ellipse cx="32" cy="72" rx="9" ry="8" fill="rgba(255,120,80,0.22)"/>
+      <ellipse cx="88" cy="72" rx="9" ry="8" fill="rgba(255,120,80,0.22)"/>
+    </svg>
+  );
+}
+
+// ── MODALS ────────────────────────────────────────────────────
+function Overlay({ children, onClose }) {
+  return (
+    <div onClick={onClose} style={{
+      position:'absolute', inset:0, background:'rgba(0,0,0,0.45)',
+      display:'flex', alignItems:'flex-end', justifyContent:'center',
+      zIndex:200, animation:'fade-in 0.2s ease both',
+    }}>
+      <div onClick={e => e.stopPropagation()} style={{ width:'100%', animation:'sheet-up 0.3s cubic-bezier(0.34,1.26,0.64,1) both' }}>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function ResetModal({ name, onConfirm, onCancel }) {
+  const [typed, setTyped] = useState('');
+  const match = typed.trim().toLowerCase() === name.trim().toLowerCase();
+  return (
+    <Overlay onClose={onCancel}>
+      <div style={{
+        background:'var(--card)', borderRadius:'24px 24px 0 0',
+        padding:'24px 20px 40px',
+      }}>
+        <div style={{ width:40, height:4, borderRadius:2, background:'rgba(0,0,0,0.15)', margin:'0 auto 20px' }}/>
+        <div style={{ fontSize:22, fontWeight:700, color:'var(--danger)', marginBottom:8 }}>Reset Progress?</div>
+        <div style={{ fontSize:14, color:'var(--ink-soft)', lineHeight:1.6, marginBottom:20 }}>
+          This will permanently erase all of <strong>{name}'s</strong> stars, stickers, streaks, and skill progress. This cannot be undone.
+        </div>
+        <div style={{ marginBottom:16 }}>
+          <div style={{ fontSize:12, fontWeight:600, color:'var(--ink-soft)', marginBottom:6 }}>
+            Type <strong>{name}</strong> to confirm
+          </div>
+          <input
+            type="text" value={typed} onChange={e => setTyped(e.target.value)}
+            placeholder={`Type "${name}" here`}
+            style={{
+              width:'100%', padding:'12px 14px', borderRadius:14, fontSize:14,
+              border:`2px solid ${match ? 'var(--danger)' : 'var(--ol)'}`,
+              outline:'none', fontFamily:'inherit', color:'var(--ink)',
+              background: match ? 'var(--danger-pale)' : 'var(--surface)',
+              transition:'all 0.2s',
+            }}/>
+        </div>
+        <div style={{ display:'flex', gap:10 }}>
+          <button onClick={onCancel} style={{
+            flex:1, padding:'14px', borderRadius:14, fontSize:15, fontWeight:600,
+            background:'var(--surface)', color:'var(--ink-soft)',
+            border:'1.5px solid var(--ol)',
+          }}>Cancel</button>
+          <button onClick={match ? onConfirm : undefined} style={{
+            flex:1, padding:'14px', borderRadius:14, fontSize:15, fontWeight:700,
+            background: match ? 'var(--danger)' : '#E8E2D4',
+            color: match ? '#fff' : 'var(--ink-faint)',
+            border:'none', transition:'all 0.2s',
+            cursor: match ? 'pointer' : 'not-allowed',
+          }}>Reset Everything</button>
+        </div>
+      </div>
+    </Overlay>
+  );
+}
+
+function AvatarModal({ current, onSelect, onClose }) {
+  const [preview, setPreview] = useState(current);
+  const col = AVATAR_COLORS.find(c => c.id === preview);
+  return (
+    <Overlay onClose={onClose}>
+      <div style={{ background:'var(--card)', borderRadius:'24px 24px 0 0', padding:'24px 20px 40px' }}>
+        <div style={{ width:40, height:4, borderRadius:2, background:'rgba(0,0,0,0.15)', margin:'0 auto 20px' }}/>
+        <div style={{ fontSize:17, fontWeight:700, color:'var(--ink)', marginBottom:20, textAlign:'center' }}>Choose Avatar Colour</div>
+        {/* Preview */}
+        <div style={{ display:'flex', justifyContent:'center', marginBottom:24 }}>
+          <div style={{
+            width:96, height:96, borderRadius:28, background: col?.hex || '#FFD36E',
+            border:'3px solid #2D3A2E', boxShadow:'0 5px 0 rgba(46,90,58,0.18)',
+            display:'flex', alignItems:'center', justifyContent:'center',
+          }}>
+            <MascotAvatar size={78} color={col?.hex || '#FFD36E'}/>
+          </div>
+        </div>
+        {/* Swatches */}
+        <div style={{ display:'flex', justifyContent:'center', gap:14, marginBottom:24 }}>
+          {AVATAR_COLORS.map(c => (
+            <button key={c.id} onClick={() => setPreview(c.id)} style={{
+              width:48, height:48, borderRadius:16,
+              background: c.hex,
+              border: preview===c.id ? '3px solid #2D3A2E' : '3px solid transparent',
+              boxShadow: preview===c.id ? '0 4px 0 rgba(46,90,58,0.2)' : 'none',
+              transition:'all 0.15s',
+              display:'flex', alignItems:'center', justifyContent:'center',
+            }}>
+              {preview===c.id && <div style={{ width:10, height:10, borderRadius:'50%', background:'rgba(46,90,58,0.4)' }}/>}
+            </button>
+          ))}
+        </div>
+        <div style={{ display:'flex', gap:10 }}>
+          <button onClick={onClose} style={{ flex:1, padding:'14px', borderRadius:14, fontSize:15, fontWeight:600, background:'var(--surface)', color:'var(--ink-soft)', border:'1.5px solid var(--ol)' }}>Cancel</button>
+          <button onClick={() => { onSelect(preview); onClose(); }} style={{ flex:1, padding:'14px', borderRadius:14, fontSize:15, fontWeight:700, background:'var(--ink)', color:'#fff', border:'none' }}>Save</button>
+        </div>
+      </div>
+    </Overlay>
+  );
+}
+
+function QuietHoursModal({ start, end, onSave, onClose }) {
+  const [s, setS] = useState(start);
+  const [e2, setE] = useState(end);
+  const HOURS = ['06:00','06:30','07:00','07:30','08:00','18:00','19:00','19:30','20:00','20:30','21:00','22:00'];
+  return (
+    <Overlay onClose={onClose}>
+      <div style={{ background:'var(--card)', borderRadius:'24px 24px 0 0', padding:'24px 20px 40px' }}>
+        <div style={{ width:40, height:4, borderRadius:2, background:'rgba(0,0,0,0.15)', margin:'0 auto 20px' }}/>
+        <div style={{ fontSize:17, fontWeight:700, color:'var(--ink)', marginBottom:6, textAlign:'center' }}>Quiet Hours</div>
+        <div style={{ fontSize:13, color:'var(--ink-soft)', textAlign:'center', marginBottom:24, lineHeight:1.5 }}>
+          The app won't be available during these hours. Good for bedtime and school mornings.
+        </div>
+        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, marginBottom:24 }}>
+          {[
+            { label:'Start (bedtime)', val:s, set:setS, opts:['19:00','19:30','20:00','20:30','21:00','22:00'] },
+            { label:'End (wake-up)',   val:e2,set:setE, opts:['06:00','06:30','07:00','07:30','08:00','08:30'] },
+          ].map(({ label, val, set, opts }) => (
+            <div key={label}>
+              <div style={{ fontSize:11, fontWeight:700, color:'var(--ink-faint)', letterSpacing:0.8, marginBottom:8 }}>{label.toUpperCase()}</div>
+              <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+                {opts.map(t => (
+                  <button key={t} onClick={() => set(t)} style={{
+                    padding:'9px 12px', borderRadius:12, fontSize:14, fontWeight:600,
+                    background: val===t ? 'var(--ink)' : 'var(--surface)',
+                    color: val===t ? '#fff' : 'var(--ink-soft)',
+                    border: val===t ? 'none' : '1px solid var(--ol)',
+                    transition:'all 0.1s',
+                  }}>{t}</button>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+        <div style={{ marginBottom:16, padding:'12px 14px', borderRadius:14, background:'var(--surface)', border:'1px solid var(--ol)', textAlign:'center' }}>
+          <div style={{ fontSize:13, color:'var(--ink-soft)' }}>App blocked from <strong style={{color:'var(--ink)'}}>{s}</strong> to <strong style={{color:'var(--ink)'}}>{e2}</strong></div>
+        </div>
+        <div style={{ display:'flex', gap:10 }}>
+          <button onClick={onClose} style={{ flex:1, padding:'14px', borderRadius:14, fontSize:15, fontWeight:600, background:'var(--surface)', color:'var(--ink-soft)', border:'1.5px solid var(--ol)' }}>Cancel</button>
+          <button onClick={() => { onSave(s, e2); onClose(); }} style={{ flex:1, padding:'14px', borderRadius:14, fontSize:15, fontWeight:700, background:'var(--ink)', color:'#fff', border:'none' }}>Save</button>
+        </div>
+      </div>
+    </Overlay>
+  );
+}
+
+// ════════════════════════════════════════════════════════════
+// TAB 1 — LEARNING
+// ════════════════════════════════════════════════════════════
+function LearningTab({ s, set }) {
+  return (
+    <div className="fade-in" style={{ display:'flex', flexDirection:'column', gap:20 }}>
+
+      {/* Language mode */}
+      <div>
+        <SectionLabel>Language Mode</SectionLabel>
+        <SettingCard style={{ padding:'16px' }}>
+          <div style={{ marginBottom:12 }}>
+            <div style={{ fontSize:14, fontWeight:700, color:'var(--ink)', marginBottom:3 }}>App language for child</div>
+            <div style={{ fontSize:12, color:'var(--ink-soft)' }}>Controls number prompts, instructions, and audio cues</div>
+          </div>
+          <ChipPicker
+            value={s.langMode}
+            onChange={v => set('langMode', v)}
+            options={[
+              { id:'en', label:'🇬🇧  English' },
+              { id:'vi', label:'🇻🇳  Tiếng Việt' },
+              { id:'bi', label:'🌏  Bilingual' },
+            ]}/>
+          {s.langMode === 'bi' && (
+            <div style={{ marginTop:12, padding:'10px 12px', borderRadius:12, background:'var(--sky-pale)', border:'1px solid var(--sky)', fontSize:12, color:'var(--sky-ink)' }}>
+              Bilingual mode: numbers spoken in both languages. Ideal for language-learning families.
+            </div>
+          )}
+        </SettingCard>
+      </div>
+
+      {/* Audio */}
+      <div>
+        <SectionLabel>Audio</SectionLabel>
+        <SettingCard>
+          <Row icon="🔊" label="Audio on"       sub="Voice prompts, sound effects, music" right={<Toggle on={s.audio}  onChange={v => set('audio', v)}/>}/>
+          <Row icon="💡" label="Guided hints"   sub="Gentle voice hints when child is stuck" right={<Toggle on={s.hints} onChange={v => set('hints', v)}/>} last/>
+        </SettingCard>
+      </div>
+
+      {/* Difficulty */}
+      <div>
+        <SectionLabel>Difficulty</SectionLabel>
+        <SettingCard style={{ padding:'16px' }}>
+          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:14 }}>
+            <div>
+              <div style={{ fontSize:14, fontWeight:600, color:'var(--ink)', lineHeight:1.2 }}>Adaptive difficulty</div>
+              <div style={{ fontSize:12, color:'var(--ink-soft)', marginTop:2 }}>App adjusts automatically based on performance</div>
+            </div>
+            <Toggle on={s.adaptive} onChange={v => set('adaptive', v)}/>
+          </div>
+          {!s.adaptive && (
+            <div style={{ animation:'slide-up 0.2s ease both' }}>
+              <div style={{ height:1, background:'var(--ol)', margin:'0 0 14px' }}/>
+              <div style={{ fontSize:13, fontWeight:600, color:'var(--ink-soft)', marginBottom:10 }}>Manual difficulty level</div>
+              <ChipPicker
+                value={String(s.startLevel)}
+                onChange={v => set('startLevel', +v)}
+                options={[
+                  { id:'1', label:'⭐ Starter'  },
+                  { id:'2', label:'⭐⭐ Easy'    },
+                  { id:'3', label:'⭐⭐⭐ Medium' },
+                  { id:'4', label:'⭐⭐⭐⭐ Hard' },
+                ]}/>
+            </div>
+          )}
+        </SettingCard>
+      </div>
+
+      {/* Start level */}
+      <div>
+        <SectionLabel>Starting Point</SectionLabel>
+        <SettingCard style={{ padding:'16px' }}>
+          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+            <div>
+              <div style={{ fontSize:14, fontWeight:600, color:'var(--ink)' }}>Starting world / level</div>
+              <div style={{ fontSize:12, color:'var(--ink-soft)', marginTop:2 }}>
+                {['','Garden of Numbers','Number Forest','Place Value Plains','Even/Odd Island','Addition Archipelago'][s.startLevel] || 'Custom'}
+              </div>
+            </div>
+            <Stepper value={s.startLevel} min={1} max={5} onChange={v => set('startLevel', v)}/>
+          </div>
+        </SettingCard>
+      </div>
+
+    </div>
+  );
+}
+
+// ════════════════════════════════════════════════════════════
+// TAB 2 — SESSION
+// ════════════════════════════════════════════════════════════
+function SessionTab({ s, set }) {
+  const [showQH, setShowQH] = useState(false);
+  return (
+    <div className="fade-in" style={{ display:'flex', flexDirection:'column', gap:20 }}>
+
+      {/* Daily limit */}
+      <div>
+        <SectionLabel>Daily Time Limit</SectionLabel>
+        <SettingCard style={{ padding:'16px' }}>
+          <div style={{ fontSize:13, color:'var(--ink-soft)', marginBottom:12, lineHeight:1.5 }}>
+            When the limit is reached, the child sees a gentle "rest time" screen. Learning is saved.
+          </div>
+          <MinuteChips options={[5,10,15,20,30]} value={s.dailyLimit} onChange={v => set('dailyLimit', v)}/>
+          <div style={{ marginTop:12, display:'flex', alignItems:'center', gap:8, padding:'10px 12px', borderRadius:12, background:'var(--surface)', border:'1px solid var(--ol)' }}>
+            <span style={{ fontSize:16 }}>⏱️</span>
+            <div style={{ fontSize:12, color:'var(--ink-soft)' }}>
+              Recommended for age {s.startLevel + 2}: <strong style={{color:'var(--ink)'}}>{Math.min(15, s.dailyLimit + 0)} – {s.dailyLimit} min/day</strong>
+            </div>
+          </div>
+        </SettingCard>
+      </div>
+
+      {/* Daily goal */}
+      <div>
+        <SectionLabel>Daily Goal</SectionLabel>
+        <SettingCard style={{ padding:'16px' }}>
+          <div style={{ fontSize:13, color:'var(--ink-soft)', marginBottom:12 }}>
+            Streak is counted when this goal is met each day.
+          </div>
+          <MinuteChips options={[5,10,15,20]} value={s.dailyGoal} onChange={v => set('dailyGoal', v)}/>
+        </SettingCard>
+      </div>
+
+      {/* Free play + quiet hours */}
+      <div>
+        <SectionLabel>Behaviour</SectionLabel>
+        <SettingCard>
+          <Row icon="🎮" label="Free play mode"
+            sub="Child can replay any unlocked game freely"
+            right={<Toggle on={s.freePlay} onChange={v => set('freePlay', v)}/>}/>
+          <Row icon="🌙" label="Quiet hours"
+            sub={s.quietHours ? `App blocked ${s.quietStart} – ${s.quietEnd}` : 'No restrictions set'}
+            right={<Toggle on={s.quietHours} onChange={v => set('quietHours', v)}/>}/>
+          {s.quietHours && (
+            <div style={{ padding:'0 16px 14px' }}>
+              <button onClick={() => setShowQH(true)} style={{
+                width:'100%', padding:'10px 14px', borderRadius:14,
+                background:'var(--surface)', border:'1px solid var(--ol)',
+                fontSize:13, fontWeight:600, color:'var(--sky-ink)',
+                display:'flex', alignItems:'center', justifyContent:'space-between',
+              }}>
+                <span>⏰ Edit quiet hours ({s.quietStart} – {s.quietEnd})</span>
+                <span style={{ color:'var(--ink-faint)', fontSize:16 }}>›</span>
+              </button>
+            </div>
+          )}
+          <Row icon="📅" label="Weekend mode" sub="Slightly longer limit on weekends (1.5×)" last
+            right={<Toggle on={false} onChange={() => {}}/>}/>
+        </SettingCard>
+      </div>
+
+      {showQH && (
+        <QuietHoursModal
+          start={s.quietStart} end={s.quietEnd}
+          onSave={(st, en) => { set('quietStart', st); set('quietEnd', en); }}
+          onClose={() => setShowQH(false)}/>
+      )}
+    </div>
+  );
+}
+
+// ════════════════════════════════════════════════════════════
+// TAB 3 — PROFILE
+// ════════════════════════════════════════════════════════════
+function ProfileTab({ s, set }) {
+  const [showAvatar, setShowAvatar] = useState(false);
+  const [showReset,  setShowReset]  = useState(false);
+  const [resetDone,  setResetDone]  = useState(false);
+  const avatarHex = AVATAR_COLORS.find(c => c.id === s.avatarColor)?.hex || '#FFD36E';
+
+  return (
+    <div className="fade-in" style={{ display:'flex', flexDirection:'column', gap:20 }}>
+
+      {/* Profile card */}
+      <div>
+        <SectionLabel>Child Profile</SectionLabel>
+        <SettingCard style={{ padding:'16px' }}>
+          {/* Avatar + name preview */}
+          <div style={{ display:'flex', alignItems:'center', gap:14, marginBottom:16 }}>
+            <button onClick={() => setShowAvatar(true)} style={{ position:'relative', flexShrink:0 }}>
+              <div style={{
+                width:68, height:68, borderRadius:20,
+                background: avatarHex, border:'2.5px solid #2D3A2E',
+                boxShadow:'0 4px 0 rgba(46,90,58,0.18)',
+                display:'flex', alignItems:'center', justifyContent:'center',
+              }}>
+                <MascotAvatar size={54} color={avatarHex}/>
+              </div>
+              <div style={{
+                position:'absolute', bottom:-4, right:-4,
+                width:22, height:22, borderRadius:'50%',
+                background:'var(--ink)', border:'2px solid #fff',
+                display:'flex', alignItems:'center', justifyContent:'center',
+                fontSize:11,
+              }}>✏️</div>
+            </button>
+            <div style={{ flex:1 }}>
+              <div style={{ fontSize:18, fontWeight:700, color:'var(--ink)' }}>{s.childName}</div>
+              <div style={{ fontSize:13, color:'var(--ink-soft)', marginTop:2 }}>Age {s.childAge} · World {s.startLevel}</div>
+              <button onClick={() => setShowAvatar(true)} style={{ fontSize:12, color:'var(--sky-ink)', fontWeight:600, marginTop:4 }}>
+                Change avatar colour →
+              </button>
+            </div>
+          </div>
+
+          <div style={{ height:1, background:'var(--ol)', margin:'0 0 14px' }}/>
+
+          {/* Name */}
+          <div style={{ marginBottom:14 }}>
+            <div style={{ fontSize:12, fontWeight:700, color:'var(--ink-faint)', letterSpacing:0.8, marginBottom:6 }}>CHILD'S NAME</div>
+            <input
+              type="text" value={s.childName}
+              onChange={e => set('childName', e.target.value)}
+              style={{
+                width:'100%', padding:'12px 14px', borderRadius:14,
+                border:'1.5px solid var(--ol)', fontSize:15, fontWeight:600,
+                color:'var(--ink)', background:'var(--surface)', outline:'none',
+                fontFamily:'inherit',
+              }}/>
+          </div>
+
+          {/* Age */}
+          <div>
+            <div style={{ fontSize:12, fontWeight:700, color:'var(--ink-faint)', letterSpacing:0.8, marginBottom:10 }}>AGE</div>
+            <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+              <div style={{ fontSize:13, color:'var(--ink-soft)' }}>
+                {['','Toddler (1–2)','Preschool (3)','Preschool (4)','Pre-K (5)','Kindergarten (6)'][s.childAge] || `Age ${s.childAge}`}
+              </div>
+              <Stepper value={s.childAge} min={2} max={7} onChange={v => set('childAge', v)} unit=" yrs"/>
+            </div>
+          </div>
+        </SettingCard>
+      </div>
+
+      {/* Notifications */}
+      <div>
+        <SectionLabel>Parent Notifications</SectionLabel>
+        <SettingCard>
+          <Row icon="📊" label="Weekly summary"  sub="Progress report every Sunday" right={<Toggle on={true}  onChange={()=>{}}/>}/>
+          <Row icon="🎯" label="Milestone alerts" sub="When child earns a new badge"  right={<Toggle on={true}  onChange={()=>{}}/>}/>
+          <Row icon="⏰" label="Daily reminder"  sub="Nudge if no play by 5 PM"       right={<Toggle on={false} onChange={()=>{}}/>} last/>
+        </SettingCard>
+      </div>
+
+      {/* Danger zone */}
+      <div>
+        <SectionLabel style={{ color:'#E05050' }}>Danger Zone</SectionLabel>
+        <SettingCard>
+          <button onClick={() => setShowReset(true)} style={{
+            width:'100%', display:'flex', alignItems:'center', gap:12, padding:'16px',
+            textAlign:'left',
+          }}>
+            <div style={{ width:34, height:34, borderRadius:11, background:'var(--danger-pale)', flexShrink:0,
+              display:'flex', alignItems:'center', justifyContent:'center', fontSize:17 }}>🗑️</div>
+            <div style={{ flex:1 }}>
+              <div style={{ fontSize:14, fontWeight:600, color:'var(--danger)' }}>Reset all progress</div>
+              <div style={{ fontSize:11, color:'var(--ink-faint)', marginTop:2 }}>Permanently erases stars, streaks, skills, stickers</div>
+            </div>
+            <div style={{ fontSize:18, color:'var(--danger)', opacity:0.5 }}>›</div>
+          </button>
+        </SettingCard>
+      </div>
+
+      {resetDone && (
+        <div style={{
+          padding:'12px 16px', borderRadius:14,
+          background:'var(--sage-pale)', border:'1px solid var(--sage-mid)',
+          fontSize:13, color:'#2F6A3C', fontWeight:600,
+          animation:'slide-up 0.3s ease both',
+          display:'flex', gap:8, alignItems:'center',
+        }}>
+          <span>✅</span> Progress has been reset. {s.childName} will start fresh!
+        </div>
+      )}
+
+      {showAvatar && (
+        <AvatarModal
+          current={s.avatarColor}
+          onSelect={v => set('avatarColor', v)}
+          onClose={() => setShowAvatar(false)}/>
+      )}
+      {showReset && (
+        <ResetModal
+          name={s.childName}
+          onConfirm={() => { setShowReset(false); setResetDone(true); }}
+          onCancel={() => setShowReset(false)}/>
+      )}
+    </div>
+  );
+}
+
+// ════════════════════════════════════════════════════════════
+// TAB 4 — REWARDS
+// ════════════════════════════════════════════════════════════
+function RewardsTab({ s, set }) {
+  const INTENSITIES = [
+    { id:'none',   label:'Off',    sub:'No animations',       icon:'🔲' },
+    { id:'subtle', label:'Subtle', sub:'Gentle confetti',     icon:'✨' },
+    { id:'full',   label:'Full',   sub:'Big celebrations',    icon:'🎉' },
+  ];
+  const cur = INTENSITIES.find(i => i.id === s.celebIntensity);
+
+  return (
+    <div className="fade-in" style={{ display:'flex', flexDirection:'column', gap:20 }}>
+
+      {/* Celebration */}
+      <div>
+        <SectionLabel>Celebration Animations</SectionLabel>
+        <SettingCard style={{ padding:'16px' }}>
+          <div style={{ fontSize:13, color:'var(--ink-soft)', marginBottom:14, lineHeight:1.5 }}>
+            Controls confetti, mascot dances, and sound fanfares when the child gets a question right.
+          </div>
+          <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+            {INTENSITIES.map(opt => (
+              <button key={opt.id} onClick={() => set('celebIntensity', opt.id)} style={{
+                display:'flex', alignItems:'center', gap:12, padding:'12px 14px',
+                borderRadius:14, textAlign:'left', width:'100%',
+                background: s.celebIntensity===opt.id ? 'var(--surface)' : 'transparent',
+                border: s.celebIntensity===opt.id ? '1.5px solid var(--ol-md)' : '1.5px solid transparent',
+                transition:'all 0.15s',
+              }}>
+                <div style={{ fontSize:22, width:32, textAlign:'center', flexShrink:0 }}>{opt.icon}</div>
+                <div style={{ flex:1 }}>
+                  <div style={{ fontSize:14, fontWeight:700, color:'var(--ink)' }}>{opt.label}</div>
+                  <div style={{ fontSize:12, color:'var(--ink-soft)' }}>{opt.sub}</div>
+                </div>
+                <div style={{
+                  width:20, height:20, borderRadius:'50%', flexShrink:0,
+                  border:`2px solid ${s.celebIntensity===opt.id ? 'var(--sage)' : 'var(--ol-md)'}`,
+                  background: s.celebIntensity===opt.id ? 'var(--sage)' : 'transparent',
+                  display:'flex', alignItems:'center', justifyContent:'center',
+                }}>
+                  {s.celebIntensity===opt.id && <div style={{ width:8, height:8, borderRadius:'50%', background:'#fff' }}/>}
+                </div>
+              </button>
+            ))}
+          </div>
+        </SettingCard>
+      </div>
+
+      {/* Stickers */}
+      <div>
+        <SectionLabel>Sticker Rewards</SectionLabel>
+        <SettingCard>
+          <Row icon="🌟" label="Sticker rewards"
+            sub="Child earns stickers for completing milestones"
+            right={<Toggle on={s.stickers} onChange={v => set('stickers', v)}/>} last/>
+        </SettingCard>
+        {!s.stickers && (
+          <div style={{ marginTop:8, padding:'10px 14px', borderRadius:12, background:'var(--sun-pale)', border:'1px solid var(--sun)', fontSize:12, color:'var(--sun-ink)', fontWeight:500 }}>
+            Note: stickers are a key motivator for this age group. Consider keeping them on.
+          </div>
+        )}
+      </div>
+
+      {/* SFX volume */}
+      <div>
+        <SectionLabel>Sound Effects Volume</SectionLabel>
+        <SettingCard style={{ padding:'16px' }}>
+          <VolumeSlider value={s.sfxVolume} onChange={v => set('sfxVolume', v)}/>
+          <div style={{ marginTop:10, fontSize:12, color:'var(--ink-faint)', textAlign:'center' }}>
+            This controls in-game sound effects only. {s.audio ? 'Voice narration is on.' : 'Voice narration is off.'}
+          </div>
+        </SettingCard>
+      </div>
+
+      {/* Preview card */}
+      <div style={{
+        borderRadius:20, padding:'16px',
+        background:'linear-gradient(135deg, var(--sage-pale), var(--sun-pale))',
+        border:'1.5px solid var(--sage-mid)',
+      }}>
+        <div style={{ fontSize:11, fontWeight:700, color:'#2F6A3C', letterSpacing:1, marginBottom:8 }}>CURRENT REWARD PROFILE</div>
+        <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
+          <div style={{ fontSize:13, color:'var(--ink-soft)' }}>
+            {cur?.icon} <strong style={{color:'var(--ink)'}}>{cur?.label}</strong> animations
+            · stickers {s.stickers ? 'on ✅' : 'off'}
+            · SFX {s.sfxVolume}%
+          </div>
+        </div>
+      </div>
+
+    </div>
+  );
+}
+
+// ════════════════════════════════════════════════════════════
+// ROOT APP
+// ════════════════════════════════════════════════════════════
+function App() {
+  const [tweaks, setTweaks] = useState(TWEAK_DEFAULTS);
+  const [tweaksOpen, setTweaksOpen] = useState(false);
+  const [tab, setTab] = useState('learning');
+  const [settings, setSettings] = useState(SETTINGS_DEFAULTS);
+
+  function set(key, val) { setSettings(s => ({...s, [key]: val})); }
+
+  useEffect(() => {
+    function onMsg(e) {
+      if (e.data?.type === '__activate_edit_mode')   setTweaksOpen(true);
+      if (e.data?.type === '__deactivate_edit_mode') setTweaksOpen(false);
+    }
+    window.addEventListener('message', onMsg);
+    window.parent.postMessage({ type: '__edit_mode_available' }, '*');
+    return () => window.removeEventListener('message', onMsg);
+  }, []);
+
+  const TABS = [
+    { id:'learning', label:'Learning' },
+    { id:'session',  label:'Session'  },
+    { id:'profile',  label:'Profile'  },
+    { id:'rewards',  label:'Rewards'  },
+  ];
+
+  return (
+    <>
+    <PhoneShell>
+      <div style={{ height:'100%', display:'flex', flexDirection:'column', background:'var(--surface)', position:'relative' }}>
+
+        {/* Header */}
+        <div style={{ padding:'52px 18px 0', background:'var(--card)', borderBottom:'1px solid var(--ol)', flexShrink:0 }}>
+          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:14 }}>
+            <button style={{ fontSize:13, fontWeight:600, color:'var(--ink-soft)', display:'flex', alignItems:'center', gap:4 }}>
+              <span style={{fontSize:18,lineHeight:1}}>‹</span> Dashboard
+            </button>
+            <div style={{ textAlign:'center' }}>
+              <div style={{ fontSize:10, fontWeight:700, color:'var(--ink-faint)', letterSpacing:1 }}>PARENT CORNER</div>
+              <div style={{ fontSize:17, fontWeight:700, color:'var(--ink)' }}>Settings</div>
+            </div>
+            {/* Save pill */}
+            <button style={{
+              fontSize:12, fontWeight:700, color:'#fff',
+              background:'var(--ink)', padding:'6px 14px', borderRadius:999, border:'none',
+            }}>Save</button>
+          </div>
+
+          {/* Tabs */}
+          <div style={{ display:'flex', overflowX:'auto', scrollbarWidth:'none' }}>
+            {TABS.map(t => (
+              <button key={t.id} onClick={() => setTab(t.id)} style={{
+                flex:'0 0 auto', padding:'10px 16px',
+                fontSize:13, fontWeight:600,
+                color: tab===t.id ? 'var(--ink)' : 'var(--ink-faint)',
+                borderBottom: tab===t.id ? '2.5px solid var(--ink)' : '2.5px solid transparent',
+                whiteSpace:'nowrap', transition:'color 0.15s',
+              }}>{t.label}</button>
+            ))}
+          </div>
+        </div>
+
+        {/* Scrollable body */}
+        <div className="scroll" style={{ flex:1, padding:'18px 16px 40px' }}>
+          {tab==='learning' && <LearningTab s={settings} set={set}/>}
+          {tab==='session'  && <SessionTab  s={settings} set={set}/>}
+          {tab==='profile'  && <ProfileTab  s={settings} set={set}/>}
+          {tab==='rewards'  && <RewardsTab  s={settings} set={set}/>}
+        </div>
+
+        {/* Sticky save bar */}
+        <div style={{
+          padding:'12px 16px 28px', background:'var(--card)',
+          borderTop:'1px solid var(--ol)', flexShrink:0,
+        }}>
+          <button style={{
+            width:'100%', padding:'14px', borderRadius:16,
+            background:'var(--ink)', color:'#fff',
+            fontSize:15, fontWeight:700, border:'none',
+            boxShadow:'0 4px 0 rgba(46,90,58,0.3)',
+          }}>Save Settings</button>
+        </div>
+      </div>
+    </PhoneShell>
+
+    {/* Tweaks */}
+    <div id="tweaks-panel" className={tweaksOpen ? 'open' : ''}>
+      <h3>TWEAKS</h3>
+      <div className="tweak-row">
+        <label>Default tab</label>
+        <select className="tw-select" value={tab} onChange={e => setTab(e.target.value)}>
+          {TABS.map(t => <option key={t.id} value={t.id}>{t.label}</option>)}
+        </select>
+      </div>
+      <div className="tweak-row">
+        <label>Child name</label>
+        <input value={tweaks.childName} onChange={e => {
+          const v = e.target.value;
+          setTweaks(t => ({...t, childName: v}));
+          set('childName', v);
+        }} style={{width:80,padding:'4px 8px',borderRadius:8,border:'1.5px solid rgba(0,0,0,0.1)',fontFamily:'inherit',fontSize:12}}/>
+      </div>
+    </div>
+    </>
+  );
+}
+
+function PhoneShell({ children }) {
+  return (
+    <div style={{
+      width:390, height:844, borderRadius:50, overflow:'hidden',
+      boxShadow:'0 0 0 10px #1a1a1a, 0 40px 80px rgba(0,0,0,0.45)',
+      background:'#000', position:'relative', flexShrink:0,
+    }}>
+      <div style={{ position:'absolute', top:0, left:'50%', transform:'translateX(-50%)', width:120, height:34, background:'#000', borderRadius:'0 0 20px 20px', zIndex:100 }}/>
+      <div style={{ position:'relative', overflow:'hidden', borderRadius:50, height:'100%', display:'flex', flexDirection:'column' }}>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>

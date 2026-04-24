@@ -1,0 +1,759 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bắp — Build the Number Game UI</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; font-family: 'Fredoka', ui-rounded, sans-serif; background: #E8E0D3; -webkit-font-smoothing: antialiased; overflow: hidden; }
+button { cursor: pointer; font-family: inherit; border: none; background: none; }
+@keyframes bobble     { 0%,100%{transform:translateY(0) rotate(0)} 50%{transform:translateY(-7px) rotate(-2deg)} }
+@keyframes pop-in     { 0%{transform:scale(.55);opacity:0} 65%{transform:scale(1.1);opacity:1} 100%{transform:scale(1)} }
+@keyframes shake      { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-8px)} 40%{transform:translateX(8px)} 60%{transform:translateX(-5px)} 80%{transform:translateX(5px)} }
+@keyframes pulse-soft { 0%,100%{transform:scale(1)} 50%{transform:scale(1.05)} }
+@keyframes sparkle    { 0%,100%{transform:scale(.6) rotate(0);opacity:.3} 50%{transform:scale(1.3) rotate(180deg);opacity:1} }
+@keyframes confetti-fall { 0%{transform:translateY(-14px) rotate(0deg);opacity:1} 100%{transform:translateY(140px) rotate(540deg);opacity:0} }
+@keyframes float-up   { from{transform:translateY(0);opacity:1} to{transform:translateY(-50px);opacity:0} }
+@keyframes slide-up   { from{transform:translateY(16px);opacity:0} to{transform:translateY(0);opacity:1} }
+@keyframes hint-glow  { 0%,100%{box-shadow:0 0 0 0 rgba(255,211,110,.5)} 50%{box-shadow:0 0 0 10px rgba(255,211,110,0)} }
+@keyframes count-in   { from{transform:scale(0) rotate(-20deg);opacity:0} to{transform:scale(1) rotate(0deg);opacity:1} }
+@keyframes correct-bg { 0%{background:rgba(196,235,185,0.3)} 50%{background:rgba(196,235,185,0.7)} 100%{background:rgba(196,235,185,0.3)} }
+@keyframes wrong-bg   { 0%{background:rgba(242,121,90,0.15)} 50%{background:rgba(242,121,90,0.3)} 100%{background:rgba(242,121,90,0.15)} }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script type="text/babel" src="design-canvas.jsx"></script>
+<script type="text/babel">
+const { useState, useMemo } = React;
+
+// ─── TOKENS ──────────────────────────────────────────────────
+const C = {
+  ink:'#2D3A2E', soft:'#6B7A6C', faint:'#A9B4A8',
+  sun:'#FFD36E',  sunSh:'#C79528',  sunInk:'#5E3A00',
+  sage:'#7FC089', sageSh:'#4D8B58', sageInk:'#1F4A28', sagePale:'#C4EBB9',
+  sky:'#8AC4DE',  skySh:'#5A96B1',  skyInk:'#1F4A61',  skyPale:'#D4EAF5',
+  lav:'#B9A4E0',  lavSh:'#8872B4',  lavInk:'#3D256D',  lavPale:'#EEE8F8',
+  coral:'#FF8F74',coralSh:'#C8614A',coralInk:'#6B1F0A',coralBg:'#FFF0EA',
+  gold:'#FFC94A', goldSh:'#C89220',
+  cream:'#FFF8EC',surface:'#FFFDF7',
+  correct:'#5FB36A', correctSh:'#3D8A4A', correctBg:'#EAF7E4',
+  wrong:'#F2795A',   wrongSh:'#C8614A',   wrongBg:'#FFE8DF',
+  hint:'#FFD36E',    hintBg:'#FFF4DE',
+  // Block colors
+  tensColor:'#8AC4DE', tensSh:'#5A96B1', tensInk:'#1F4A61',
+  onesColor:'#FFD36E', onesSh:'#C79528', onesInk:'#5E3A00',
+  hundredsColor:'#B9A4E0', hundredsSh:'#8872B4', hundredsInk:'#3D256D',
+};
+
+// ─── MASCOT ──────────────────────────────────────────────────
+function Bap({ size=70, mood='happy', color='sun' }) {
+  const body={sun:'#FFD36E',sage:'#A8D5A2',coral:'#FFA48C',lavender:'#D9C7F0',sky:'#B8DEEF'}[color]||'#FFD36E';
+  const dark={sun:'#E8B23F',sage:'#7FB983',coral:'#E2815E',lavender:'#B39DD1',sky:'#88BED4'}[color]||'#E8B23F';
+  const eye={
+    happy:<><ellipse cx="0" cy="0" rx="6" ry="7" fill={C.ink}/><ellipse cx="-1.5" cy="-2" rx="2" ry="2.5" fill="#fff"/></>,
+    celebrate:<path d="M -6 2 Q 0 -6 6 2" stroke={C.ink} strokeWidth="3" fill="none" strokeLinecap="round"/>,
+    worry:<ellipse cx="0" cy="1" rx="5" ry="5" fill={C.ink}/>,
+    hint:<><ellipse cx="0" cy="0" rx="6" ry="6" fill={C.ink}/><ellipse cx="2" cy="-2" rx="2" ry="2.5" fill="#fff"/></>,
+    excited:<><ellipse cx="0" cy="0" rx="7" ry="8" fill={C.ink}/><ellipse cx="-2" cy="-2.5" rx="2.5" ry="3" fill="#fff"/></>,
+  };
+  const mouth={
+    happy:<path d="M 35 85 Q 50 98 65 85" stroke={C.ink} strokeWidth="3.5" fill="#C14A2A" strokeLinecap="round"/>,
+    celebrate:<path d="M 32 82 Q 50 105 68 82 Q 50 95 32 82" fill="#C14A2A" stroke={C.ink} strokeWidth="3"/>,
+    worry:<path d="M 38 89 Q 50 81 62 89" stroke={C.ink} strokeWidth="3" fill="none" strokeLinecap="round"/>,
+    hint:<path d="M 40 85 Q 50 91 60 85" stroke={C.ink} strokeWidth="3" fill="#C14A2A" strokeLinecap="round"/>,
+    excited:<path d="M 30 80 Q 50 108 70 80 Q 50 96 30 80" fill="#C14A2A" stroke={C.ink} strokeWidth="3"/>,
+  };
+  return (
+    <svg viewBox="0 0 120 140" width={size} height={size*140/120} style={{display:'block'}}>
+      <g><ellipse cx="38" cy="18" rx="14" ry="20" fill="#7FB983" transform="rotate(-30 38 18)"/>
+      <ellipse cx="38" cy="18" rx="7" ry="16" fill="#A8D5A2" transform="rotate(-30 38 18)"/>
+      <ellipse cx="76" cy="14" rx="16" ry="22" fill="#5FA36A" transform="rotate(25 76 14)"/>
+      <ellipse cx="76" cy="14" rx="8" ry="18" fill="#A8D5A2" transform="rotate(25 76 14)"/></g>
+      <ellipse cx="60" cy="126" rx="38" ry="6" fill="rgba(46,90,58,0.15)"/>
+      <path d="M60 28 C92 28 100 56 100 82 C100 110 82 126 60 126 C38 126 20 110 20 82 C20 56 28 28 60 28Z" fill={body} stroke={C.ink} strokeWidth="3.5"/>
+      <g opacity=".3" stroke={dark} strokeWidth="2" fill="none" strokeLinecap="round">
+        <path d="M30 62 Q60 56 90 62"/><path d="M28 80 Q60 74 92 80"/><path d="M30 98 Q60 104 90 98"/>
+      </g>
+      <circle cx="30" cy="82" r="7" fill="#FFA48C" opacity=".7"/>
+      <circle cx="90" cy="82" r="7" fill="#FFA48C" opacity=".7"/>
+      <g transform="translate(42 66)">{eye[mood]||eye.happy}</g>
+      <g transform="translate(78 66)">{eye[mood]||eye.happy}</g>
+      {mouth[mood]||mouth.happy}
+    </svg>
+  );
+}
+
+// ─── SHARED UI ────────────────────────────────────────────────
+function Sparkle({x,y,s=10,d=0}) {
+  return <div style={{position:'absolute',left:x,top:y,width:s,height:s,pointerEvents:'none',animation:`sparkle ${1.8+d}s ease-in-out ${d}s infinite`}}><svg viewBox="0 0 20 20" width="100%" height="100%"><path d="M10 0L12 8 20 10 12 12 10 20 8 12 0 10 8 8Z" fill="#FFD36E"/></svg></div>;
+}
+function Confetti({count=20}) {
+  const p=useMemo(()=>Array.from({length:count},(_,i)=>({left:Math.random()*100,color:['#FFD36E','#FFA48C','#A8D5A2','#B8DEEF','#D9C7F0','#E6779E'][i%6],size:6+Math.random()*7,dur:1.3+Math.random()*1.2,delay:Math.random()*.6,shape:Math.random()>.5?'50%':'3px'})),[count]);
+  return <div style={{position:'absolute',inset:0,pointerEvents:'none',overflow:'hidden'}}>{p.map((x,i)=><div key={i} style={{position:'absolute',left:`${x.left}%`,top:-14,width:x.size,height:x.size,background:x.color,borderRadius:x.shape,animation:`confetti-fall ${x.dur}s ease-in ${x.delay}s forwards`}}/>)}</div>;
+}
+function HUD({hearts=3,progress=2,total=4,color=C.sky}) {
+  return (
+    <div style={{padding:'52px 16px 8px',display:'flex',alignItems:'center',gap:10}}>
+      <button style={{width:44,height:44,borderRadius:'50%',background:C.cream,border:`3px solid ${C.ink}`,boxShadow:'0 3px 0 #D9C38A',display:'flex',alignItems:'center',justifyContent:'center',fontSize:20,color:C.soft,flexShrink:0}}>✕</button>
+      <div style={{flex:1}}>
+        <div style={{height:14,borderRadius:14,background:'rgba(46,90,58,0.1)',border:`2px solid ${C.ink}`,overflow:'hidden'}}>
+          <div style={{height:'100%',width:`${progress/total*100}%`,borderRadius:14,background:color,transition:'width .6s cubic-bezier(.34,1.56,.64,1)'}}/>
+        </div>
+      </div>
+      <div style={{padding:'6px 12px',borderRadius:999,background:'#FFDDE2',border:`2px solid ${C.ink}`,fontSize:14,fontWeight:700,color:'#A33A1D',flexShrink:0}}>❤️ {hearts}</div>
+    </div>
+  );
+}
+function Bubble({text,mood='happy',color='sky',size=66}) {
+  return (
+    <div style={{display:'flex',alignItems:'flex-end',gap:8,padding:'0 16px 8px'}}>
+      <div style={{animation:'bobble 2.5s ease-in-out infinite',flexShrink:0}}><Bap size={size} mood={mood} color={color}/></div>
+      <div style={{flex:1,background:C.cream,borderRadius:'16px 16px 16px 5px',border:`2.5px solid ${C.ink}`,boxShadow:'0 4px 0 #D9C38A',padding:'10px 14px',fontSize:14,fontWeight:700,color:C.ink,lineHeight:1.4}}>{text}</div>
+    </div>
+  );
+}
+function DiffBadge({label,color}) {
+  return <div style={{display:'inline-flex',alignItems:'center',gap:4,padding:'4px 11px',borderRadius:999,background:color+'22',border:`1.5px solid ${color}`,fontSize:11,fontWeight:700,color,letterSpacing:.4}}>{label}</div>;
+}
+
+// ─── BLOCK COMPONENTS ─────────────────────────────────────────
+
+// Ten-stick: vertical rod with 10 dots
+function TenStick({ mini=false, anim=false }) {
+  const w = mini ? 14 : 20, h = mini ? 44 : 64, r = mini ? 4 : 6;
+  const dotR = mini ? 3.5 : 5;
+  return (
+    <div style={{
+      width:w, position:'relative', display:'flex', flexDirection:'column', alignItems:'center',
+      animation: anim ? 'count-in .3s cubic-bezier(.34,1.56,.64,1) both' : 'none',
+    }}>
+      <div style={{width:w, height:h, borderRadius:r, background:C.tensColor, border:`2px solid ${C.ink}`, boxShadow:`inset 0 -3px 0 ${C.tensSh}, inset 0 1px 0 rgba(255,255,255,.3)`, position:'relative', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'space-around', padding:'4px 0'}}>
+        {Array.from({length:10}).map((_,i)=>(
+          <div key={i} style={{width:dotR*2, height:dotR*2, borderRadius:'50%', background:'rgba(255,255,255,0.7)', border:'1px solid rgba(46,90,58,0.15)'}}/>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// One dot
+function OneDot({ mini=false, anim=false }) {
+  const s = mini ? 14 : 22;
+  return (
+    <div style={{
+      width:s, height:s, borderRadius:'50%',
+      background:C.onesColor, border:`2px solid ${C.ink}`,
+      boxShadow:`0 2px 0 ${C.onesSh}`,
+      animation: anim ? 'count-in .25s cubic-bezier(.34,1.56,.64,1) both' : 'none',
+      flexShrink:0,
+    }}/>
+  );
+}
+
+// Hundred block (flat square)
+function HundredBlock({ mini=false }) {
+  const s = mini ? 28 : 44;
+  return (
+    <div style={{
+      width:s, height:s, borderRadius: mini ? 6 : 10,
+      background:C.hundredsColor, border:`2px solid ${C.ink}`,
+      boxShadow:`0 3px 0 ${C.hundredsSh}, inset 0 1px 0 rgba(255,255,255,.3)`,
+      display:'flex', alignItems:'center', justifyContent:'center',
+      flexShrink:0,
+    }}>
+      <div style={{width:s*.55, height:s*.55, borderRadius: mini ? 3 : 5, border:'1.5px solid rgba(255,255,255,.5)'}}/>
+    </div>
+  );
+}
+
+// Stepper control (+ / count / -)
+function Stepper({ count, max=9, onAdd, onSub, color, sh, label, sub }) {
+  return (
+    <div style={{flex:1,borderRadius:18,background:'rgba(255,255,255,0.75)',border:`2px solid rgba(46,90,58,0.12)`,padding:10,display:'flex',flexDirection:'column',gap:8}}>
+      <div>
+        <div style={{fontSize:14,fontWeight:700,color:C.ink}}>{label}</div>
+        <div style={{fontSize:11,color:C.soft}}>{sub}</div>
+      </div>
+      {/* Visual display area */}
+      <div style={{minHeight:58,borderRadius:10,background:'rgba(255,255,255,0.6)',border:'1.5px dashed rgba(46,90,58,0.18)',display:'flex',flexWrap:'wrap',gap:3,padding:5,alignContent:'flex-end',justifyContent:'center',overflow:'hidden'}}>
+        {Array.from({length:count}).map((_,i)=>(
+          label==='Tens' ? <TenStick key={i} mini anim/> :
+          label==='Ones' ? <div key={i} style={{width:14,height:14,borderRadius:'50%',background:C.onesColor,border:`1.5px solid ${C.ink}`,boxShadow:`0 1.5px 0 ${C.onesSh}`,animation:'count-in .25s cubic-bezier(.34,1.56,.64,1) both'}}/> :
+          <HundredBlock key={i} mini/>
+        ))}
+      </div>
+      {/* Controls */}
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+        <button onClick={onSub} style={{width:36,height:36,borderRadius:'50%',background:C.cream,border:`2.5px solid ${C.ink}`,boxShadow:'0 3px 0 #D9C38A',fontFamily:'Fredoka',fontWeight:700,fontSize:20,color:C.ink,display:'flex',alignItems:'center',justifyContent:'center'}}>−</button>
+        <div style={{fontFamily:'Fredoka',fontWeight:700,fontSize:28,color:C.ink,minWidth:32,textAlign:'center'}}>{count}</div>
+        <button onClick={onAdd} style={{width:36,height:36,borderRadius:'50%',background:color,border:`2.5px solid ${C.ink}`,boxShadow:`0 3px 0 ${sh}`,fontFamily:'Fredoka',fontWeight:700,fontSize:20,color:C.ink,display:'flex',alignItems:'center',justifyContent:'center'}}>+</button>
+      </div>
+    </div>
+  );
+}
+
+// ─── TARGET CARD ─────────────────────────────────────────────
+function TargetCard({ n, match=false, state='default' }) {
+  const configs = {
+    default: { bg:C.sun,sh:C.sunSh,color:C.sunInk },
+    correct: { bg:C.correctBg,sh:C.correctSh,color:C.correct },
+    wrong:   { bg:C.wrongBg,sh:C.wrongSh,color:C.wrong },
+  };
+  const cfg = configs[state]||configs.default;
+  return (
+    <div style={{
+      padding:'12px 28px', borderRadius:24, textAlign:'center',
+      background:cfg.bg, border:`3px solid ${C.ink}`,
+      boxShadow:`0 5px 0 ${cfg.sh}`,
+      animation: state==='correct' ? 'pop-in .4s cubic-bezier(.34,1.56,.64,1) both' : 'none',
+    }}>
+      <div style={{fontSize:11,fontWeight:700,color:cfg.color,letterSpacing:.5,marginBottom:2,opacity:.8}}>MAKE THIS NUMBER</div>
+      <div style={{fontFamily:'Fredoka',fontWeight:700,fontSize:64,color:cfg.color,lineHeight:1,letterSpacing:-2}}>{n}</div>
+      {state==='correct' && <div style={{fontSize:22,marginTop:4}}>✅</div>}
+      {state==='wrong' && <div style={{fontSize:22,marginTop:4}}>❌</div>}
+    </div>
+  );
+}
+
+// ─── YOUR NUMBER DISPLAY ─────────────────────────────────────
+function YourNumber({ current, target, state='idle' }) {
+  const match = current === target;
+  const empty = current === 0;
+  const bg = state==='correct' ? C.correctBg : state==='wrong' ? C.wrongBg : 'rgba(255,255,255,.6)';
+  const border = state==='correct' ? `3px solid ${C.correct}` : state==='wrong' ? `3px solid ${C.wrong}` : `2px dashed rgba(46,90,58,.25)`;
+  return (
+    <div style={{
+      padding:'10px 16px', borderRadius:20, background:bg, border,
+      display:'flex', justifyContent:'space-between', alignItems:'center',
+      animation: state==='correct' ? 'pop-in .3s both' : state==='wrong' ? 'shake .4s both' : 'none',
+      transition:'background .2s',
+    }}>
+      <div style={{fontSize:13,fontWeight:700,color:state==='correct'?C.sageInk:state==='wrong'?C.coralInk:C.soft}}>YOUR NUMBER</div>
+      <div style={{fontFamily:'Fredoka',fontWeight:700,fontSize:42,color:state==='correct'?C.correct:state==='wrong'?C.wrong:empty?C.faint:C.ink,lineHeight:1,transition:'color .2s'}}>
+        {empty ? '0' : current}
+      </div>
+      {state==='correct' && <div style={{fontSize:26}}>✅</div>}
+      {state==='wrong' && <div style={{fontSize:26}}>❌</div>}
+    </div>
+  );
+}
+
+// ── CHECK BUTTON ─────────────────────────────────────────────
+function CheckBtn({ match, onClick, disabled }) {
+  return (
+    <button onClick={!disabled?onClick:undefined} style={{
+      width:'100%',height:56,borderRadius:20,
+      background:match?C.correct:C.sage,
+      border:`3px solid ${C.ink}`,
+      boxShadow:`0 5px 0 ${match?C.correctSh:C.sageSh}`,
+      fontFamily:'Fredoka',fontWeight:700,fontSize:20,
+      color:match?'#fff':C.sageInk,
+      opacity:disabled?.45:1,
+      animation:match?'pulse-soft 1.2s ease-in-out infinite':'none',
+    }}>
+      {match ? '🎉 Correct! Next →' : 'Check ✓'}
+    </button>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════
+// VARIANT 1 — TENS & ONES (target: 24)
+// ══════════════════════════════════════════════════════════════
+function TensOnesGame() {
+  const [tens,setTens]=useState(2);
+  const [ones,setOnes]=useState(4);
+  const target=24, current=tens*10+ones, match=current===target;
+  return (
+    <div style={{position:'absolute',inset:0,background:'radial-gradient(ellipse 110% 55% at 50% 0%,#D4EAF5 0%,#E4F2FA 45%,#F4FAFF 100%)'}}>
+      <Sparkle x="7%"  y="12%" s={11} d={0}/>
+      <Sparkle x="86%" y="9%"  s={9}  d={.7}/>
+      <div style={{position:'relative',zIndex:1,height:'100%',display:'flex',flexDirection:'column'}}>
+        <HUD hearts={3} progress={1} total={4} color={C.sky}/>
+        <div style={{padding:'0 18px 4px',display:'flex',alignItems:'center',gap:8}}>
+          <DiffBadge label="🧱 TENS & ONES" color={C.skyInk}/>
+          <div style={{fontSize:11,color:C.faint,fontWeight:600}}>Use the blocks!</div>
+        </div>
+
+        <Bubble text="Build 24 using tens and ones blocks! 🧱" mood="happy" color="sky" size={64}/>
+
+        <div style={{padding:'6px 16px 8px',display:'flex',justifyContent:'center'}}>
+          <TargetCard n={24} state={match?'correct':'default'}/>
+        </div>
+
+        <div style={{padding:'4px 16px 8px'}}>
+          <YourNumber current={current} target={target} state={match?'correct':'idle'}/>
+        </div>
+
+        <div style={{flex:1,padding:'4px 16px 8px',display:'flex',gap:12}}>
+          <Stepper count={tens} max={9} onAdd={()=>tens<9&&setTens(t=>t+1)} onSub={()=>tens>0&&setTens(t=>t-1)} color={C.tensColor} sh={C.tensSh} label="Tens" sub="× 10 each"/>
+          <Stepper count={ones} max={9} onAdd={()=>ones<9&&setOnes(o=>o+1)} onSub={()=>ones>0&&setOnes(o=>o-1)} color={C.onesColor} sh={C.onesSh} label="Ones" sub="× 1 each"/>
+        </div>
+
+        <div style={{padding:'0 16px 18px'}}>
+          <CheckBtn match={match} onClick={()=>{}} disabled={current===0}/>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════
+// VARIANT 2 — READ & BUILD (target: 36, shown as text)
+// ══════════════════════════════════════════════════════════════
+function ReadAndBuild() {
+  const [tens,setTens]=useState(1);
+  const [ones,setOnes]=useState(6);
+  const target=36, current=tens*10+ones, match=current===target;
+  return (
+    <div style={{position:'absolute',inset:0,background:'radial-gradient(ellipse 110% 55% at 50% 0%,#E8F4E0 0%,#F4FAEE 40%,#FFFDF7 100%)'}}>
+      <Sparkle x="8%"  y="11%" s={11} d={0}/>
+      <Sparkle x="84%" y="8%"  s={9}  d={.8}/>
+      <div style={{position:'relative',zIndex:1,height:'100%',display:'flex',flexDirection:'column'}}>
+        <HUD hearts={3} progress={2} total={4} color={C.sage}/>
+        <div style={{padding:'0 18px 4px',display:'flex',alignItems:'center',gap:8}}>
+          <DiffBadge label="📖 READ & BUILD" color={C.sageInk}/>
+        </div>
+
+        <Bubble text="Can you build thirty-six? 🔢" mood="wink" color="sage" size={64}/>
+
+        {/* Written number + decomposition */}
+        <div style={{padding:'6px 16px 6px'}}>
+          <div style={{background:C.cream,borderRadius:22,border:`2.5px solid ${C.ink}`,boxShadow:'0 4px 0 rgba(46,90,58,0.18)',padding:'12px 18px',textAlign:'center'}}>
+            <div style={{fontFamily:'Fredoka',fontWeight:700,fontSize:58,color:match?C.correct:C.ink,lineHeight:1,transition:'color .2s',letterSpacing:-1}}>thirty-six</div>
+            {/* Decomposition hint */}
+            <div style={{display:'flex',justifyContent:'center',gap:8,marginTop:8,alignItems:'center'}}>
+              <div style={{padding:'4px 10px',borderRadius:999,background:C.skyPale,border:`1.5px solid ${C.tensSh}`,fontSize:12,fontWeight:700,color:C.skyInk}}>3 tens = 30</div>
+              <div style={{fontSize:14,color:C.faint}}>+</div>
+              <div style={{padding:'4px 10px',borderRadius:999,background:'#FFF4DE',border:`1.5px solid ${C.onesSh}`,fontSize:12,fontWeight:700,color:C.sunInk}}>6 ones = 6</div>
+            </div>
+          </div>
+        </div>
+
+        <div style={{padding:'4px 16px 6px'}}>
+          <YourNumber current={current} target={target} state={match?'correct':'idle'}/>
+        </div>
+
+        <div style={{flex:1,padding:'4px 16px 6px',display:'flex',gap:12}}>
+          <Stepper count={tens} max={9} onAdd={()=>tens<9&&setTens(t=>t+1)} onSub={()=>tens>0&&setTens(t=>t-1)} color={C.tensColor} sh={C.tensSh} label="Tens" sub="× 10"/>
+          <Stepper count={ones} max={9} onAdd={()=>ones<9&&setOnes(o=>o+1)} onSub={()=>ones>0&&setOnes(o=>o-1)} color={C.onesColor} sh={C.onesSh} label="Ones" sub="× 1"/>
+        </div>
+
+        <div style={{padding:'0 16px 16px'}}>
+          <CheckBtn match={match} onClick={()=>{}} disabled={current===0}/>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════
+// VARIANT 3 — AUDIO PROMPT (target: 53)
+// ══════════════════════════════════════════════════════════════
+function AudioBuild() {
+  const [tens,setTens]=useState(5);
+  const [ones,setOnes]=useState(3);
+  const target=53, current=tens*10+ones, match=current===target;
+  return (
+    <div style={{position:'absolute',inset:0,background:'radial-gradient(ellipse 110% 55% at 50% 0%,#FFE8B8 0%,#FFF2CC 40%,#FFFBF0 100%)'}}>
+      <Sparkle x="7%"  y="12%" s={11} d={0}/>
+      <Sparkle x="86%" y="9%"  s={8}  d={.7}/>
+      <div style={{position:'relative',zIndex:1,height:'100%',display:'flex',flexDirection:'column'}}>
+        <HUD hearts={3} progress={3} total={4} color={C.sun}/>
+        <div style={{padding:'0 18px 4px',display:'flex',alignItems:'center',gap:8}}>
+          <DiffBadge label="🔊 BUILD WHAT YOU HEAR" color={C.sunInk}/>
+        </div>
+
+        <Bubble text="Listen and build the number! 🔊 Tap to hear again" mood="happy" color="sun" size={64}/>
+
+        {/* Audio button */}
+        <div style={{display:'flex',justifyContent:'center',padding:'6px 0'}}>
+          <button style={{
+            width:110,height:110,borderRadius:'50%',
+            background:`radial-gradient(circle at 35% 35%,${C.sun} 0%,${C.sun}dd 100%)`,
+            border:`4px solid ${C.ink}`,boxShadow:`0 6px 0 ${C.sunSh},0 14px 24px rgba(199,149,40,0.2)`,
+            display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',gap:4,
+            animation:'pulse-soft 2s ease-in-out infinite',
+          }}>
+            <svg width="38" height="38" viewBox="0 0 24 24" fill="none">
+              <path d="M4 10v4a1 1 0 001 1h3l4 4a1 1 0 001.7-.7V5.7a1 1 0 00-1.7-.7l-4 4H5a1 1 0 00-1 1z" fill={C.sunInk}/>
+              <path d="M16 8.5Q20 12 16 15.5M18.5 5.5Q24 12 18.5 18.5" stroke={C.sunInk} strokeWidth="2.5" fill="none" strokeLinecap="round"/>
+            </svg>
+            <div style={{fontSize:10,fontWeight:700,color:C.sunInk,letterSpacing:.5}}>HEAR IT</div>
+          </button>
+        </div>
+
+        {/* Hidden number shown as ??? */}
+        <div style={{padding:'4px 16px 6px',display:'flex',justifyContent:'center'}}>
+          <div style={{padding:'8px 24px',borderRadius:20,background:'rgba(255,255,255,0.7)',border:`2.5px solid ${C.ink}`,textAlign:'center'}}>
+            <div style={{fontSize:11,fontWeight:700,color:C.sunInk,letterSpacing:.5,marginBottom:2}}>MAKE THIS NUMBER</div>
+            <div style={{fontFamily:'Fredoka',fontWeight:700,fontSize:54,color:match?C.correct:'rgba(46,90,58,0.2)',lineHeight:1,letterSpacing:-1}}>
+              {match ? target : '??'}
+            </div>
+          </div>
+        </div>
+
+        <div style={{padding:'4px 16px 6px'}}>
+          <YourNumber current={current} target={target} state={match?'correct':'idle'}/>
+        </div>
+
+        <div style={{flex:1,padding:'4px 16px 6px',display:'flex',gap:12}}>
+          <Stepper count={tens} max={9} onAdd={()=>tens<9&&setTens(t=>t+1)} onSub={()=>tens>0&&setTens(t=>t-1)} color={C.tensColor} sh={C.tensSh} label="Tens" sub="× 10"/>
+          <Stepper count={ones} max={9} onAdd={()=>ones<9&&setOnes(o=>o+1)} onSub={()=>ones>0&&setOnes(o=>o-1)} color={C.onesColor} sh={C.onesSh} label="Ones" sub="× 1"/>
+        </div>
+
+        <div style={{padding:'0 16px 16px'}}>
+          <CheckBtn match={match} onClick={()=>{}} disabled={current===0}/>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════
+// VARIANT 4 — HUNDREDS (target: 234)
+// ══════════════════════════════════════════════════════════════
+function HundredsGame() {
+  const [hundreds,setHundreds]=useState(2);
+  const [tens,setTens]=useState(3);
+  const [ones,setOnes]=useState(4);
+  const target=234, current=hundreds*100+tens*10+ones, match=current===target;
+  return (
+    <div style={{position:'absolute',inset:0,background:'radial-gradient(ellipse 110% 55% at 50% 0%,#E8E0F4 0%,#F0E8FA 40%,#FAF0FF 100%)'}}>
+      <Sparkle x="7%"  y="11%" s={11} d={0}/>
+      <Sparkle x="85%" y="8%"  s={9}  d={.7}/>
+      <div style={{position:'relative',zIndex:1,height:'100%',display:'flex',flexDirection:'column'}}>
+        <HUD hearts={3} progress={4} total={4} color={C.lav}/>
+        <div style={{padding:'0 18px 4px',display:'flex',alignItems:'center',gap:8}}>
+          <DiffBadge label="🏰 HUNDREDS" color={C.lavInk}/>
+          <div style={{fontSize:11,color:C.faint,fontWeight:600}}>Advanced level!</div>
+        </div>
+
+        <Bubble text="Build two hundred thirty-four! 🏰" mood="excited" color="lavender" size={64}/>
+
+        <div style={{padding:'6px 16px 6px',display:'flex',justifyContent:'center'}}>
+          <TargetCard n={234} state={match?'correct':'default'}/>
+        </div>
+
+        <div style={{padding:'4px 16px 6px'}}>
+          <YourNumber current={current} target={target} state={match?'correct':'idle'}/>
+        </div>
+
+        <div style={{flex:1,padding:'4px 16px 6px',display:'flex',gap:8}}>
+          <Stepper count={hundreds} max={9} onAdd={()=>hundreds<9&&setHundreds(h=>h+1)} onSub={()=>hundreds>0&&setHundreds(h=>h-1)} color={C.hundredsColor} sh={C.hundredsSh} label="Hundreds" sub="× 100"/>
+          <Stepper count={tens} max={9} onAdd={()=>tens<9&&setTens(t=>t+1)} onSub={()=>tens>0&&setTens(t=>t-1)} color={C.tensColor} sh={C.tensSh} label="Tens" sub="× 10"/>
+          <Stepper count={ones} max={9} onAdd={()=>ones<9&&setOnes(o=>o+1)} onSub={()=>ones>0&&setOnes(o=>o-1)} color={C.onesColor} sh={C.onesSh} label="Ones" sub="× 1"/>
+        </div>
+
+        <div style={{padding:'0 16px 16px'}}>
+          <CheckBtn match={match} onClick={()=>{}} disabled={current===0}/>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════
+// STATE — EMPTY BUILD AREA
+// ══════════════════════════════════════════════════════════════
+function StateEmpty() {
+  return (
+    <div style={{position:'absolute',inset:0,background:'radial-gradient(ellipse 110% 55% at 50% 0%,#D4EAF5 0%,#E4F2FA 40%,#F4FAFF 100%)'}}>
+      <div style={{position:'relative',zIndex:1,height:'100%',display:'flex',flexDirection:'column'}}>
+        <HUD hearts={3} progress={0} total={4} color={C.sky}/>
+        <Bubble text="Use the + buttons to add blocks! Let's build 47!" mood="hint" color="sky" size={64}/>
+
+        <div style={{padding:'6px 16px 6px',display:'flex',justifyContent:'center'}}>
+          <TargetCard n={47}/>
+        </div>
+
+        {/* Empty "your number" */}
+        <div style={{padding:'4px 16px 8px'}}>
+          <div style={{padding:'12px 16px',borderRadius:20,background:'rgba(255,255,255,0.4)',border:'2px dashed rgba(46,90,58,.2)',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+            <div style={{fontSize:13,fontWeight:700,color:C.faint}}>YOUR NUMBER</div>
+            <div style={{fontFamily:'Fredoka',fontWeight:700,fontSize:42,color:C.faint,lineHeight:1}}>0</div>
+            <div style={{fontSize:13,color:C.faint}}>← tap + to add</div>
+          </div>
+        </div>
+
+        {/* Empty stepper columns */}
+        <div style={{flex:1,padding:'4px 16px 8px',display:'flex',gap:12}}>
+          {[{l:'Tens',c:C.tensColor,sh:C.tensSh},{l:'Ones',c:C.onesColor,sh:C.onesSh}].map(col=>(
+            <div key={col.l} style={{flex:1,borderRadius:18,background:'rgba(255,255,255,0.6)',border:`2px dashed rgba(46,90,58,0.18)`,padding:10,display:'flex',flexDirection:'column',gap:8,alignItems:'center',justifyContent:'center'}}>
+              <div style={{fontSize:14,fontWeight:700,color:C.soft}}>{col.l}</div>
+              <div style={{width:'80%',height:58,borderRadius:10,background:'rgba(255,255,255,0.5)',border:'1.5px dashed rgba(46,90,58,0.15)',display:'flex',alignItems:'center',justifyContent:'center'}}>
+                <div style={{fontSize:22,opacity:.4}}>+</div>
+              </div>
+              <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',width:'100%'}}>
+                <div style={{width:36,height:36,borderRadius:'50%',background:'rgba(255,255,255,0.5)',border:'2px dashed rgba(46,90,58,0.15)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:20,color:C.faint}}>−</div>
+                <div style={{fontFamily:'Fredoka',fontWeight:700,fontSize:28,color:C.faint}}>0</div>
+                <div style={{width:36,height:36,borderRadius:'50%',background:col.c,border:`2.5px solid ${C.ink}`,boxShadow:`0 3px 0 ${col.sh}`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:20,color:C.ink,fontWeight:700}}>+</div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div style={{padding:'0 16px 18px'}}>
+          <button style={{width:'100%',height:54,borderRadius:20,background:'#E8DFCE',border:'3px solid rgba(46,90,58,0.2)',fontFamily:'Fredoka',fontWeight:700,fontSize:18,color:C.faint,cursor:'not-allowed'}}>
+            Check ✓
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════
+// STATE — PARTIAL (2 tens, 1 one → 21, target 47)
+// ══════════════════════════════════════════════════════════════
+function StatePartial() {
+  return (
+    <div style={{position:'absolute',inset:0,background:'radial-gradient(ellipse 110% 55% at 50% 0%,#D4EAF5 0%,#E4F2FA 40%,#F4FAFF 100%)'}}>
+      <div style={{position:'relative',zIndex:1,height:'100%',display:'flex',flexDirection:'column'}}>
+        <HUD hearts={3} progress={1} total={4} color={C.sky}/>
+        <Bubble text="Keep adding! You need 4 tens and 7 ones 💪" mood="hint" color="sky" size={64}/>
+
+        <div style={{padding:'6px 16px 6px',display:'flex',justifyContent:'center'}}>
+          <TargetCard n={47}/>
+        </div>
+
+        {/* Progress indicator */}
+        <div style={{padding:'4px 16px 8px'}}>
+          <div style={{padding:'10px 16px',borderRadius:20,background:'rgba(255,255,255,0.6)',border:'2px dashed rgba(46,90,58,0.2)',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+            <div style={{fontSize:13,fontWeight:700,color:C.soft}}>YOUR NUMBER</div>
+            <div style={{fontFamily:'Fredoka',fontWeight:700,fontSize:42,color:C.ink,lineHeight:1}}>21</div>
+            <div style={{display:'flex',flexDirection:'column',alignItems:'flex-end',gap:2}}>
+              <div style={{fontSize:11,color:C.coralInk,fontWeight:600}}>Need +26 more</div>
+              <div style={{height:6,width:60,borderRadius:6,background:'rgba(46,90,58,0.1)',overflow:'hidden'}}>
+                <div style={{height:'100%',width:'45%',background:C.sky,borderRadius:6}}/>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style={{flex:1,padding:'4px 16px 8px',display:'flex',gap:12}}>
+          {/* Tens — partially filled */}
+          <div style={{flex:1,borderRadius:18,background:'rgba(255,255,255,0.75)',border:`2px solid rgba(46,90,58,0.12)`,padding:10,display:'flex',flexDirection:'column',gap:8}}>
+            <div><div style={{fontSize:14,fontWeight:700,color:C.ink}}>Tens</div><div style={{fontSize:11,color:C.soft}}>× 10 each</div></div>
+            <div style={{minHeight:58,borderRadius:10,background:'rgba(255,255,255,0.6)',border:'1.5px dashed rgba(46,90,58,0.18)',display:'flex',flexWrap:'wrap',gap:4,padding:5,alignContent:'flex-end',justifyContent:'center'}}>
+              {[0,1].map(i=><TenStick key={i} mini/>)}
+            </div>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+              <button style={{width:36,height:36,borderRadius:'50%',background:C.cream,border:`2.5px solid ${C.ink}`,boxShadow:'0 3px 0 #D9C38A',fontFamily:'Fredoka',fontWeight:700,fontSize:20}}>−</button>
+              <div style={{fontFamily:'Fredoka',fontWeight:700,fontSize:28,color:C.ink}}>2</div>
+              <button style={{width:36,height:36,borderRadius:'50%',background:C.tensColor,border:`2.5px solid ${C.ink}`,boxShadow:`0 3px 0 ${C.tensSh}`,fontFamily:'Fredoka',fontWeight:700,fontSize:20,animation:'pulse-soft 1.5s ease-in-out infinite'}}>+</button>
+            </div>
+          </div>
+          {/* Ones — partially filled */}
+          <div style={{flex:1,borderRadius:18,background:'rgba(255,255,255,0.75)',border:`2px solid rgba(46,90,58,0.12)`,padding:10,display:'flex',flexDirection:'column',gap:8}}>
+            <div><div style={{fontSize:14,fontWeight:700,color:C.ink}}>Ones</div><div style={{fontSize:11,color:C.soft}}>× 1 each</div></div>
+            <div style={{minHeight:58,borderRadius:10,background:'rgba(255,255,255,0.6)',border:'1.5px dashed rgba(46,90,58,0.18)',display:'flex',flexWrap:'wrap',gap:3,padding:5,alignContent:'flex-end',justifyContent:'center'}}>
+              <div style={{width:14,height:14,borderRadius:'50%',background:C.onesColor,border:`1.5px solid ${C.ink}`,boxShadow:`0 1.5px 0 ${C.onesSh}`}}/>
+            </div>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+              <button style={{width:36,height:36,borderRadius:'50%',background:C.cream,border:`2.5px solid ${C.ink}`,boxShadow:'0 3px 0 #D9C38A',fontFamily:'Fredoka',fontWeight:700,fontSize:20}}>−</button>
+              <div style={{fontFamily:'Fredoka',fontWeight:700,fontSize:28,color:C.ink}}>1</div>
+              <button style={{width:36,height:36,borderRadius:'50%',background:C.onesColor,border:`2.5px solid ${C.ink}`,boxShadow:`0 3px 0 ${C.onesSh}`,fontFamily:'Fredoka',fontWeight:700,fontSize:20}}>+</button>
+            </div>
+          </div>
+        </div>
+
+        <div style={{padding:'0 16px 18px'}}>
+          <button style={{width:'100%',height:54,borderRadius:20,background:C.sage,border:`3px solid ${C.ink}`,boxShadow:`0 5px 0 ${C.sageSh}`,fontFamily:'Fredoka',fontWeight:700,fontSize:18,color:C.sageInk}}>
+            Check ✓
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════
+// STATE — CORRECT CONSTRUCTION
+// ══════════════════════════════════════════════════════════════
+function StateCorrect() {
+  return (
+    <div style={{position:'absolute',inset:0,background:'radial-gradient(ellipse 110% 55% at 50% 0%,#C8E8B8 0%,#D6ECCE 40%,#EAF7E4 100%)'}}>
+      <Confetti count={24}/>
+      <Sparkle x="7%"  y="12%" s={12} d={0}/>
+      <Sparkle x="85%" y="9%"  s={10} d={.6}/>
+      <div style={{position:'relative',zIndex:1,height:'100%',display:'flex',flexDirection:'column'}}>
+        <HUD hearts={3} progress={3} total={4} color={C.correct}/>
+        <Bubble text="YES! You built 47 perfectly! 🎉🎉" mood="celebrate" color="sage" size={72}/>
+
+        <div style={{padding:'6px 16px 4px',display:'flex',justifyContent:'center'}}>
+          <TargetCard n={47} state="correct"/>
+        </div>
+
+        {/* Float-up rewards */}
+        <div style={{position:'relative',height:44,overflow:'visible',marginTop:4}}>
+          {['+1 ⭐','+3 🪙','✓'].map((t,i)=>(
+            <div key={t} style={{position:'absolute',left:`${24+i*22}%`,top:0,fontFamily:'Fredoka',fontWeight:700,fontSize:18,color:C.sunInk,textShadow:'0 2px 0 rgba(46,90,58,0.2)',animation:`float-up 1.4s ease-out ${i*.18}s both`,whiteSpace:'nowrap'}}>{t}</div>
+          ))}
+        </div>
+
+        {/* Show correct blocks */}
+        <div style={{flex:1,padding:'4px 16px',display:'flex',gap:12}}>
+          {[{l:'Tens',count:4,c:C.tensColor,sh:C.tensSh},{l:'Ones',count:7,c:C.onesColor,sh:C.onesSh}].map(col=>(
+            <div key={col.l} style={{flex:1,borderRadius:18,background:C.correctBg,border:`2px solid ${C.correct}`,padding:10,display:'flex',flexDirection:'column',gap:8,animation:'pop-in .4s both'}}>
+              <div style={{display:'flex',justifyContent:'space-between',alignItems:'baseline'}}>
+                <div style={{fontSize:14,fontWeight:700,color:C.sageInk}}>{col.l}</div>
+                <div style={{fontSize:18,color:C.correct}}>✓</div>
+              </div>
+              <div style={{minHeight:58,borderRadius:10,background:'rgba(255,255,255,0.7)',display:'flex',flexWrap:'wrap',gap:3,padding:5,alignContent:'flex-end',justifyContent:'center'}}>
+                {Array.from({length:col.count}).map((_,i)=>(
+                  col.l==='Tens' ? <TenStick key={i} mini/> :
+                  <div key={i} style={{width:14,height:14,borderRadius:'50%',background:col.c,border:`1.5px solid ${C.ink}`,boxShadow:`0 1.5px 0 ${col.sh}`}}/>
+                ))}
+              </div>
+              <div style={{textAlign:'center',fontFamily:'Fredoka',fontWeight:700,fontSize:24,color:C.sageInk}}>{col.count}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Continue */}
+        <div style={{margin:'8px 16px 20px',padding:'14px 18px',borderRadius:22,background:'linear-gradient(135deg,#C4EBB9 0%,#7FC089 100%)',border:`3px solid ${C.ink}`,boxShadow:`0 5px 0 ${C.sageSh}`,display:'flex',alignItems:'center',gap:12,animation:'slide-up .3s both'}}>
+          <div style={{fontSize:32}}>⭐</div>
+          <div style={{flex:1}}>
+            <div style={{fontSize:17,fontWeight:700,color:'#1F4A28'}}>Perfect build! +1 star</div>
+            <div style={{fontSize:12,color:C.sageInk,marginTop:1}}>4 tens + 7 ones = 47 ✓</div>
+          </div>
+          <button style={{padding:'12px 20px',borderRadius:18,background:C.sun,border:`3px solid ${C.ink}`,boxShadow:`0 4px 0 ${C.sunSh}`,fontFamily:'Fredoka',fontWeight:700,fontSize:17,color:C.sunInk}}>Next →</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════
+// STATE — HINT OVERLAY
+// ══════════════════════════════════════════════════════════════
+function StateHint() {
+  return (
+    <div style={{position:'absolute',inset:0,background:'radial-gradient(ellipse 110% 55% at 50% 0%,#FFF0C8 0%,#FFF7E0 40%,#FFFBF0 100%)'}}>
+      <div style={{position:'relative',zIndex:1,height:'100%',display:'flex',flexDirection:'column'}}>
+        <HUD hearts={1} progress={1} total={4} color={C.sun}/>
+
+        {/* Expanded hint bubble */}
+        <div style={{display:'flex',alignItems:'flex-end',gap:8,padding:'0 16px 8px'}}>
+          <div style={{animation:'bobble 2.5s ease-in-out infinite',flexShrink:0}}><Bap size={72} mood="hint" color="sun"/></div>
+          <div style={{flex:1,background:C.hintBg,borderRadius:'16px 16px 16px 5px',border:`2.5px solid ${C.sun}`,boxShadow:`0 4px 0 ${C.sunSh}`,padding:'12px 14px',animation:'hint-glow 1.4s ease-in-out infinite'}}>
+            <div style={{fontSize:11,fontWeight:700,color:C.sunInk,letterSpacing:.5,marginBottom:6}}>💡 LET ME HELP!</div>
+            <div style={{fontSize:14,fontWeight:700,color:C.ink,lineHeight:1.4,marginBottom:8}}>
+              47 = <span style={{color:C.skyInk}}>4 tens</span> + <span style={{color:C.sunInk}}>7 ones</span>
+            </div>
+            {/* Visual decomp */}
+            <div style={{display:'flex',alignItems:'center',gap:6,flexWrap:'wrap'}}>
+              <div style={{display:'flex',gap:2,alignItems:'flex-end'}}>
+                {[0,0,0,0].map((_,i)=><TenStick key={i} mini/>)}
+              </div>
+              <div style={{fontSize:16,color:C.soft,fontWeight:700}}>+</div>
+              <div style={{display:'flex',gap:3,flexWrap:'wrap',maxWidth:80}}>
+                {Array.from({length:7}).map((_,i)=><div key={i} style={{width:14,height:14,borderRadius:'50%',background:C.onesColor,border:`1.5px solid ${C.ink}`}}/>)}
+              </div>
+              <div style={{fontSize:16,color:C.soft,fontWeight:700}}>=</div>
+              <div style={{width:44,height:44,borderRadius:12,background:C.sun,border:`2.5px solid ${C.ink}`,display:'flex',alignItems:'center',justifyContent:'center',fontFamily:'Fredoka',fontWeight:700,fontSize:22,color:C.sunInk}}>47</div>
+            </div>
+          </div>
+        </div>
+
+        <div style={{padding:'4px 16px 4px',display:'flex',justifyContent:'center'}}>
+          <TargetCard n={47}/>
+        </div>
+
+        <div style={{padding:'4px 16px 8px'}}>
+          <div style={{padding:'10px 16px',borderRadius:20,background:'rgba(255,255,255,0.6)',border:`2px dashed ${C.sunSh}`,display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+            <div style={{fontSize:13,fontWeight:700,color:C.soft}}>YOUR NUMBER</div>
+            <div style={{fontFamily:'Fredoka',fontWeight:700,fontSize:42,color:C.ink}}>20</div>
+            <div style={{fontSize:11,color:C.coralInk,fontWeight:600}}>Need +27</div>
+          </div>
+        </div>
+
+        {/* Highlighted steppers */}
+        <div style={{flex:1,padding:'4px 16px 8px',display:'flex',gap:12}}>
+          {/* Tens — hint */}
+          <div style={{flex:1,borderRadius:18,background:C.hintBg,border:`2.5px solid ${C.sun}`,padding:10,display:'flex',flexDirection:'column',gap:8,animation:'hint-glow 1.4s ease-in-out infinite'}}>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'baseline'}}>
+              <div style={{fontSize:14,fontWeight:700,color:C.sunInk}}>Tens</div>
+              <div style={{fontSize:10,fontWeight:700,color:C.sunInk,padding:'2px 7px',borderRadius:999,background:C.sun,border:`1px solid ${C.sunSh}`}}>Need 4</div>
+            </div>
+            <div style={{minHeight:58,borderRadius:10,background:'rgba(255,255,255,0.7)',display:'flex',flexWrap:'wrap',gap:3,padding:5,alignContent:'flex-end',justifyContent:'center'}}>
+              {[0,1].map(i=><TenStick key={i} mini/>)}
+            </div>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+              <button style={{width:36,height:36,borderRadius:'50%',background:C.cream,border:`2.5px solid ${C.ink}`,fontFamily:'Fredoka',fontWeight:700,fontSize:20}}>−</button>
+              <div style={{fontFamily:'Fredoka',fontWeight:700,fontSize:28,color:C.ink}}>2</div>
+              <button style={{width:36,height:36,borderRadius:'50%',background:C.tensColor,border:`2.5px solid ${C.ink}`,boxShadow:`0 3px 0 ${C.tensSh}`,fontFamily:'Fredoka',fontWeight:700,fontSize:20,animation:'pulse-soft 1.2s ease-in-out infinite'}}>+</button>
+            </div>
+          </div>
+          {/* Ones — hint */}
+          <div style={{flex:1,borderRadius:18,background:C.hintBg,border:`2.5px solid ${C.sun}`,padding:10,display:'flex',flexDirection:'column',gap:8,animation:'hint-glow 1.4s ease-in-out .2s infinite'}}>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'baseline'}}>
+              <div style={{fontSize:14,fontWeight:700,color:C.sunInk}}>Ones</div>
+              <div style={{fontSize:10,fontWeight:700,color:C.sunInk,padding:'2px 7px',borderRadius:999,background:C.sun,border:`1px solid ${C.sunSh}`}}>Need 7</div>
+            </div>
+            <div style={{minHeight:58,borderRadius:10,background:'rgba(255,255,255,0.7)',display:'flex',flexWrap:'wrap',gap:3,padding:5,alignContent:'flex-end',justifyContent:'center'}}>
+              {Array.from({length:0}).map((_,i)=><div key={i} style={{width:14,height:14,borderRadius:'50%',background:C.onesColor,border:`1.5px solid ${C.ink}`}}/>)}
+            </div>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+              <button style={{width:36,height:36,borderRadius:'50%',background:C.cream,border:`2.5px solid ${C.ink}`,fontFamily:'Fredoka',fontWeight:700,fontSize:20}}>−</button>
+              <div style={{fontFamily:'Fredoka',fontWeight:700,fontSize:28,color:C.ink}}>0</div>
+              <button style={{width:36,height:36,borderRadius:'50%',background:C.onesColor,border:`2.5px solid ${C.ink}`,boxShadow:`0 3px 0 ${C.onesSh}`,fontFamily:'Fredoka',fontWeight:700,fontSize:20,animation:'pulse-soft 1.2s ease-in-out .1s infinite'}}>+</button>
+            </div>
+          </div>
+        </div>
+
+        <div style={{margin:'0 16px 18px',padding:'10px 14px',borderRadius:18,background:C.hintBg,border:`2px solid ${C.sun}`,display:'flex',alignItems:'center',gap:10}}>
+          <span style={{fontSize:18}}>💡</span>
+          <div style={{fontSize:13,fontWeight:600,color:C.sunInk}}>Tap the + button 2 more times on Tens, then 7 times on Ones!</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── CANVAS ──────────────────────────────────────────────────
+function App() {
+  return (
+    <DesignCanvas title="Bắp — Build the Number: Full UI System">
+      <DCSection id="s1" title="Game Variants">
+        <DCArtboard id="v1" label="🧱 Tens & Ones (24)" width={375} height={720}>
+          <TensOnesGame/>
+        </DCArtboard>
+        <DCArtboard id="v2" label="📖 Read & Build (36)" width={375} height={720}>
+          <ReadAndBuild/>
+        </DCArtboard>
+        <DCArtboard id="v3" label="🔊 Audio Build (53)" width={375} height={720}>
+          <AudioBuild/>
+        </DCArtboard>
+        <DCArtboard id="v4" label="🏰 Hundreds (234)" width={375} height={720}>
+          <HundredsGame/>
+        </DCArtboard>
+      </DCSection>
+      <DCSection id="s2" title="UI States">
+        <DCArtboard id="st1" label="⬜ Empty Build Area" width={375} height={720}>
+          <StateEmpty/>
+        </DCArtboard>
+        <DCArtboard id="st2" label="⏳ Partially Built (21→47)" width={375} height={720}>
+          <StatePartial/>
+        </DCArtboard>
+        <DCArtboard id="st3" label="✅ Correct Construction" width={375} height={720}>
+          <StateCorrect/>
+        </DCArtboard>
+        <DCArtboard id="st4" label="💡 Hint Overlay" width={375} height={720}>
+          <StateHint/>
+        </DCArtboard>
+      </DCSection>
+    </DesignCanvas>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>

@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Parent Dashboard — Bắp Number Adventure</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  background: #C8BFB0;
+  min-height: 100vh;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Be Vietnam Pro', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  padding: 24px 0;
+}
+:root {
+  --ink:        #1F2A1F;
+  --ink-soft:   #6B7A6C;
+  --ink-faint:  #A9B4A8;
+  --surface:    #F5F3ED;
+  --card:       #FFFFFF;
+  --outline:    rgba(46,90,58,0.10);
+  --outline-md: rgba(46,90,58,0.18);
+  --sage:       #5FB36A;
+  --sage-pale:  #EDF7EC;
+  --sage-mid:   #A8D5A2;
+  --sun:        #FFD36E;
+  --sun-ink:    #7A4E0E;
+  --sky:        #8AC4DE;
+  --sky-pale:   #E4F2FA;
+  --lavender:   #B9A4E0;
+  --lav-pale:   #F0EBFA;
+  --coral:      #FFA48C;
+  --coral-pale: #FFF0EA;
+  --correct:    #5FB36A;
+}
+button { font-family: inherit; border: none; background: none; cursor: pointer; color: inherit; }
+.scroll { overflow-y: auto; -webkit-overflow-scrolling: touch; }
+.scroll::-webkit-scrollbar { display: none; }
+
+/* Tweaks panel */
+#tweaks-panel {
+  display: none;
+  position: fixed; bottom: 24px; right: 24px; z-index: 9999;
+  background: #fff; border-radius: 20px;
+  border: 1.5px solid rgba(0,0,0,0.08);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.14);
+  padding: 18px 20px; width: 240px;
+  font-family: 'Be Vietnam Pro', sans-serif; font-size: 13px;
+}
+#tweaks-panel.open { display: block; }
+#tweaks-panel h3 { font-size: 13px; font-weight: 700; color: #1F2A1F; margin-bottom: 14px; letter-spacing: 0.5px; }
+.tweak-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.tweak-row label { color: #6B7A6C; font-weight: 500; }
+.tweak-toggle {
+  width: 40px; height: 24px; border-radius: 999px; border: none; cursor: pointer;
+  display: flex; align-items: center; padding: 2px;
+  transition: background 0.2s;
+}
+.tweak-toggle.on  { background: #5FB36A; justify-content: flex-end; }
+.tweak-toggle.off { background: #D8D2C0; justify-content: flex-start; }
+.tweak-knob { width: 20px; height: 20px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+.tweak-select {
+  padding: 5px 10px; border-radius: 8px; border: 1.5px solid rgba(0,0,0,0.1);
+  font-family: inherit; font-size: 12px; color: #1F2A1F; background: #fff;
+}
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel">
+const { useState, useEffect, useRef } = React;
+
+// ── TWEAKS ──────────────────────────────────────────────────
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "childName": "Bắp",
+  "childAge": 4,
+  "lang": "en",
+  "streakDays": 5,
+  "dailyMinToday": 12,
+  "accuracyPct": 84,
+  "starsTotal": 42
+}/*EDITMODE-END*/;
+
+// ── CHILD DATA (driven by tweaks) ───────────────────────────
+function buildData(t) {
+  const vi = t.lang === 'vi';
+  return {
+    name: t.childName,
+    age: t.childAge,
+    since: 'March 2025',
+    color: '#FFD36E',
+    world: vi ? 'Thế giới 2 · Rừng số' : 'World 2 · Number Forest',
+    worldSub: vi ? 'Đang học: Số chục và trăm' : 'Currently: Tens & Ones',
+    worldProgress: 0.58,
+    lessonsTotal: 24,
+    lessonsDone: 14,
+    streak: t.streakDays,
+    timeToday: t.dailyMinToday,
+    accuracy: t.accuracyPct,
+    stars: t.starsTotal,
+    weekMins: [10, 14, 0, 15, 8, t.dailyMinToday, 0],
+    skills: [
+      { id:'recog',   label: vi ? 'Nhận biết số 1–20' : 'Number Recognition 1–20', pct:0.92, badge: vi?'Giỏi':'Strong',       color:'#5FB36A' },
+      { id:'tens',    label: vi ? 'Số chục và trăm'   : 'Tens & Ones',             pct:0.55, badge: vi?'Đang học':'In Progress', color:'#FFD36E' },
+      { id:'evenodd', label: vi ? 'Số chẵn / lẻ'      : 'Even & Odd',              pct:0.30, badge: vi?'Mới học':'Emerging',    color:'#8AC4DE' },
+      { id:'add',     label: vi ? 'Cộng / Trừ cơ bản' : 'Addition & Subtraction',  pct:0.10, badge: vi?'Sắp mở':'Just Started', color:'#B9A4E0' },
+    ],
+    games: [
+      { name: 'Hear & Tap',      plays:28, acc:91, icon:'👂' },
+      { name: 'Build the Number',plays:16, acc:67, icon:'🧱' },
+      { name: 'Number Order',    plays:11, acc:78, icon:'🔢' },
+      { name: 'Even / Odd House',plays: 7, acc:44, icon:'🏠' },
+    ],
+    activity: [
+      { date: vi?'Hôm nay':'Today',      mins:t.dailyMinToday, stars:6, acc:t.accuracyPct, game:'Hear & Tap' },
+      { date: vi?'Hôm qua':'Yesterday',  mins:8,  stars:4, acc:78, game:'Build the Number' },
+      { date: vi?'2 ngày trước':'2 days ago', mins:15, stars:9, acc:88, game:'Number Order' },
+    ],
+    focus: {
+      title: vi ? 'Tiếp theo: luyện Số chục' : 'Next up: Practice Tens & Ones',
+      sub: vi
+        ? 'Bé đang ở 55% — thêm 3–4 buổi nữa là xong! Mini-game "Build the Number" rất hiệu quả.'
+        : 'At 55% mastery — just 3–4 more sessions to complete this stage. "Build the Number" is working well.',
+      game: 'Build the Number',
+      icon: '🧱',
+    },
+    labels: {
+      parentDashboard: vi ? 'Bảng điều khiển' : 'Parent Dashboard',
+      parentCorner: vi ? 'KHU VỰC CHA MẸ' : 'PARENT CORNER',
+      profile: vi ? 'Hồ sơ' : 'Profile',
+      today: vi ? 'Hôm nay' : 'Today',
+      streak: vi ? 'Chuỗi ngày' : 'Streak',
+      accuracy: vi ? 'Độ chính xác' : 'Accuracy',
+      stars: vi ? 'Ngôi sao' : 'Stars',
+      currentWorld: vi ? 'Giai đoạn học' : 'Current Stage',
+      lessons: vi ? 'Bài học' : 'Lessons',
+      weeklyTime: vi ? 'Thời gian trong tuần' : 'Weekly Time',
+      goalLabel: vi ? 'mục tiêu 15ph/ngày' : 'goal: 15 min/day',
+      topicMastery: vi ? 'Kỹ năng số' : 'Topic Mastery',
+      recentSessions: vi ? 'Hoạt động gần đây' : 'Recent Sessions',
+      favGames: vi ? 'Mini-game yêu thích' : 'Favourite Games',
+      nextFocus: vi ? 'Gợi ý tiếp theo' : 'Recommended Focus',
+      settings: vi ? 'Cài đặt' : 'Settings',
+      report: vi ? 'Báo cáo chi tiết' : 'Detailed Report',
+      timeLimit: vi ? 'Giới hạn thời gian' : 'Time Limits',
+      language: vi ? 'Ngôn ngữ & Âm thanh' : 'Language & Audio',
+      back: vi ? 'Thoát' : 'Exit',
+      days: vi ? ['T2','T3','T4','T5','T6','T7','CN'] : ['M','T','W','T','F','S','S'],
+      mins: vi ? 'ph' : 'min',
+      plays: vi ? 'lượt' : 'plays',
+      age: vi ? 'tuổi' : 'yrs',
+      since: vi ? 'Học từ' : 'Learning since',
+      daysRow: vi ? 'ngày liên tiếp 🔥' : 'day streak 🔥',
+    },
+  };
+}
+
+// ── SMALL COMPONENTS ─────────────────────────────────────────
+
+function SectionLabel({ children }) {
+  return (
+    <div style={{ fontSize:11, fontWeight:700, color:'var(--ink-faint)', letterSpacing:1.2, textTransform:'uppercase', marginBottom:10 }}>
+      {children}
+    </div>
+  );
+}
+
+function Card({ children, style={}, accent, onClick }) {
+  return (
+    <div onClick={onClick}
+      style={{
+        background:'var(--card)', borderRadius:20,
+        border:'1px solid var(--outline)',
+        boxShadow:'0 1px 4px rgba(46,90,58,0.05)',
+        overflow:'hidden',
+        cursor: onClick ? 'pointer' : 'default',
+        ...style,
+      }}>
+      {children}
+    </div>
+  );
+}
+
+function MetricPill({ label, value, sub, accent, icon }) {
+  return (
+    <div style={{
+      background:'var(--card)', borderRadius:16,
+      border:'1px solid var(--outline)',
+      padding:'12px 14px',
+      display:'flex', flexDirection:'column', gap:2,
+    }}>
+      <div style={{ fontSize:10, fontWeight:700, color:'var(--ink-faint)', letterSpacing:0.8, textTransform:'uppercase' }}>{label}</div>
+      <div style={{ fontSize:22, fontWeight:700, color: accent, lineHeight:1.1, fontVariantNumeric:'tabular-nums' }}>
+        {icon && <span style={{marginRight:3}}>{icon}</span>}{value}
+      </div>
+      {sub && <div style={{ fontSize:11, color:'var(--ink-soft)', fontWeight:500 }}>{sub}</div>}
+    </div>
+  );
+}
+
+function SkillBar({ label, pct, color, badge }) {
+  return (
+    <div style={{ marginBottom:14 }}>
+      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:6 }}>
+        <div style={{ fontSize:13, fontWeight:600, color:'var(--ink)' }}>{label}</div>
+        <div style={{
+          fontSize:10, fontWeight:700, letterSpacing:0.5,
+          padding:'2px 8px', borderRadius:999,
+          background: pct > 0.7 ? '#EDF7EC' : pct > 0.4 ? '#FFFAE8' : pct > 0.15 ? '#E4F2FA' : '#F0EBFA',
+          color: pct > 0.7 ? '#2F6A3C' : pct > 0.4 ? '#7A4E0E' : pct > 0.15 ? '#1F4A61' : '#5D3F94',
+          border: `1px solid ${pct > 0.7 ? '#A8D5A2' : pct > 0.4 ? '#FFD36E' : pct > 0.15 ? '#8AC4DE' : '#B9A4E0'}`,
+        }}>{badge}</div>
+      </div>
+      <div style={{ height:8, borderRadius:8, background:'rgba(46,90,58,0.08)', overflow:'hidden' }}>
+        <div style={{
+          height:'100%', width:`${pct*100}%`, borderRadius:8,
+          background: color,
+          transition:'width 0.8s cubic-bezier(0.34,1.56,0.64,1)',
+        }}/>
+      </div>
+      <div style={{ marginTop:4, fontSize:11, color:'var(--ink-faint)', fontWeight:500 }}>
+        {Math.round(pct*100)}% mastery
+      </div>
+    </div>
+  );
+}
+
+function WeekChart({ data, days, goal=15, minsLabel='min' }) {
+  const max = Math.max(...data, goal, 1);
+  return (
+    <div style={{ display:'flex', alignItems:'flex-end', gap:8, height:100 }}>
+      {data.map((v, i) => {
+        const h = Math.max(2, Math.round((v/max)*86));
+        const achieved = v >= goal;
+        const empty = v === 0;
+        return (
+          <div key={i} style={{ flex:1, display:'flex', flexDirection:'column', alignItems:'center', gap:4 }}>
+            {v > 0 && <div style={{ fontSize:9, fontWeight:700, color: achieved ? '#2F6A3C' : 'var(--ink-faint)' }}>{v}</div>}
+            {v === 0 && <div style={{ fontSize:9, color:'var(--ink-faint)' }}> </div>}
+            <div style={{
+              width:'100%', height:h, borderRadius:6,
+              background: empty ? 'rgba(46,90,58,0.08)' : achieved ? '#5FB36A' : '#FFD36E',
+            }}/>
+            <div style={{ fontSize:10, fontWeight:600, color:'var(--ink-faint)' }}>{days[i]}</div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function ActivityRow({ date, mins, stars, acc, game, last, minsLabel }) {
+  return (
+    <div style={{
+      display:'flex', alignItems:'center', gap:12, padding:'12px 0',
+      borderBottom: last ? 'none' : '1px solid var(--outline)',
+    }}>
+      <div style={{
+        width:40, height:40, borderRadius:14, flexShrink:0,
+        background:'#FFF8EC', border:'1px solid rgba(46,90,58,0.1)',
+        display:'flex', alignItems:'center', justifyContent:'center',
+        fontSize:20,
+      }}>🎮</div>
+      <div style={{ flex:1, minWidth:0 }}>
+        <div style={{ fontSize:13, fontWeight:600, color:'var(--ink)', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{game}</div>
+        <div style={{ fontSize:11, color:'var(--ink-faint)', marginTop:2 }}>{date} · {mins}{minsLabel}</div>
+      </div>
+      <div style={{ textAlign:'right', flexShrink:0 }}>
+        <div style={{ fontSize:13, fontWeight:700, color:'#2F6A3C' }}>{acc}%</div>
+        <div style={{ fontSize:11, color:'var(--sun-ink)', fontWeight:600 }}>{stars} ⭐</div>
+      </div>
+    </div>
+  );
+}
+
+function GameChip({ name, plays, acc, icon, playsLabel }) {
+  return (
+    <div style={{
+      display:'flex', alignItems:'center', gap:10, padding:'10px 12px',
+      borderRadius:14, background:'var(--surface)',
+      border:'1px solid var(--outline)',
+    }}>
+      <div style={{ fontSize:22, width:32, textAlign:'center', flexShrink:0 }}>{icon}</div>
+      <div style={{ flex:1, minWidth:0 }}>
+        <div style={{ fontSize:13, fontWeight:600, color:'var(--ink)', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{name}</div>
+        <div style={{ fontSize:11, color:'var(--ink-faint)' }}>{plays} {playsLabel}</div>
+      </div>
+      <div style={{ fontSize:13, fontWeight:700, color: acc>75 ? '#2F6A3C' : acc>50 ? '#B87C0E' : 'var(--ink-soft)', flexShrink:0 }}>{acc}%</div>
+    </div>
+  );
+}
+
+function SettingsRow({ icon, label, sub, last, onClick }) {
+  return (
+    <button onClick={onClick} style={{
+      width:'100%', display:'flex', alignItems:'center', gap:12,
+      padding:'14px 16px', textAlign:'left',
+      background:'var(--card)',
+      borderBottom: last ? 'none' : '1px solid var(--outline)',
+    }}>
+      <div style={{ width:36, height:36, borderRadius:12, background:'var(--surface)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:18, flexShrink:0 }}>{icon}</div>
+      <div style={{ flex:1 }}>
+        <div style={{ fontSize:14, fontWeight:600, color:'var(--ink)' }}>{label}</div>
+        {sub && <div style={{ fontSize:12, color:'var(--ink-soft)', marginTop:1 }}>{sub}</div>}
+      </div>
+      <div style={{ fontSize:18, color:'var(--ink-faint)' }}>›</div>
+    </button>
+  );
+}
+
+// ── MASCOT MINI (inline, no external dependency) ─────────────
+function MascotAvatar({ size=56, color='#FFD36E' }) {
+  const dark = color === '#FFD36E' ? '#E8B23F' : '#7FB983';
+  return (
+    <svg viewBox="0 0 120 140" width={size} height={size*140/120}>
+      <ellipse cx="38" cy="18" rx="14" ry="20" fill="#7FB983" transform="rotate(-30 38 18)"/>
+      <ellipse cx="38" cy="18" rx="7" ry="16" fill="#A8D5A2" transform="rotate(-30 38 18)"/>
+      <ellipse cx="76" cy="14" rx="16" ry="22" fill="#5FA36A" transform="rotate(25 76 14)"/>
+      <ellipse cx="76" cy="14" rx="8" ry="18" fill="#A8D5A2" transform="rotate(25 76 14)"/>
+      <ellipse cx="60" cy="126" rx="38" ry="6" fill="rgba(46,90,58,0.15)"/>
+      <path d="M60 28 C92 28 100 56 100 82 C100 110 82 126 60 126 C38 126 20 110 20 82 C20 56 28 28 60 28Z" fill={color} stroke="#2D3A2E" strokeWidth="3.5"/>
+      <line x1="30" y1="72" x2="90" y2="72" stroke={dark} strokeWidth="2" opacity="0.4"/>
+      <line x1="28" y1="82" x2="92" y2="82" stroke={dark} strokeWidth="2" opacity="0.4"/>
+      <line x1="30" y1="92" x2="90" y2="92" stroke={dark} strokeWidth="2" opacity="0.4"/>
+      <ellipse cx="60" cy="56" rx="28" ry="18" fill="rgba(255,255,255,0.18)"/>
+      <g transform="translate(40,62)">
+        <ellipse cx="0" cy="0" rx="6" ry="7" fill="#2D3A2E"/>
+        <ellipse cx="-1.5" cy="-2" rx="2" ry="2.5" fill="#fff"/>
+      </g>
+      <g transform="translate(80,62)">
+        <ellipse cx="0" cy="0" rx="6" ry="7" fill="#2D3A2E"/>
+        <ellipse cx="-1.5" cy="-2" rx="2" ry="2.5" fill="#fff"/>
+      </g>
+      <path d="M 42 80 Q 60 94 78 80" stroke="#2D3A2E" strokeWidth="3.5" fill="#C14A2A" strokeLinecap="round" strokeLinejoin="round"/>
+      <ellipse cx="32" cy="72" rx="9" ry="8" fill="rgba(255,120,80,0.22)"/>
+      <ellipse cx="88" cy="72" rx="9" ry="8" fill="rgba(255,120,80,0.22)"/>
+    </svg>
+  );
+}
+
+// ── WORLD ILLUSTRATION PLACEHOLDER ──────────────────────────
+function WorldIllustration() {
+  return (
+    <div style={{
+      width:72, height:72, borderRadius:18, overflow:'hidden', flexShrink:0,
+      background:'linear-gradient(145deg, #B8DEEF 0%, #7FC089 100%)',
+      border:'2px solid rgba(46,90,58,0.15)',
+      display:'flex', alignItems:'center', justifyContent:'center',
+      position:'relative',
+    }}>
+      {/* Trees */}
+      <svg viewBox="0 0 72 72" width="72" height="72" style={{position:'absolute',inset:0}}>
+        <rect x="0" y="0" width="72" height="72" fill="url(#worldGrad)"/>
+        <defs>
+          <linearGradient id="worldGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#B8DEEF"/>
+            <stop offset="100%" stopColor="#A8D5A2"/>
+          </linearGradient>
+        </defs>
+        {/* Ground */}
+        <ellipse cx="36" cy="62" rx="32" ry="8" fill="#7FB983" opacity="0.7"/>
+        {/* Tree 1 */}
+        <rect x="23" y="46" width="4" height="14" rx="2" fill="#5E3A00"/>
+        <ellipse cx="25" cy="38" rx="12" ry="14" fill="#5FA36A"/>
+        <ellipse cx="25" cy="34" rx="9" ry="10" fill="#7FC089"/>
+        {/* Tree 2 */}
+        <rect x="44" y="50" width="3" height="10" rx="1.5" fill="#5E3A00"/>
+        <ellipse cx="45.5" cy="43" rx="9" ry="11" fill="#4D8B58"/>
+        <ellipse cx="45.5" cy="39" rx="7" ry="8" fill="#7FC089"/>
+        {/* Number tag */}
+        <rect x="28" y="22" width="16" height="16" rx="5" fill="#FFD36E" stroke="#2D3A2E" strokeWidth="1.5"/>
+        <text x="36" y="33" textAnchor="middle" fontFamily="Fredoka" fontWeight="700" fontSize="12" fill="#5E3A00">2</text>
+      </svg>
+    </div>
+  );
+}
+
+// ── CIRCULAR PROGRESS ────────────────────────────────────────
+function CircleProgress({ pct=0.58, size=64, stroke=6, color='#5FB36A' }) {
+  const r = (size - stroke*2) / 2;
+  const c = 2*Math.PI*r;
+  return (
+    <svg width={size} height={size} style={{transform:'rotate(-90deg)',flexShrink:0}}>
+      <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="rgba(46,90,58,0.1)" strokeWidth={stroke}/>
+      <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={color}
+        strokeWidth={stroke} strokeLinecap="round"
+        strokeDasharray={c} strokeDashoffset={c*(1-pct)}
+        style={{transition:'stroke-dashoffset 0.8s ease'}}/>
+    </svg>
+  );
+}
+
+// ── TWEAKS PANEL ─────────────────────────────────────────────
+function TweaksPanel({ tweaks, setTweaks, open }) {
+  if (!open) return null;
+  const T = (key) => (
+    <button className={`tweak-toggle ${tweaks[key] ? 'on' : 'off'}`}
+      onClick={() => setTweaks(t => ({...t, [key]: !t[key]}))}>
+      <div className="tweak-knob"/>
+    </button>
+  );
+  return (
+    <div id="tweaks-panel" className="open">
+      <h3>TWEAKS</h3>
+      <div className="tweak-row">
+        <label>Language</label>
+        <select className="tweak-select" value={tweaks.lang}
+          onChange={e => setTweaks(t=>({...t,lang:e.target.value}))}>
+          <option value="en">English</option>
+          <option value="vi">Tiếng Việt</option>
+        </select>
+      </div>
+      <div className="tweak-row">
+        <label>Child name</label>
+        <input value={tweaks.childName} onChange={e=>setTweaks(t=>({...t,childName:e.target.value}))}
+          style={{width:90,padding:'4px 8px',borderRadius:8,border:'1.5px solid rgba(0,0,0,0.1)',fontFamily:'inherit',fontSize:12}}/>
+      </div>
+      <div className="tweak-row">
+        <label>Streak days</label>
+        <input type="range" min="0" max="14" value={tweaks.streakDays}
+          onChange={e=>setTweaks(t=>({...t,streakDays:+e.target.value}))} style={{width:90}}/>
+      </div>
+      <div className="tweak-row">
+        <label>Accuracy %</label>
+        <input type="range" min="20" max="100" value={tweaks.accuracyPct}
+          onChange={e=>setTweaks(t=>({...t,accuracyPct:+e.target.value}))} style={{width:90}}/>
+      </div>
+      <div className="tweak-row">
+        <label>Today mins</label>
+        <input type="range" min="0" max="30" value={tweaks.dailyMinToday}
+          onChange={e=>setTweaks(t=>({...t,dailyMinToday:+e.target.value}))} style={{width:90}}/>
+      </div>
+    </div>
+  );
+}
+
+// ── MAIN DASHBOARD ───────────────────────────────────────────
+function ParentDashboard() {
+  const [tweaks, setTweaks] = useState(TWEAK_DEFAULTS);
+  const [tweaksOpen, setTweaksOpen] = useState(false);
+  const d = buildData(tweaks);
+  const L = d.labels;
+
+  // Tweaks host protocol
+  useEffect(() => {
+    function onMsg(e) {
+      if (e.data?.type === '__activate_edit_mode')   setTweaksOpen(true);
+      if (e.data?.type === '__deactivate_edit_mode') setTweaksOpen(false);
+    }
+    window.addEventListener('message', onMsg);
+    window.parent.postMessage({ type: '__edit_mode_available' }, '*');
+    return () => window.removeEventListener('message', onMsg);
+  }, []);
+
+  useEffect(() => {
+    window.parent.postMessage({ type: '__edit_mode_set_keys', edits: tweaks }, '*');
+  }, [tweaks]);
+
+  return (
+    <>
+    <PhoneShell>
+      <div style={{ height:'100%', display:'flex', flexDirection:'column', background:'var(--surface)' }}>
+
+        {/* ── STICKY HEADER ── */}
+        <div style={{
+          padding:'52px 18px 12px',
+          background:'var(--card)',
+          borderBottom:'1px solid var(--outline)',
+          flexShrink:0,
+        }}>
+          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+            <button style={{ fontSize:13, fontWeight:600, color:'var(--ink-soft)', display:'flex', alignItems:'center', gap:4 }}>
+              <span style={{fontSize:18,lineHeight:1}}>‹</span> {L.back}
+            </button>
+            <div style={{ textAlign:'center' }}>
+              <div style={{ fontSize:10, fontWeight:700, color:'var(--ink-faint)', letterSpacing:1 }}>{L.parentCorner}</div>
+              <div style={{ fontSize:17, fontWeight:700, color:'var(--ink)' }}>{L.parentDashboard}</div>
+            </div>
+            <button style={{ fontSize:22 }}>⚙️</button>
+          </div>
+        </div>
+
+        {/* ── SCROLLABLE BODY ── */}
+        <div className="scroll" style={{ flex:1, padding:'16px 16px 32px', display:'flex', flexDirection:'column', gap:20 }}>
+
+          {/* 1 ── CHILD PROFILE ── */}
+          <Card>
+            <div style={{ padding:'16px', display:'flex', alignItems:'center', gap:14 }}>
+              <div style={{
+                width:64, height:64, borderRadius:20, background:'#FFF8EC',
+                border:'2px solid rgba(46,90,58,0.12)',
+                display:'flex', alignItems:'center', justifyContent:'center',
+                flexShrink:0,
+              }}>
+                <MascotAvatar size={52} color="#FFD36E"/>
+              </div>
+              <div style={{ flex:1 }}>
+                <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+                  <div style={{ fontSize:20, fontWeight:700, color:'var(--ink)' }}>{d.name}</div>
+                  <div style={{
+                    fontSize:10, fontWeight:700, letterSpacing:0.8,
+                    padding:'2px 8px', borderRadius:999,
+                    background:'#EDF7EC', color:'#2F6A3C',
+                    border:'1px solid #A8D5A2',
+                  }}>● LEARNING</div>
+                </div>
+                <div style={{ fontSize:13, color:'var(--ink-soft)', marginTop:2 }}>
+                  {d.age} {L.age} · {L.since} {d.since}
+                </div>
+              </div>
+            </div>
+            <div style={{
+              margin:'0 16px 16px', padding:'10px 14px',
+              background:'var(--surface)', borderRadius:14,
+              border:'1px solid var(--outline)',
+              display:'flex', alignItems:'center', gap:10,
+            }}>
+              <WorldIllustration/>
+              <div style={{ flex:1 }}>
+                <div style={{ fontSize:12, fontWeight:700, color:'var(--ink-faint)', letterSpacing:0.5, marginBottom:2 }}>{L.currentWorld.toUpperCase()}</div>
+                <div style={{ fontSize:14, fontWeight:700, color:'var(--ink)' }}>{d.world}</div>
+                <div style={{ fontSize:12, color:'var(--ink-soft)' }}>{d.worldSub}</div>
+              </div>
+              <div style={{ position:'relative', flexShrink:0 }}>
+                <CircleProgress pct={d.worldProgress} size={52} stroke={5} color="#5FB36A"/>
+                <div style={{
+                  position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center',
+                  fontSize:12, fontWeight:700, color:'#2F6A3C',
+                }}>{Math.round(d.worldProgress*100)}%</div>
+              </div>
+            </div>
+          </Card>
+
+          {/* 2 ── AT-A-GLANCE METRICS ── */}
+          <div>
+            <SectionLabel>{L.today}</SectionLabel>
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
+              <MetricPill label={L.today}    value={`${d.timeToday} ${L.mins}`} sub="today" accent="#2E6F93"/>
+              <MetricPill label={L.streak}   value={`${d.streak} ${d.streak===1?'day':'days'}`} sub={L.daysRow} accent="#C14A2A" icon="🔥"/>
+              <MetricPill label={L.accuracy} value={`${d.accuracy}%`} sub="this week" accent="#2F6A3C"/>
+              <MetricPill label={L.stars}    value={d.stars} sub="collected" accent="#B87C0E" icon="⭐"/>
+            </div>
+          </div>
+
+          {/* 3 ── LESSONS PROGRESS ── */}
+          <Card style={{padding:'16px'}}>
+            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:12 }}>
+              <div style={{ fontSize:14, fontWeight:700, color:'var(--ink)' }}>{L.lessons}</div>
+              <div style={{ fontSize:13, fontWeight:700, color:'#2F6A3C' }}>{d.lessonsDone} / {d.lessonsTotal}</div>
+            </div>
+            <div style={{ height:10, borderRadius:10, background:'rgba(46,90,58,0.08)', overflow:'hidden' }}>
+              <div style={{
+                height:'100%', width:`${(d.lessonsDone/d.lessonsTotal)*100}%`,
+                borderRadius:10, background:'#5FB36A',
+                transition:'width 0.8s ease',
+              }}/>
+            </div>
+            <div style={{ marginTop:8, fontSize:12, color:'var(--ink-faint)' }}>
+              {d.lessonsTotal - d.lessonsDone} lessons remaining in {d.world.split('·')[0].trim()}
+            </div>
+          </Card>
+
+          {/* 4 ── WEEKLY TIME ── */}
+          <Card style={{padding:'16px'}}>
+            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'baseline', marginBottom:14 }}>
+              <div style={{ fontSize:14, fontWeight:700, color:'var(--ink)' }}>{L.weeklyTime}</div>
+              <div style={{ fontSize:11, color:'var(--ink-faint)', fontWeight:500 }}>{L.goalLabel}</div>
+            </div>
+            <WeekChart data={d.weekMins} days={L.days} goal={15} minsLabel={L.mins}/>
+            <div style={{ marginTop:12, display:'flex', gap:16, alignItems:'center' }}>
+              <div style={{ display:'flex', alignItems:'center', gap:6 }}>
+                <div style={{ width:10, height:10, borderRadius:3, background:'#5FB36A' }}/>
+                <span style={{ fontSize:11, color:'var(--ink-soft)' }}>Goal met</span>
+              </div>
+              <div style={{ display:'flex', alignItems:'center', gap:6 }}>
+                <div style={{ width:10, height:10, borderRadius:3, background:'#FFD36E' }}/>
+                <span style={{ fontSize:11, color:'var(--ink-soft)' }}>Partial</span>
+              </div>
+              <div style={{ display:'flex', alignItems:'center', gap:6 }}>
+                <div style={{ width:10, height:10, borderRadius:3, background:'rgba(46,90,58,0.1)' }}/>
+                <span style={{ fontSize:11, color:'var(--ink-soft)' }}>No play</span>
+              </div>
+            </div>
+          </Card>
+
+          {/* 5 ── TOPIC MASTERY ── */}
+          <Card style={{padding:'16px'}}>
+            <div style={{ fontSize:14, fontWeight:700, color:'var(--ink)', marginBottom:16 }}>{L.topicMastery}</div>
+            {d.skills.map(s => (
+              <SkillBar key={s.id} label={s.label} pct={s.pct} color={s.color} badge={s.badge}/>
+            ))}
+          </Card>
+
+          {/* 6 ── RECENT SESSIONS ── */}
+          <Card style={{padding:'16px 16px 4px'}}>
+            <div style={{ fontSize:14, fontWeight:700, color:'var(--ink)', marginBottom:4 }}>{L.recentSessions}</div>
+            {d.activity.map((a, i) => (
+              <ActivityRow key={i} {...a} last={i===d.activity.length-1} minsLabel={L.mins}/>
+            ))}
+          </Card>
+
+          {/* 7 ── FAVOURITE GAMES ── */}
+          <div>
+            <SectionLabel>{L.favGames}</SectionLabel>
+            <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+              {d.games.map((g, i) => (
+                <GameChip key={i} {...g} playsLabel={L.plays}/>
+              ))}
+            </div>
+          </div>
+
+          {/* 8 ── RECOMMENDED FOCUS ── */}
+          <div style={{
+            borderRadius:20, padding:'16px',
+            background:'linear-gradient(135deg, #EDF7EC 0%, #FFF8EC 100%)',
+            border:'1.5px solid #A8D5A2',
+          }}>
+            <div style={{ fontSize:11, fontWeight:700, color:'#2F6A3C', letterSpacing:1, marginBottom:8 }}>💡 {L.nextFocus.toUpperCase()}</div>
+            <div style={{ display:'flex', gap:12, alignItems:'flex-start' }}>
+              <div style={{
+                width:44, height:44, borderRadius:14, background:'#fff', flexShrink:0,
+                display:'flex', alignItems:'center', justifyContent:'center', fontSize:22,
+                border:'1.5px solid rgba(46,90,58,0.15)',
+              }}>{d.focus.icon}</div>
+              <div>
+                <div style={{ fontSize:14, fontWeight:700, color:'var(--ink)', lineHeight:1.3 }}>{d.focus.title}</div>
+                <div style={{ fontSize:12, color:'var(--ink-soft)', marginTop:4, lineHeight:1.5 }}>{d.focus.sub}</div>
+              </div>
+            </div>
+          </div>
+
+          {/* 9 ── SETTINGS SHORTCUTS ── */}
+          <div>
+            <SectionLabel>{L.settings}</SectionLabel>
+            <Card>
+              <SettingsRow icon="📊" label={L.report}    sub="Weekly breakdown & trends"/>
+              <SettingsRow icon="⏱️" label={L.timeLimit}  sub="15 min / day"/>
+              <SettingsRow icon="🌏" label={L.language}   sub="EN for child · VI for parents"/>
+              <SettingsRow icon="⚙️" label={L.settings}   sub="Profile, security" last/>
+            </Card>
+          </div>
+
+          {/* Footer */}
+          <div style={{ textAlign:'center', fontSize:11, color:'var(--ink-faint)', padding:'4px 0' }}>
+            Bắp Number Adventure · v1.0
+          </div>
+
+        </div>{/* end scroll */}
+      </div>
+    </PhoneShell>
+    <TweaksPanel tweaks={tweaks} setTweaks={setTweaks} open={tweaksOpen}/>
+    </>
+  );
+}
+
+// ── PHONE SHELL ──────────────────────────────────────────────
+function PhoneShell({ children }) {
+  return (
+    <div style={{
+      width:390, minHeight:844,
+      borderRadius:50, overflow:'hidden',
+      boxShadow:'0 0 0 10px #1a1a1a, 0 40px 80px rgba(0,0,0,0.45), inset 0 0 0 1px rgba(255,255,255,0.07)',
+      position:'relative', background:'#000',
+    }}>
+      <div style={{ position:'absolute', top:0, left:'50%', transform:'translateX(-50%)', width:120, height:34, background:'#000', borderRadius:'0 0 20px 20px', zIndex:100 }}/>
+      <div style={{ position:'relative', overflow:'hidden', borderRadius:50 }}>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<ParentDashboard/>);
+</script>
+</body>
+</html>
