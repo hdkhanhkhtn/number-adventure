@@ -59,13 +59,17 @@ ${COMPOSE} ps app
 # ── 5. Health check ───────────────────────────────────────────────────────────
 info "Waiting for app to become healthy..."
 RETRIES=15
-until ${COMPOSE} ps app | grep -q "running" || [[ ${RETRIES} -eq 0 ]]; do
+until ${COMPOSE} ps app | grep -qE "running|Up" || [[ ${RETRIES} -eq 0 ]]; do
   sleep 2
   RETRIES=$((RETRIES - 1))
 done
 
 if [[ ${RETRIES} -eq 0 ]]; then
-  error "App failed to become healthy. Check: ${COMPOSE} logs app"
+  echo "" | tee -a "${LOG_FILE}"
+  echo "── app logs (last 40 lines) ──────────────────────────" | tee -a "${LOG_FILE}"
+  ${COMPOSE} logs app --tail=40 2>&1 | tee -a "${LOG_FILE}"
+  echo "──────────────────────────────────────────────────────" | tee -a "${LOG_FILE}"
+  error "App failed to become healthy. See logs above."
 fi
 
 # Quick HTTP check (if port 3000 is accessible from localhost)
