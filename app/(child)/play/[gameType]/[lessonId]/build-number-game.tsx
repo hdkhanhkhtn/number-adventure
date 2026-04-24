@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { GameContainer } from '@/components/game/game-container';
 import { GameHud } from '@/components/game/game-hud';
 import { SlotColumn } from '@/components/game/slot-column';
@@ -8,6 +8,7 @@ import { TenStick } from '@/components/game/ten-stick';
 import { OneDot } from '@/components/game/one-dot';
 import { BigButton } from '@/components/ui/big-button';
 import { useGame } from '@/lib/hooks/use-game';
+import { useSoundEffects } from '@/lib/hooks/use-sound-effects';
 import type { BuildNumberQuestion, AnyQuestion, GameResult } from '@/lib/game-engine/types';
 
 interface Props {
@@ -20,11 +21,20 @@ interface Props {
 export function BuildNumberGame({ questions, onComplete, onExit, onAttempt }: Props) {
   const [tens, setTens] = useState(0);
   const [ones, setOnes] = useState(0);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const { playCorrect, playWrong, playLevelComplete } = useSoundEffects();
 
   const { round, hearts, question, totalRounds, handleCorrect, handleWrong } = useGame<AnyQuestion>(questions, onComplete);
   const q = question as BuildNumberQuestion | null;
 
   useEffect(() => { setTens(0); setOnes(0); }, [round]);
+
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
+  }, []);
 
   const current = tens * 10 + ones;
   const match = q ? current === q.target : false;
@@ -33,8 +43,8 @@ export function BuildNumberGame({ questions, onComplete, onExit, onAttempt }: Pr
     if (!q) return;
     const correct = current === q.target;
     onAttempt(String(current), correct);
-    if (correct) setTimeout(handleCorrect, 1000);
-    else handleWrong();
+    if (correct) { playCorrect(); timeoutRef.current = setTimeout(() => { playLevelComplete(); handleCorrect(); }, 1000); }
+    else { playWrong(); handleWrong(); }
   };
 
   if (!q) return null;

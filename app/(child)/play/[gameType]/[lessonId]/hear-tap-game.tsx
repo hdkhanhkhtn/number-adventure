@@ -1,23 +1,15 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { GameContainer } from '@/components/game/game-container';
 import { GameHud } from '@/components/game/game-hud';
 import { NumTile } from '@/components/ui/num-tile';
 import { SpeakerIcon } from '@/components/ui/speaker-icon';
 import { Sparkles } from '@/components/ui/sparkles';
 import { useGame } from '@/lib/hooks/use-game';
+import { useAudio } from '@/lib/hooks/use-audio';
+import { useSoundEffects } from '@/lib/hooks/use-sound-effects';
 import type { HearTapQuestion, AnyQuestion, GameResult } from '@/lib/game-engine/types';
-
-function speak(n: number) {
-  if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
-  try {
-    window.speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(String(n));
-    u.rate = 0.85; u.pitch = 1.1; u.lang = 'en-US';
-    window.speechSynthesis.speak(u);
-  } catch { /* ignore */ }
-}
 
 interface Props {
   questions: AnyQuestion[];
@@ -29,6 +21,10 @@ interface Props {
 export function HearTapGame({ questions, onComplete, onExit, onAttempt }: Props) {
   const [wrongs, setWrongs] = useState(new Set<number>());
   const [correctPicked, setCorrectPicked] = useState(false);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const { speakNumber } = useAudio();
+  const { playCorrect, playWrong, playLevelComplete } = useSoundEffects();
 
   const { round, hearts, question, totalRounds, handleCorrect, handleWrong } = useGame<AnyQuestion>(questions, onComplete);
   const q = question as HearTapQuestion | null;
@@ -36,21 +32,30 @@ export function HearTapGame({ questions, onComplete, onExit, onAttempt }: Props)
   useEffect(() => {
     setWrongs(new Set());
     setCorrectPicked(false);
-    if (q) speak(q.target);
+    if (q) speakNumber(q.target);
   }, [round]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
+  }, []);
 
   const onPick = useCallback((n: number) => {
     if (!q || correctPicked) return;
+    if (wrongs.has(n)) return; // already wrong — ignore re-tap
     if (n === q.target) {
       setCorrectPicked(true);
+      playCorrect();
       onAttempt(String(n), true);
-      setTimeout(handleCorrect, 900);
+      timeoutRef.current = setTimeout(() => { playLevelComplete(); handleCorrect(); }, 900);
     } else {
       setWrongs((prev) => new Set([...prev, n]));
+      playWrong();
       onAttempt(String(n), false);
       handleWrong();
     }
-  }, [q, correctPicked, handleCorrect, handleWrong, onAttempt]);
+  }, [q, correctPicked, wrongs, handleCorrect, handleWrong, onAttempt, playCorrect, playWrong, playLevelComplete]);
 
   if (!q) return null;
 
@@ -60,7 +65,7 @@ export function HearTapGame({ questions, onComplete, onExit, onAttempt }: Props)
       <GameHud hearts={hearts} progress={round} total={totalRounds} onClose={onExit} />
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 20px', gap: 28 }}>
         <div style={{ fontSize: 14, color: '#2F6A3C', fontWeight: 700, letterSpacing: 0.5 }}>TAP WHAT YOU HEAR</div>
-        <button onClick={() => speak(q.target)} className="no-select pulse-soft" style={{
+        <button onClick={() => speakNumber(q.target)} aria-label="Tap to hear the number" className="no-select pulse-soft" style={{
           width: 160, height: 160, borderRadius: '50%',
           background: '#FFD36E', border: '4px solid #2D3A2E',
           boxShadow: '0 6px 0 #C79528, 0 14px 24px rgba(46,90,58,0.18)',
