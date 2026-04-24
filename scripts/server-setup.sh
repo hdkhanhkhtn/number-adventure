@@ -23,7 +23,10 @@ set -euo pipefail
 
 APP_USER="bap"
 APP_DIR="/home/${APP_USER}/apps/number-adventure"
-REPO_URL="${REPO_URL:-}"         # pass as env var: REPO_URL=https://github.com/... sudo bash server-setup.sh
+# Accept REPO_URL as env var OR first positional argument:
+#   sudo env REPO_URL=https://github.com/org/repo bash server-setup.sh
+#   sudo bash server-setup.sh https://github.com/org/repo
+REPO_URL="${REPO_URL:-${1:-}}"
 BRANCH="${BRANCH:-main}"
 
 # ── colours ──────────────────────────────────────────────────────────────────
