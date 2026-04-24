@@ -54,10 +54,10 @@
   --r-xl: 36px;
   --r-pill: 9999px;
 
-  /* Typography */
-  --font-kid: 'Fredoka', 'Baloo 2', ui-rounded, system-ui, sans-serif;
-  --font-num: 'Fredoka', 'Baloo 2', ui-rounded, system-ui, sans-serif;
-  --font-parent: 'Be Vietnam Pro', 'Inter', system-ui, sans-serif;
+  /* Typography — use next/font CSS vars injected by app/layout.tsx */
+  --font-kid: var(--font-fredoka, 'Fredoka'), var(--font-baloo2, 'Baloo 2'), ui-rounded, system-ui, sans-serif;
+  --font-num: var(--font-fredoka, 'Fredoka'), var(--font-baloo2, 'Baloo 2'), ui-rounded, system-ui, sans-serif;
+  --font-parent: var(--font-be-vietnam-pro, 'Be Vietnam Pro'), 'Inter', system-ui, sans-serif;
 }
 
 /* ── Theme Variants ─────────────────────────────────────────── */
@@ -128,13 +128,13 @@
   --radius-xl: var(--r-xl);
   --radius-pill: var(--r-pill);
 
-  --shadow-card: var(--shadow-card);
-  --shadow-pop: var(--shadow-pop);
-  --shadow-tile: var(--shadow-tile);
+  /* Shadows — use raw values to avoid CSS self-reference cycle */
+  --shadow-card: 0 2px 0 rgba(46,90,58,0.08), 0 10px 24px rgba(46,90,58,0.10);
+  --shadow-pop: 0 4px 0 rgba(46,90,58,0.18), 0 18px 32px rgba(46,90,58,0.14);
+  --shadow-tile: 0 3px 0 rgba(46,90,58,0.14);
 
-  --font-kid: var(--font-kid);
-  --font-num: var(--font-num);
-  --font-parent: var(--font-parent);
+  /* Note: font-kid/num/parent omitted — Tailwind font utilities not used;
+     all components reference var(--font-kid) etc. from :root directly */
 }
 
 /* ── Base Styles ─────────────────────────────────────────────── */
