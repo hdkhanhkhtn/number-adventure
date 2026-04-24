@@ -41,6 +41,7 @@ export function BigButton({
       className={`no-select${className ? ` ${className}` : ''}`}
       onClick={disabled ? undefined : onClick}
       disabled={disabled}
+      aria-disabled={disabled}
       style={{
         height: s.h,
         padding: `0 ${s.px}px`,
@@ -60,25 +61,17 @@ export function BigButton({
         opacity: disabled ? 0.5 : 1,
         cursor: disabled ? 'not-allowed' : 'pointer',
       }}
-      onMouseDown={e => {
+      onPointerDown={e => {
         if (disabled) return;
+        e.currentTarget.setPointerCapture(e.pointerId);
         e.currentTarget.style.transform = 'translateY(4px)';
         e.currentTarget.style.boxShadow = pressedShadow;
       }}
-      onMouseUp={e => {
+      onPointerUp={e => {
         e.currentTarget.style.transform = '';
         e.currentTarget.style.boxShadow = baseShadow;
       }}
-      onMouseLeave={e => {
-        e.currentTarget.style.transform = '';
-        e.currentTarget.style.boxShadow = baseShadow;
-      }}
-      onTouchStart={e => {
-        if (disabled) return;
-        e.currentTarget.style.transform = 'translateY(4px)';
-        e.currentTarget.style.boxShadow = pressedShadow;
-      }}
-      onTouchEnd={e => {
+      onPointerCancel={e => {
         e.currentTarget.style.transform = '';
         e.currentTarget.style.boxShadow = baseShadow;
       }}

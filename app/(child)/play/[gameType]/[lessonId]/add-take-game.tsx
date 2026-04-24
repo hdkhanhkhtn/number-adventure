@@ -5,6 +5,7 @@ import { GameContainer } from '@/components/game/game-container';
 import { GameHud } from '@/components/game/game-hud';
 import { NumTile } from '@/components/ui/num-tile';
 import { useGame } from '@/lib/hooks/use-game';
+import { useSoundEffects } from '@/lib/hooks/use-sound-effects';
 import type { AddTakeQuestion, AnyQuestion, GameResult } from '@/lib/game-engine/types';
 
 interface Props {
@@ -32,6 +33,8 @@ function Apples({ count, crossed = 0 }: { count: number; crossed?: number }) {
 export function AddTakeGame({ questions, onComplete, onExit, onAttempt }: Props) {
   const [picked, setPicked] = useState<number | null>(null);
 
+  const { playCorrect, playWrong, playLevelComplete } = useSoundEffects();
+
   const { round, hearts, question, totalRounds, handleCorrect, handleWrong } = useGame<AnyQuestion>(questions, onComplete);
   const q = question as AddTakeQuestion | null;
 
@@ -42,9 +45,9 @@ export function AddTakeGame({ questions, onComplete, onExit, onAttempt }: Props)
     setPicked(n);
     const correct = n === q.target;
     onAttempt(String(n), correct);
-    if (correct) setTimeout(handleCorrect, 900);
-    else handleWrong(); // decrements hearts and advances after 900ms internally
-  }, [q, picked, handleCorrect, handleWrong, onAttempt]);
+    if (correct) { playCorrect(); setTimeout(() => { playLevelComplete(); handleCorrect(); }, 900); }
+    else { playWrong(); handleWrong(); }
+  }, [q, picked, handleCorrect, handleWrong, onAttempt, playCorrect, playWrong, playLevelComplete]);
 
   if (!q) return null;
 

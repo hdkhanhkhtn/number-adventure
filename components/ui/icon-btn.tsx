@@ -25,6 +25,8 @@ export function IconBtn({
   children, onClick, color = 'cream', size = 52, pulse, style, 'aria-label': ariaLabel,
 }: IconBtnProps) {
   const c = COLOR_MAP[color];
+  const baseShadow = `0 4px 0 ${c.sh}, 0 8px 14px rgba(46,90,58,0.12)`;
+  const pressedShadow = `0 1px 0 ${c.sh}, 0 2px 6px rgba(46,90,58,0.1)`;
 
   return (
     <button
@@ -37,7 +39,7 @@ export function IconBtn({
         borderRadius: '50%',
         background: c.bg,
         color: c.ink,
-        boxShadow: `0 4px 0 ${c.sh}, 0 8px 14px rgba(46,90,58,0.12)`,
+        boxShadow: baseShadow,
         border: '3px solid #2D3A2E',
         display: 'inline-flex',
         alignItems: 'center',
@@ -47,11 +49,19 @@ export function IconBtn({
         flexShrink: 0,
         ...style,
       }}
-      onMouseDown={e => { e.currentTarget.style.transform = 'translateY(3px)'; }}
-      onMouseUp={e => { e.currentTarget.style.transform = ''; }}
-      onMouseLeave={e => { e.currentTarget.style.transform = ''; }}
-      onTouchStart={e => { e.currentTarget.style.transform = 'translateY(3px)'; }}
-      onTouchEnd={e => { e.currentTarget.style.transform = ''; }}
+      onPointerDown={e => {
+        e.currentTarget.setPointerCapture(e.pointerId);
+        e.currentTarget.style.transform = 'translateY(3px)';
+        e.currentTarget.style.boxShadow = pressedShadow;
+      }}
+      onPointerUp={e => {
+        e.currentTarget.style.transform = '';
+        e.currentTarget.style.boxShadow = baseShadow;
+      }}
+      onPointerCancel={e => {
+        e.currentTarget.style.transform = '';
+        e.currentTarget.style.boxShadow = baseShadow;
+      }}
     >
       {children}
     </button>

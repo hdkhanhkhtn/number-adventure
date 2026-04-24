@@ -8,6 +8,7 @@ import { TenStick } from '@/components/game/ten-stick';
 import { OneDot } from '@/components/game/one-dot';
 import { BigButton } from '@/components/ui/big-button';
 import { useGame } from '@/lib/hooks/use-game';
+import { useSoundEffects } from '@/lib/hooks/use-sound-effects';
 import type { BuildNumberQuestion, AnyQuestion, GameResult } from '@/lib/game-engine/types';
 
 interface Props {
@@ -21,6 +22,8 @@ export function BuildNumberGame({ questions, onComplete, onExit, onAttempt }: Pr
   const [tens, setTens] = useState(0);
   const [ones, setOnes] = useState(0);
 
+  const { playCorrect, playWrong, playLevelComplete } = useSoundEffects();
+
   const { round, hearts, question, totalRounds, handleCorrect, handleWrong } = useGame<AnyQuestion>(questions, onComplete);
   const q = question as BuildNumberQuestion | null;
 
@@ -33,8 +36,8 @@ export function BuildNumberGame({ questions, onComplete, onExit, onAttempt }: Pr
     if (!q) return;
     const correct = current === q.target;
     onAttempt(String(current), correct);
-    if (correct) setTimeout(handleCorrect, 1000);
-    else handleWrong();
+    if (correct) { playCorrect(); setTimeout(() => { playLevelComplete(); handleCorrect(); }, 1000); }
+    else { playWrong(); handleWrong(); }
   };
 
   if (!q) return null;

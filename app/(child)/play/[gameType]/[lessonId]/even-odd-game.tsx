@@ -5,6 +5,7 @@ import { GameContainer } from '@/components/game/game-container';
 import { GameHud } from '@/components/game/game-hud';
 import { Basket } from '@/components/game/basket';
 import { useGame } from '@/lib/hooks/use-game';
+import { useSoundEffects } from '@/lib/hooks/use-sound-effects';
 import type { EvenOddQuestion, AnyQuestion, GameResult } from '@/lib/game-engine/types';
 
 interface Props {
@@ -16,6 +17,8 @@ interface Props {
 
 export function EvenOddGame({ questions, onComplete, onExit, onAttempt }: Props) {
   const [picked, setPicked] = useState<'even' | 'odd' | null>(null);
+
+  const { playCorrect, playWrong, playLevelComplete } = useSoundEffects();
 
   const { round, hearts, question, totalRounds, handleCorrect, handleWrong } = useGame<AnyQuestion>(
     questions,
@@ -32,12 +35,13 @@ export function EvenOddGame({ questions, onComplete, onExit, onAttempt }: Props)
     const correct = (choice === 'even') === q.isEven;
     onAttempt(choice, correct);
     if (correct) {
-      setTimeout(handleCorrect, 900);
+      playCorrect();
+      setTimeout(() => { playLevelComplete(); handleCorrect(); }, 900);
     } else {
-      // handleWrong decrements hearts and advances the round after 900ms internally
+      playWrong();
       handleWrong();
     }
-  }, [q, picked, handleCorrect, handleWrong, onAttempt]);
+  }, [q, picked, handleCorrect, handleWrong, onAttempt, playCorrect, playWrong, playLevelComplete]);
 
   if (!q) return null;
 
