@@ -22,52 +22,52 @@ All screens designed in Claude Design and exported as a runnable HTML prototype.
 **Persistence:** PostgreSQL (source of truth) + React Context (cache) + localStorage (fallback)  
 **Goal:** Full-stack implementation with real database, AI-driven content, parent dashboard.
 
-### Milestone 1 — Project Setup
+### Milestone 1 — Project Setup ✅ Done
 | # | Task | Status |
 |---|---|---|
-| 1.1 | Init Next.js 14 App Router + TypeScript | Todo |
-| 1.2 | Configure Tailwind with design tokens from `src/tokens.css` | Todo |
-| 1.3 | Add Framer Motion + Howler.js | Todo |
-| 1.4 | Configure ESLint + Prettier + path aliases | Todo |
-| 1.5 | Init PostgreSQL (Docker compose) + Prisma | Todo |
-| 1.6 | Set up folder structure: app/api, prisma/, lib/db, lib/ai | Todo |
-| 1.7 | Add Google Fonts (Fredoka, Baloo 2, Be Vietnam Pro) | Todo |
+| 1.1 | Init Next.js 14 App Router + TypeScript | Done |
+| 1.2 | Configure Tailwind with design tokens from `src/tokens.css` | Done |
+| 1.3 | Add Framer Motion + Howler.js | Done |
+| 1.4 | Configure ESLint + Prettier + path aliases | Done |
+| 1.5 | Init PostgreSQL (Docker compose) + Prisma | Done |
+| 1.6 | Set up folder structure: app/api, prisma/, lib/db, lib/ai | Done |
+| 1.7 | Add Google Fonts (Fredoka, Baloo 2, Be Vietnam Pro) | Done |
 
-### Milestone 2 — Design System & Shared Components
+### Milestone 2 — Design System & Shared Components ✅ Done
 | # | Task | Status |
 |---|---|---|
-| 2.1 | CSS variables + Tailwind token mapping | Todo |
-| 2.2 | `NumTile` — tappable number tile with 3D press effect | Todo |
-| 2.3 | `BigButton` — CTA button with tactile shadow | Todo |
-| 2.4 | `IconBtn` — round icon button | Todo |
-| 2.5 | `ProgressBar` — progress bar with star | Todo |
-| 2.6 | `Card` — soft rounded card | Todo |
-| 2.7 | `StarRow` — 1-3 star rating | Todo |
-| 2.8 | `Tag` — pill label | Todo |
-| 2.9 | `GardenBg` — gradient backgrounds (5 variants) | Todo |
-| 2.10 | `Sparkles`, `Confetti` — decorative animations | Todo |
-| 2.11 | `BapMascot` + `BapMini` — SVG mascot (5 moods × 5 colors) | Todo |
-| 2.12 | `IOSDevice` frame + `IOSStatusBar` | Todo |
-| 2.13 | `GameHud` — hearts + progress bar top bar | Todo |
+| 2.1 | CSS variables + Tailwind token mapping | Done |
+| 2.2 | `NumTile` — tappable number tile with 3D press effect | Done |
+| 2.3 | `BigButton` — CTA button with tactile shadow | Done |
+| 2.4 | `IconBtn` — round icon button | Done |
+| 2.5 | `ProgressBar` — progress bar with star | Done |
+| 2.6 | `Card` — soft rounded card | Done |
+| 2.7 | `StarRow` — 1-3 star rating | Done |
+| 2.8 | `Tag` — pill label | Done |
+| 2.9 | `GardenBg` — gradient backgrounds (5 variants) | Done |
+| 2.10 | `Sparkles`, `Confetti` — decorative animations | Done |
+| 2.11 | `BapMascot` + `BapMini` — SVG mascot (5 moods × 5 colors) | Done |
+| 2.12 | `IOSDevice` frame + `IOSStatusBar` | Done |
+| 2.13 | `GameHud` — hearts + progress bar top bar | Done |
 
-### Milestone 3 — Backend API Setup
+### Milestone 3 — Backend API Setup ✅ Done
 | # | Task | Status |
 |---|---|---|
-| 3.1 | Define Prisma schema (Parent, Child, ChildSettings, Lesson, GameSession, GameAttempt, AIQuestion, Sticker, ChildSticker, Streak) | Todo |
-| 3.2 | Run migrations, verify DB structure | Todo |
-| 3.3 | Auth API: `/api/auth/session` (GET) + `/api/auth/pin` (POST) | Todo |
-| 3.4 | Sessions API: `/api/sessions/start`, `/attempt`, `/complete` | Todo |
-| 3.5 | AI integration: `/api/ai/generate` (POST to 9router, validate, cache in DB) | Todo |
-| 3.6 | Progress API: `/api/progress` (GET GameSession[] + streak) | Todo |
+| 3.1 | Define Prisma schema (Parent, Child, ChildSettings, Lesson, GameSession, GameAttempt, AIQuestion, Sticker, ChildSticker, Streak) | Done |
+| 3.2 | Run migrations, verify DB structure | Done |
+| 3.3 | Auth API: `/api/auth/session` (GET) + `/api/auth/pin` (POST) | Done |
+| 3.4 | Sessions API: `/api/sessions/start`, `/attempt`, `/complete` | Done |
+| 3.5 | AI integration: `/api/ai/generate` (POST to 9router, validate, cache in DB) | Done |
+| 3.6 | Progress API: `/api/progress` (GET GameSession[] + streak) | Done |
 
-### Milestone 4 — App Shell & Navigation
+### Milestone 4 — App Shell & Navigation ✅ Done
 | # | Task | Status |
 |---|---|---|
-| 4.1 | Root layout with `GameProgressContext`, `AudioContext`, `ThemeContext` | Todo |
-| 4.2 | `(child)` route group layout | Todo |
-| 4.3 | `(parent)` route group layout + PIN gate middleware | Todo |
-| 4.4 | useProgress hook (fetch from `/api/progress`) | Todo |
-| 4.5 | Theme + mascot color provider | Todo |
+| 4.1 | Root layout with `GameProgressContext`, `AudioContext`, `ThemeContext` | Done |
+| 4.2 | `(child)` route group layout | Done |
+| 4.3 | `(parent)` route group layout + PIN gate middleware | Done |
+| 4.4 | useProgress hook (fetch from `/api/progress`) | Done |
+| 4.5 | Theme + mascot color provider | Done |
 
 ### Milestone 5 — Onboarding Screens
 | # | Task | Status |

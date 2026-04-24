@@ -12,7 +12,7 @@
 ## Overview
 
 - **Priority:** P0 -- everything depends on this phase
-- **Status:** Pending
+- **Status:** ✅ Complete
 - **Description:** Initialize Next.js 14 project, port design tokens to Tailwind, create all shared UI components, set up Prisma + PostgreSQL schema (10 tables), create Docker Compose for local dev, scaffold API route structure, create 3 React Context providers (UI cache only), create static game config data files.
 
 ## Key Insights
@@ -560,30 +560,30 @@ Must compile with zero errors. Database must accept connections.
 
 ## Todo List
 
-- [ ] Initialize Next.js 14 project or verify existing setup
-- [ ] Install deps (framer-motion, clsx, tailwind-merge, @prisma/client, prisma)
-- [ ] Create `docker-compose.yml` + `.env.example` + `.env`
-- [ ] Create `prisma/schema.prisma` with 10 tables
-- [ ] Run `npx prisma migrate dev --name init`
-- [ ] Create `lib/prisma.ts`
-- [ ] Create `app/globals.css` with all tokens, keyframes, utilities
-- [ ] Create `tailwind.config.ts` with full theme extension
-- [ ] Create `lib/types/common.ts` + `lib/types/api.ts`
-- [ ] Create `lib/utils/cn.ts`
-- [ ] Create `src/data/game-config/worlds.ts`
-- [ ] Create `src/data/game-config/game-types.ts`
-- [ ] Create `src/data/game-config/lesson-templates.ts`
-- [ ] Create `src/data/game-config/skills.ts`
-- [ ] Create `src/data/game-config/sticker-defs.ts`
-- [ ] Port all 13 UI components + StreakCard (14 files total)
-- [ ] Create `context/game-progress-context.tsx` (UI cache)
-- [ ] Create `context/audio-context.tsx` (stub)
-- [ ] Create `context/theme-context.tsx`
-- [ ] Create `context/providers.tsx`
-- [ ] Scaffold 11 API route files (stub responses)
-- [ ] Create `app/layout.tsx` + `app/page.tsx`
-- [ ] Run `npm run build` -- zero errors
-- [ ] Verify DB connection with `npx prisma studio`
+- [x] Initialize Next.js 14 project or verify existing setup
+- [x] Install deps (framer-motion, clsx, tailwind-merge, @prisma/client, prisma)
+- [x] Create `docker-compose.yml` + `.env.example` + `.env`
+- [x] Create `prisma/schema.prisma` with 10 tables
+- [x] Run `npx prisma migrate dev --name init`
+- [x] Create `lib/prisma.ts`
+- [x] Create `app/globals.css` with all tokens, keyframes, utilities
+- [x] Create `tailwind.config.ts` with full theme extension
+- [x] Create `lib/types/common.ts` + `lib/types/api.ts`
+- [x] Create `lib/utils/cn.ts`
+- [x] Create `src/data/game-config/worlds.ts`
+- [x] Create `src/data/game-config/game-types.ts`
+- [x] Create `src/data/game-config/lesson-templates.ts`
+- [x] Create `src/data/game-config/skills.ts`
+- [x] Create `src/data/game-config/sticker-defs.ts`
+- [x] Port all 13 UI components + StreakCard (14 files total)
+- [x] Create `context/game-progress-context.tsx` (UI cache)
+- [x] Create `context/audio-context.tsx` (stub)
+- [x] Create `context/theme-context.tsx`
+- [x] Create `context/providers.tsx`
+- [x] Scaffold 11 API route files (stub responses)
+- [x] Create `app/layout.tsx` + `app/page.tsx`
+- [x] Run `npm run build` -- zero errors
+- [x] Verify DB connection with `npx prisma studio`
 
 ## Acceptance Criteria
 

@@ -4,7 +4,7 @@
 
 | Layer | Technology | Reason |
 |---|---|---|
-| Framework | Next.js 14+ (App Router) | File-based routing, RSC, good DX |
+| Framework | Next.js 16.2.4 (App Router) | File-based routing, RSC, good DX |
 | Language | TypeScript | Type safety, better IDE support |
 | Styling | TailwindCSS | Rapid UI, consistent design tokens |
 | State | React Context + useReducer | Simple, no extra dependency |
@@ -57,4 +57,4 @@
 
 ## Design Tokens
 Source: `handoff/number-adventure/project/tokens.css`
-Applied via: Tailwind config (`tailwind.config.ts`)
+Applied via: CSS-first config in `app/globals.css` (`@import "tailwindcss"` with `@theme` inline block). No `tailwind.config.ts` file (Tailwind v4 CSS-first approach).
