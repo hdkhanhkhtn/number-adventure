@@ -7,8 +7,9 @@ export function generateNumberOrderQuestion(): NumberOrderQuestion {
   const hideIdx = 1 + Math.floor(Math.random() * 3);
   const target = seq[hideIdx];
   const opts = new Set([target]);
+  // Use range ±4 to guarantee ≥3 unique distractors even at minimum target value
   while (opts.size < 3) {
-    opts.add(Math.max(1, target + (Math.random() > 0.5 ? 1 : -1) * (1 + Math.floor(Math.random() * 3))));
+    opts.add(Math.max(1, target + (Math.random() > 0.5 ? 1 : -1) * (1 + Math.floor(Math.random() * 4))));
   }
   return { seq, hideIdx, target, options: [...opts].sort(() => Math.random() - 0.5) };
 }
