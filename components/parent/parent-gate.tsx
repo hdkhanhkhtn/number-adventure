@@ -8,7 +8,9 @@ export interface ParentGateProps {
   onCancel: () => void;
 }
 
-/** Math-challenge modal overlay that guards parent area access */
+/** Math-challenge modal — anti-toddler friction ONLY, not a security control.
+ *  Answer is intentionally computed client-side. Real auth is handled via
+ *  session cookies + middleware.ts. Do not treat this as an auth mechanism. */
 export function ParentGate({ onPass, onCancel }: ParentGateProps) {
   const [a] = useState(() => 3 + Math.floor(Math.random() * 4));
   const [b] = useState(() => 2 + Math.floor(Math.random() * 3));

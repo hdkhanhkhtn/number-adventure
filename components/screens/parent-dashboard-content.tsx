@@ -35,11 +35,16 @@ export function ParentDashboardContent() {
 
   useEffect(() => {
     if (!childId || childId.startsWith('guest_')) return;
-    fetch(`/api/report/${childId}`)
-      .then(r => r.json())
-      .then(setReport)
-      .catch(console.error);
-  }, [childId]);
+    const controller = new AbortController();
+    fetch(`/api/report/${childId}`, { signal: controller.signal, credentials: 'include' })
+      .then(r => {
+        if (r.status === 401) { router.push('/home'); return null; }
+        return r.json();
+      })
+      .then(data => { if (data) setReport(data); })
+      .catch(e => { if (e.name !== 'AbortError') console.error(e); });
+    return () => controller.abort();
+  }, [childId, router]);
 
   const streak = report?.streak ?? { currentStreak: 0, longestStreak: 0 };
   const totalMin = (report?.recentActivity ?? []).reduce((s, v) => s + v, 0);
@@ -77,7 +82,7 @@ export function ParentDashboardContent() {
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
           <MetricCard label="Tuần này" value={`${totalMin} phút`} sub="Thời gian chơi" accent="#5FB36A" />
           <MetricCard label="Chuỗi ngày" value={`${streak.currentStreak} ngày`} sub="🔥 liên tiếp" accent="#C14A2A" />
-          <MetricCard label="Độ chính xác" value={report ? `${Math.round((report.games.reduce((s, g) => s + g.accuracy, 0) / Math.max(report.games.length, 1)))}%` : '—'} sub="trung bình" accent="#2E6F93" />
+          <MetricCard label="Độ chính xác" value={report && report.games.length > 0 ? `${Math.round(report.games.reduce((s, g) => s + g.accuracy, 0) / report.games.length)}%` : '—'} sub="trung bình" accent="#2E6F93" />
           <MetricCard label="Ngôi sao" value={`${report?.totalStars ?? 0} ⭐`} sub="đã thu thập" accent="#B87C0E" />
         </div>
 

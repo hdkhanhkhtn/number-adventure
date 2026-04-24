@@ -35,14 +35,15 @@ export function ParentSettingsContent() {
   // Load settings from DB on mount
   useEffect(() => {
     if (!childId || childId.startsWith('guest_')) return;
-    fetch(`/api/children/${childId}/settings`)
+    fetch(`/api/children/${childId}/settings`, { credentials: 'include' })
       .then(r => r.ok ? r.json() : null)
       .then(data => { if (data?.settings) setSettings(data.settings); })
       .catch(console.error);
   }, [childId]);
 
-  // Persist patch to DB and local context
+  // Persist patch to DB and local context; rollback optimistic update on failure
   const handleChange = async (patch: Partial<ChildSettings>) => {
+    const prev = settings;
     const next = { ...settings, ...patch };
     setSettings(next);
     updateSettings(next);
@@ -50,13 +51,17 @@ export function ParentSettingsContent() {
     if (!childId || childId.startsWith('guest_')) return;
     setSaving(true);
     try {
-      await fetch(`/api/children/${childId}/settings`, {
+      const res = await fetch(`/api/children/${childId}/settings`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(patch),
+        credentials: 'include',
       });
+      if (!res.ok) throw new Error('Save failed');
     } catch (e) {
       console.error('Failed to save settings', e);
+      setSettings(prev);
+      updateSettings(prev);
     } finally {
       setSaving(false);
     }
