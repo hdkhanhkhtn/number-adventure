@@ -2,16 +2,16 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
-/** GET /api/children?parentId=xxx — list children for a parent */
+/** GET /api/children — list children for the authenticated parent (session cookie) */
 export async function GET(request: NextRequest) {
   try {
-    const parentId = request.nextUrl.searchParams.get('parentId');
-    if (!parentId) {
-      return NextResponse.json({ error: 'parentId required' }, { status: 400 });
+    const cookieParentId = request.cookies.get('parentId')?.value;
+    if (!cookieParentId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const children = await prisma.child.findMany({
-      where: { parentId },
+      where: { parentId: cookieParentId },
       include: { settings: true, streak: true },
     });
 
@@ -21,20 +21,22 @@ export async function GET(request: NextRequest) {
   }
 }
 
-/** POST /api/children — create a new child profile */
+/** POST /api/children — create a new child profile for the authenticated parent */
 export async function POST(request: NextRequest) {
   try {
+    const cookieParentId = request.cookies.get('parentId')?.value;
+    if (!cookieParentId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
     const body = await request.json();
-    const { parentId, name, age, color } = body as {
-      parentId?: string; name?: string; age?: number; color?: string;
-    };
+    const { name, age, color } = body as { name?: string; age?: number; color?: string };
 
-    if (!parentId || !name || age === undefined) {
-      return NextResponse.json({ error: 'parentId, name, age required' }, { status: 400 });
+    if (!name || typeof age !== 'number' || age < 1 || age > 18) {
+      return NextResponse.json({ error: 'name and age (1–18) required' }, { status: 400 });
     }
 
     const child = await prisma.child.create({
-      data: { parentId, name, age, color: color ?? 'sage' },
+      data: { parentId: cookieParentId, name, age, color: color ?? 'sage' },
     });
 
     return NextResponse.json({ child }, { status: 201 });

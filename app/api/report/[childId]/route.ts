@@ -21,44 +21,56 @@ const GAME_COLORS: Record<string, string> = {
 };
 
 /** GET /api/report/:childId — aggregate child progress report */
-export async function GET(_request: NextRequest, { params }: Params) {
+export async function GET(request: NextRequest, { params }: Params) {
   try {
     const { childId } = await params;
+    const cookieParentId = request.cookies.get('parentId')?.value;
+    if (!cookieParentId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    const child = await prisma.child.findUnique({ where: { id: childId }, select: { parentId: true } });
+    if (!child || child.parentId !== cookieParentId) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
 
-    // Lessons completed
-    const lessonsCompleted = await prisma.gameSession.count({
-      where: { childId, status: 'completed' },
-    });
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const ninetyDaysAgo = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
 
-    // Total stars
-    const starResult = await prisma.gameSession.aggregate({
-      where: { childId, status: 'completed' },
-      _sum: { stars: true },
-    });
+    // Parallelize all DB queries for performance
+    const [lessonsCompleted, starResult, recentSessions, sessions, attempts, streak] =
+      await Promise.all([
+        prisma.gameSession.count({ where: { childId, status: 'completed' } }),
+        prisma.gameSession.aggregate({
+          where: { childId, status: 'completed' },
+          _sum: { stars: true },
+        }),
+        prisma.gameSession.findMany({
+          where: { childId, status: 'completed', completedAt: { gte: sevenDaysAgo } },
+          select: { completedAt: true },
+        }),
+        prisma.gameSession.findMany({
+          where: { childId, status: 'completed', completedAt: { gte: ninetyDaysAgo } },
+          include: { lesson: { select: { gameType: true } } },
+        }),
+        prisma.gameAttempt.findMany({
+          where: { session: { childId }, createdAt: { gte: ninetyDaysAgo } },
+          select: { correct: true, session: { select: { lesson: { select: { gameType: true } } } } },
+        }),
+        prisma.streak.findUnique({ where: { childId } }),
+      ]);
     const totalStars = starResult._sum.stars ?? 0;
 
-    // 7-day activity: minutes per day (approx: count sessions per day)
-    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-    const recentSessions = await prisma.gameSession.findMany({
-      where: { childId, status: 'completed', completedAt: { gte: sevenDaysAgo } },
-      select: { completedAt: true },
-    });
-
-    // Build 7-day array (Mon=0 … Sun=6), count sessions as proxy for time
+    // Build 7-day array indexed by days-ago (index 6 = today, index 0 = 6 days ago)
     const dayCount = Array(7).fill(0) as number[];
+    const now = Date.now();
     for (const s of recentSessions) {
       if (s.completedAt) {
-        const dow = (s.completedAt.getDay() + 6) % 7; // 0=Mon
-        dayCount[dow] += 5; // ~5 min per session
+        const daysAgo = Math.floor((now - s.completedAt.getTime()) / (1000 * 60 * 60 * 24));
+        if (daysAgo < 7) dayCount[6 - daysAgo] += 5;
       }
     }
 
     // Per-game stats via sessions + lesson join
-    const sessions = await prisma.gameSession.findMany({
-      where: { childId, status: 'completed' },
-      include: { lesson: { select: { gameType: true } } },
-    });
-
     const gameStats: Record<string, { count: number; correct: number; total: number }> = {};
     for (const s of sessions) {
       const gt = s.lesson.gameType;
@@ -67,10 +79,6 @@ export async function GET(_request: NextRequest, { params }: Params) {
     }
 
     // Accuracy per game type
-    const attempts = await prisma.gameAttempt.findMany({
-      where: { session: { childId } },
-      select: { correct: true, session: { select: { lesson: { select: { gameType: true } } } } },
-    });
     for (const a of attempts) {
       const gt = a.session.lesson.gameType;
       if (!gameStats[gt]) gameStats[gt] = { count: 0, correct: 0, total: 0 };
@@ -90,9 +98,6 @@ export async function GET(_request: NextRequest, { params }: Params) {
     // Weakest skill = lowest accuracy with ≥1 session
     const withSessions = games.filter(g => g.playCount > 0);
     const weakest = withSessions.sort((a, b) => a.accuracy - b.accuracy)[0] ?? null;
-
-    // Streak
-    const streak = await prisma.streak.findUnique({ where: { childId } });
 
     return NextResponse.json({
       lessonsCompleted,

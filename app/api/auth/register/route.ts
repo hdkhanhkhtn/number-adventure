@@ -9,18 +9,23 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { email, password, name } = body as { email?: string; password?: string; name?: string };
 
-    if (!email || !password) {
-      return NextResponse.json({ error: 'email and password required' }, { status: 400 });
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email || !emailRegex.test(email) || !password || password.length < 8) {
+      return NextResponse.json(
+        { error: 'Valid email and password (min 8 chars) required' },
+        { status: 400 }
+      );
     }
+    const normalizedEmail = email.toLowerCase().trim();
 
-    const existing = await prisma.parent.findUnique({ where: { email } });
+    const existing = await prisma.parent.findUnique({ where: { email: normalizedEmail } });
     if (existing) {
       return NextResponse.json({ error: 'Email already registered' }, { status: 409 });
     }
 
     const passwordHash = await bcrypt.hash(password, 10);
     const parent = await prisma.parent.create({
-      data: { email, passwordHash, name: name ?? null },
+      data: { email: normalizedEmail, passwordHash, name: name ?? null },
     });
 
     return NextResponse.json({ parentId: parent.id }, { status: 201 });
