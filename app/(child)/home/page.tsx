@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useGameProgress } from '@/context/game-progress-context';
 import { HomeScreen } from '@/components/screens/home-screen';
+import { ParentGate } from '@/components/parent/parent-gate';
 import type { MascotColor } from '@/lib/types/common';
 import { STICKER_DEFS } from '@/src/data/game-config/sticker-defs';
 
@@ -17,6 +18,7 @@ export default function HomePage() {
   const [streak, setStreak] = useState(0);
   const [weekDays, setWeekDays] = useState<boolean[]>(Array(7).fill(false));
   const [stickerCount, setStickerCount] = useState(0);
+  const [showGate, setShowGate] = useState(false);
   const stickerTotal = STICKER_DEFS.length;
 
   const childId = state.childId;
@@ -47,16 +49,24 @@ export default function HomePage() {
   if (!profile) return null;
 
   return (
-    <HomeScreen
-      profile={{ name: profile.name, color: profile.color as MascotColor }}
-      streak={streak}
-      weekDays={weekDays}
-      stickerCount={stickerCount}
-      stickerTotal={stickerTotal}
-      onPlay={() => router.push('/worlds')}
-      onMap={() => router.push('/worlds')}
-      onStickers={() => router.push('/stickers')}
-      onParent={() => router.push('/parent/dashboard')}
-    />
+    <>
+      <HomeScreen
+        profile={{ name: profile.name, color: profile.color as MascotColor }}
+        streak={streak}
+        weekDays={weekDays}
+        stickerCount={stickerCount}
+        stickerTotal={stickerTotal}
+        onPlay={() => router.push('/worlds')}
+        onMap={() => router.push('/worlds')}
+        onStickers={() => router.push('/stickers')}
+        onParent={() => setShowGate(true)}
+      />
+      {showGate && (
+        <ParentGate
+          onPass={() => { setShowGate(false); router.push('/dashboard'); }}
+          onCancel={() => setShowGate(false)}
+        />
+      )}
+    </>
   );
 }
