@@ -51,7 +51,7 @@ Phase D (Audio + Tests + Deploy)
 | Phase | Name | Scope | Status | Depends On |
 |-------|------|-------|--------|------------|
 | A | [Foundation + DB](./phase-A-foundation.md) | ~40 files | ✅ Complete | None |
-| B | [Child Screens + Games + API](./phase-B-child-screens-games.md) | ~35 files | Pending | A |
+| B | [Child Screens + Games + API](./phase-B-child-screens-games.md) | ~46 files | ✅ Complete | A |
 | C | [Parent Area + Report + API](./phase-C-parent-area.md) | ~18 files | Pending | A |
 | D | [Audio + Tests + Deploy](./phase-D-audio-qa-polish.md) | ~20 files | Pending | B, C |
 
