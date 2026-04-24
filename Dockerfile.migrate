@@ -1,0 +1,17 @@
+# syntax=docker/dockerfile:1
+# Debian-based migrate runner — avoids Alpine/musl OpenSSL incompatibility with Prisma
+
+FROM node:20-slim
+
+RUN apt-get update -qq && apt-get install -y -qq openssl && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+COPY package.json package-lock.json* ./
+RUN if [ -f package-lock.json ]; then npm ci --frozen-lockfile; else npm install; fi
+
+COPY prisma ./prisma
+
+RUN npx prisma generate
+
+CMD ["npx", "prisma", "migrate", "deploy"]

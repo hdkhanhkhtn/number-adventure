@@ -26,10 +26,10 @@ services:
 
   migrate:
     # One-shot: runs `prisma migrate deploy` then exits (no restart)
+    # Uses Debian-based image to avoid Alpine/musl OpenSSL incompatibility with Prisma
     build:
       context: .
-      dockerfile: Dockerfile
-      target: builder
+      dockerfile: Dockerfile.migrate
     env_file: .env
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-bap}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-bap_adventure}
