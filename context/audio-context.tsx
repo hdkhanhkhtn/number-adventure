@@ -12,6 +12,8 @@ interface AudioContextValue {
   setSfxEnabled: (v: boolean) => void;
   setMusicEnabled: (v: boolean) => void;
   setVoiceEnabled: (v: boolean) => void;
+  setVoiceStyle: (v: string) => void;
+  setKidLang: (v: string) => void;
   /** Read a number aloud using Web Speech API (placeholder for Phase D) */
   speak: (n: number | string) => void;
 }
@@ -25,19 +27,28 @@ const AudioCtx = createContext<AudioContextValue>({
   setSfxEnabled: () => undefined,
   setMusicEnabled: () => undefined,
   setVoiceEnabled: () => undefined,
+  setVoiceStyle: () => undefined,
+  setKidLang: () => undefined,
   speak: () => undefined,
 });
+
+const LANG_MAP: Record<string, string> = {
+  en: 'en-US',
+  vi: 'vi-VN',
+};
 
 export function AudioProvider({ children }: { children: React.ReactNode }) {
   const [sfxEnabled, setSfxEnabled] = useState(true);
   const [musicEnabled, setMusicEnabled] = useState(true);
   const [voiceEnabled, setVoiceEnabled] = useState(true);
+  const [voiceStyle, setVoiceStyle] = useState('Friendly');
+  const [kidLang, setKidLang] = useState('en');
 
   function speak(n: number | string) {
     if (!voiceEnabled) return;
     if (typeof window === 'undefined' || !window.speechSynthesis) return;
     const utterance = new SpeechSynthesisUtterance(String(n));
-    utterance.lang = 'en-US';
+    utterance.lang = LANG_MAP[kidLang] ?? 'en-US';
     utterance.rate = 0.85;
     window.speechSynthesis.cancel();
     window.speechSynthesis.speak(utterance);
@@ -49,11 +60,13 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
         sfxEnabled,
         musicEnabled,
         voiceEnabled,
-        voiceStyle: 'Friendly',
-        kidLang: 'en',
+        voiceStyle,
+        kidLang,
         setSfxEnabled,
         setMusicEnabled,
         setVoiceEnabled,
+        setVoiceStyle,
+        setKidLang,
         speak,
       }}
     >

@@ -25,10 +25,17 @@ function readStoredTheme(): ThemeName {
 }
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  // Lazy initializer runs once on mount — avoids useEffect + setState pattern
-  const [theme, setThemeState] = useState<ThemeName>(readStoredTheme);
+  // Initialize with default to avoid SSR hydration mismatch.
+  // Apply stored value after mount in useEffect.
+  const [theme, setThemeState] = useState<ThemeName>('garden');
 
-  // Apply data-theme attribute whenever theme changes
+  // On mount: restore stored theme, then keep in sync
+  useEffect(() => {
+    const stored = readStoredTheme();
+    if (stored !== 'garden') setThemeState(stored);
+  }, []);
+
+  // Apply data-theme attribute and persist whenever theme changes
   useEffect(() => {
     const root = document.documentElement;
     if (theme === 'garden') {

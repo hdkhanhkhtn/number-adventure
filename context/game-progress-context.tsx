@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useEffect, useReducer } from 'react';
+import { createContext, useContext, useEffect, useMemo, useReducer } from 'react';
 import type { ChildProfile, ChildSettings, WorldId } from '@/lib/types/common';
 
 // ── State shape ──────────────────────────────────────────────
@@ -105,7 +105,8 @@ export function GameProgressProvider({ children }: { children: React.ReactNode }
     }
   }, [state]);
 
-  const ctx: GameProgressContextValue = {
+  // Memoize ctx so consumers only re-render when state actually changes
+  const ctx = useMemo<GameProgressContextValue>(() => ({
     state,
     setChild: (childId, profile) => dispatch({ type: 'SET_CHILD', payload: { childId, profile } }),
     setProfile: (profile) => dispatch({ type: 'SET_PROFILE', payload: profile }),
@@ -113,7 +114,7 @@ export function GameProgressProvider({ children }: { children: React.ReactNode }
     setWorld: (worldId) => dispatch({ type: 'SET_WORLD', payload: worldId }),
     setSessionActive: (active) => dispatch({ type: 'SET_SESSION_ACTIVE', payload: active }),
     clear: () => dispatch({ type: 'CLEAR' }),
-  };
+  }), [state]);
 
   return (
     <GameProgressContext.Provider value={ctx}>
