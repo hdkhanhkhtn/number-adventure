@@ -3,7 +3,7 @@
 
 # ─── Stage 1: install dependencies ───────────────────────────
 FROM node:20-alpine AS deps
-RUN apk add --no-cache libc6-compat
+RUN apk add --no-cache libc6-compat openssl
 WORKDIR /app
 
 COPY package.json package-lock.json* ./
@@ -12,6 +12,7 @@ RUN if [ -f package-lock.json ]; then npm ci --frozen-lockfile; else npm install
 
 # ─── Stage 2: build the app ───────────────────────────────────
 FROM node:20-alpine AS builder
+RUN apk add --no-cache openssl
 WORKDIR /app
 
 COPY --from=deps /app/node_modules ./node_modules
@@ -25,6 +26,7 @@ RUN npm run build
 
 # ─── Stage 3: production runner ───────────────────────────────
 FROM node:20-alpine AS runner
+RUN apk add --no-cache openssl
 WORKDIR /app
 
 ENV NODE_ENV=production
