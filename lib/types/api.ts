@@ -54,7 +54,7 @@ export interface CompleteSessionRequest {
 export interface SubmitAttemptRequest {
   questionId?: string;
   answer: string;
-  correct: boolean;
+  // `correct` intentionally omitted — server computes from AIQuestion.payload vs answer
   timeMs?: number;
 }
 
