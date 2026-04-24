@@ -16,13 +16,13 @@
 #   7. Set up the systemd service so Docker starts on reboot
 #
 # After running, you still need to:
-#   - Fill in /home/bap/number-adventure/.env
+#   - Fill in /home/bap/apps/number-adventure/.env
 #   - Add the GitHub Actions SSH public key printed by this script to GitHub Secrets
 # ─────────────────────────────────────────────────────────────────────────────
 set -euo pipefail
 
 APP_USER="bap"
-APP_DIR="/home/${APP_USER}/number-adventure"
+APP_DIR="/home/${APP_USER}/apps/number-adventure"
 REPO_URL="${REPO_URL:-}"         # pass as env var: REPO_URL=https://github.com/... sudo bash server-setup.sh
 BRANCH="${BRANCH:-main}"
 

@@ -6,7 +6,7 @@
 |---|---|
 | Target | Ubuntu 22.04 VPS |
 | App user | `bap` |
-| App dir | `/home/bap/number-adventure` |
+| App dir | `/home/bap/apps/number-adventure` |
 | Stack | Next.js 14 + PostgreSQL 16, both in Docker |
 | CD trigger | Push to `main` (PR merge) via GitHub Actions |
 | Scripts | `scripts/server-setup.sh`, `scripts/deploy.sh` |
@@ -32,7 +32,7 @@ The script will:
 1. Install Docker + Docker Compose plugin
 2. Create system user `bap` (added to `docker` group)
 3. Generate an SSH keypair for GitHub Actions at `/home/bap/.ssh/github_actions`
-4. Clone the repository to `/home/bap/number-adventure`
+4. Clone the repository to `/home/bap/apps/number-adventure`
 5. Create a `.env` placeholder file
 6. Configure UFW firewall (ports 22, 80, 443, 3000)
 7. Print the **private key** — copy it for Step 1.3 below
@@ -42,7 +42,7 @@ The script will:
 ```bash
 # Switch to the bap user
 su - bap
-nano ~/number-adventure/.env
+nano ~/apps/number-adventure/.env
 ```
 
 Required values:
@@ -84,7 +84,7 @@ In your GitHub repo go to **Settings → Secrets and variables → Actions → N
 
 ```bash
 # On the server as user bap
-cd ~/number-adventure
+cd ~/apps/number-adventure
 docker compose up -d db          # start database first
 docker compose run --rm migrate  # run migrations
 docker compose up -d app         # start app
@@ -141,7 +141,7 @@ git push origin main
 # As user bap on the server
 docker compose logs -f app        # Next.js app logs (live)
 docker compose logs -f db         # PostgreSQL logs
-tail -f ~/number-adventure/deploy.log  # deploy history
+tail -f ~/apps/number-adventure/deploy.log  # deploy history
 ```
 
 ### Restart services manually
@@ -179,7 +179,7 @@ If a bad deploy gets through:
 
 ```bash
 # On the server as bap
-cd ~/number-adventure
+cd ~/apps/number-adventure
 
 # Find the last good commit
 git log --oneline -10

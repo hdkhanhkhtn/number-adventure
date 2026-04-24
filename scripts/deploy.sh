@@ -5,11 +5,11 @@
 # Pull latest code, rebuild Docker images, run migrations, restart services.
 #
 # Usage (called by GitHub Actions):
-#   ssh bap@<host> "bash ~/number-adventure/scripts/deploy.sh"
+#   ssh bap@<host> "bash ~/apps/number-adventure/scripts/deploy.sh"
 # ─────────────────────────────────────────────────────────────────────────────
 set -euo pipefail
 
-APP_DIR="${APP_DIR:-/home/bap/number-adventure}"
+APP_DIR="${APP_DIR:-/home/bap/apps/number-adventure}"
 COMPOSE="docker compose -f ${APP_DIR}/docker-compose.yml"
 LOG_FILE="${APP_DIR}/deploy.log"
 
