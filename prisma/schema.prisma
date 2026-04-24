@@ -1,0 +1,143 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Parent {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  pinHash      String?  // bcrypt hashed 4-digit parent gate
+  name         String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  children     Child[]
+}
+
+model Child {
+  id        String         @id @default(cuid())
+  parentId  String
+  name      String
+  age       Int
+  color     String         @default("sage") // theme color name
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  parent   Parent         @relation(fields: [parentId], references: [id])
+  settings ChildSettings?
+  sessions GameSession[]
+  stickers ChildSticker[]
+  streak   Streak?
+
+  @@index([parentId])
+}
+
+model ChildSettings {
+  id         String  @id @default(cuid())
+  childId    String  @unique
+  dailyMin   Int     @default(15)
+  difficulty String  @default("easy")  // easy | medium | hard
+  kidLang    String  @default("en")    // en | vi
+  parentLang String  @default("vi")
+  sfx        Boolean @default(true)
+  music      Boolean @default(true)
+  voice      Boolean @default(true)
+  voiceStyle String  @default("Friendly")
+  quietHours Boolean @default(false)
+
+  child Child @relation(fields: [childId], references: [id], onDelete: Cascade)
+}
+
+model Lesson {
+  id         String   @id @default(cuid())
+  worldId    String
+  gameType   String   // hear-tap | build-number | even-odd | number-order | add-take
+  order      Int
+  title      String
+  difficulty String   @default("easy")
+  createdAt  DateTime @default(now())
+
+  sessions  GameSession[]
+  questions AIQuestion[]
+}
+
+model GameSession {
+  id          String    @id @default(cuid())
+  childId     String
+  lessonId    String
+  status      String    @default("in_progress") // in_progress | completed | abandoned
+  stars       Int       @default(0)
+  startedAt   DateTime  @default(now())
+  completedAt DateTime?
+
+  child    Child         @relation(fields: [childId], references: [id], onDelete: Cascade)
+  lesson   Lesson        @relation(fields: [lessonId], references: [id])
+  attempts GameAttempt[]
+
+  @@index([childId])
+  @@index([lessonId])
+}
+
+model GameAttempt {
+  id         String   @id @default(cuid())
+  sessionId  String
+  questionId String?
+  answer     String
+  correct    Boolean
+  timeMs     Int      @default(0)
+  createdAt  DateTime @default(now())
+
+  session  GameSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  question AIQuestion? @relation(fields: [questionId], references: [id])
+
+  @@index([sessionId])
+}
+
+model AIQuestion {
+  id         String   @id @default(cuid())
+  lessonId   String
+  gameType   String
+  payload    Json
+  difficulty String   @default("easy")
+  createdAt  DateTime @default(now())
+
+  lesson   Lesson        @relation(fields: [lessonId], references: [id])
+  attempts GameAttempt[]
+}
+
+model Sticker {
+  id      String @id @default(cuid())
+  emoji   String
+  name    String
+  worldId String
+  rarity  String @default("common") // common | rare | epic
+
+  children ChildSticker[]
+}
+
+model ChildSticker {
+  id        String   @id @default(cuid())
+  childId   String
+  stickerId String
+  earnedAt  DateTime @default(now())
+
+  child   Child   @relation(fields: [childId], references: [id], onDelete: Cascade)
+  sticker Sticker @relation(fields: [stickerId], references: [id])
+
+  @@unique([childId, stickerId])
+}
+
+model Streak {
+  id            String    @id @default(cuid())
+  childId       String    @unique
+  currentStreak Int       @default(0)
+  longestStreak Int       @default(0)
+  lastPlayDate  DateTime?
+  updatedAt     DateTime  @updatedAt
+
+  child Child @relation(fields: [childId], references: [id], onDelete: Cascade)
+}
