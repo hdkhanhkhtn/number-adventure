@@ -5,9 +5,10 @@ import type { NextRequest } from 'next/server';
 const PUBLIC_API_PATHS = ['/api/auth/register', '/api/auth/login'];
 
 /**
- * Auth middleware — protects all /api/* routes.
- * Phase A: skeleton with session-cookie check.
- * Phase C: replace cookie check with full JWT/NextAuth validation.
+ * Auth middleware — two responsibilities:
+ * 1. Protects all /api/* routes (except public auth endpoints) via bap-session cookie.
+ * 2. Redirects unauthenticated users away from parent UI routes (/dashboard, /report, /settings)
+ *    by checking the parentId session cookie set at login.
  *
  * IDOR note: middleware validates session existence here; each route handler
  * must additionally validate that the requested resource belongs to the
@@ -16,14 +17,22 @@ const PUBLIC_API_PATHS = ['/api/auth/register', '/api/auth/login'];
 export function middleware(request: NextRequest): NextResponse {
   const { pathname } = request.nextUrl;
 
-  // Allow public auth routes
+  // Guard parent UI routes — redirect to /home if no parentId cookie
+  const parentPaths = ['/dashboard', '/report', '/settings'];
+  if (parentPaths.some(p => pathname.startsWith(p))) {
+    const parentId = request.cookies.get('parentId')?.value;
+    if (!parentId) {
+      return NextResponse.redirect(new URL('/home', request.url));
+    }
+    return NextResponse.next();
+  }
+
+  // Allow public auth API routes
   if (PUBLIC_API_PATHS.some(p => pathname.startsWith(p))) {
     return NextResponse.next();
   }
 
-  // PHASE C MERGE BLOCKER: Middleware validates cookie existence only.
-  // JWT validation and per-route IDOR guards must be implemented before
-  // this app is deployed to any user-accessible environment.
+  // Protect all other /api/* routes via bap-session cookie
   // TODO Phase C: replace with JWT/NextAuth session validation
   const sessionToken = request.cookies.get('bap-session')?.value;
   if (!sessionToken) {
@@ -37,6 +46,6 @@ export function middleware(request: NextRequest): NextResponse {
 }
 
 export const config = {
-  // Protect all API routes
-  matcher: '/api/:path*',
+  // Protect API routes and parent UI routes
+  matcher: ['/api/:path*', '/dashboard/:path*', '/report/:path*', '/settings/:path*'],
 };

@@ -113,13 +113,13 @@ All screens designed in Claude Design and exported as a runnable HTML prototype.
 | 9.3 | Sticker unlock flow (save to ChildSticker, show in book) | Todo |
 | 9.4 | StreakCard on reward screen | Todo |
 
-### Milestone 10 — Parent Area (Phase C)
+### Milestone 10 — Parent Area (Phase C) ✅ Done
 | # | Task | Status |
 |---|---|---|
-| 10.1 | Parent Gate (4-digit PIN, stored in Parent table) | Todo |
-| 10.2 | Parent Dashboard (simple report from `/api/parent-report`) | Todo |
-| 10.3 | Report contents: lessons, stars, skills, recent activity, next step | Todo |
-| 10.4 | Settings (difficulty, language, audioEnabled, celebrationsOn — save to ChildSettings) | Todo |
+| 10.1 | Parent Gate (4-digit PIN, stored in Parent table, modal on parent icon tap) | Done |
+| 10.2 | Parent Dashboard (aggregated report from `/api/report/[childId]`) | Done |
+| 10.3 | Report contents: lessons, stars, skills, recent activity, next step | Done |
+| 10.4 | Settings (difficulty, language, audioEnabled, celebrationsOn — save to ChildSettings) | Done |
 
 ### Milestone 11 — Audio Integration
 | # | Task | Status |

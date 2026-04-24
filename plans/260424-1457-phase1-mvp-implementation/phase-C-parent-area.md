@@ -12,7 +12,7 @@
 ## Overview
 
 - **Priority:** P1 -- secondary to child experience, required for MVP
-- **Status:** Pending
+- **Status:** ✅ Complete
 - **Description:** Port parent-facing area: parent gate (math challenge overlay), dashboard with real metrics from DB, settings (time/language/audio tabs persisted to DB), and ParentReport (simple report: lessons completed, stars earned, skills practiced, recent activity, recommended next step). All parent data flows through API endpoints backed by PostgreSQL.
 
 ## Key Insights
@@ -366,30 +366,30 @@ Navigate: Home -> Parent icon -> Parent Gate -> solve -> Dashboard (real data fr
 
 ## Todo List
 
-- [ ] Create `app/(parent)/layout.tsx`
-- [ ] Create `app/(parent)/dashboard/page.tsx`
-- [ ] Create `app/(parent)/settings/page.tsx`
-- [ ] Create `app/(parent)/report/page.tsx`
-- [ ] Implement `POST /api/auth/login`
-- [ ] Implement `POST /api/auth/register`
-- [ ] Implement `GET /api/children`
-- [ ] Implement `GET/PATCH /api/children/[childId]/settings`
-- [ ] Implement `GET /api/report/[childId]` (aggregation queries)
-- [ ] Port ParentGate to `components/parent/parent-gate.tsx`
-- [ ] Port MetricCard to `components/parent/metric-card.tsx`
-- [ ] Port SkillRow to `components/parent/skill-row.tsx`
-- [ ] Port MenuRow to `components/parent/menu-row.tsx`
-- [ ] Port Panel to `components/parent/panel.tsx`
-- [ ] Port LangOption to `components/parent/lang-option.tsx`
-- [ ] Port SettingRow to `components/parent/setting-row.tsx`
-- [ ] Create WeeklyChart at `components/parent/weekly-chart.tsx`
-- [ ] Port ParentDashboard to `components/screens/parent-dashboard-content.tsx`
-- [ ] Port ParentSettings to `components/screens/parent-settings-content.tsx` (split if > 200 lines)
-- [ ] Port ParentReport to `components/screens/parent-report-content.tsx`
-- [ ] Wire ParentGate into child layout
-- [ ] Install bcryptjs for password hashing
-- [ ] Build compiles with zero errors
-- [ ] Manual test: gate -> dashboard (DB data) -> settings (persist) -> report (aggregated)
+- [x] Create `app/(parent)/layout.tsx`
+- [x] Create `app/(parent)/dashboard/page.tsx`
+- [x] Create `app/(parent)/settings/page.tsx`
+- [x] Create `app/(parent)/report/page.tsx`
+- [x] Implement `POST /api/auth/login`
+- [x] Implement `POST /api/auth/register`
+- [x] Implement `GET /api/children`
+- [x] Implement `GET/PATCH /api/children/[childId]/settings`
+- [x] Implement `GET /api/report/[childId]` (aggregation queries)
+- [x] Port ParentGate to `components/parent/parent-gate.tsx`
+- [x] Port MetricCard to `components/parent/metric-card.tsx`
+- [x] Port SkillRow to `components/parent/skill-row.tsx`
+- [x] Port MenuRow to `components/parent/menu-row.tsx`
+- [x] Port Panel to `components/parent/panel.tsx`
+- [x] Port LangOption to `components/parent/lang-option.tsx`
+- [x] Port SettingRow to `components/parent/setting-row.tsx`
+- [x] Create WeeklyChart at `components/parent/weekly-chart.tsx`
+- [x] Port ParentDashboard to `components/screens/parent-dashboard-content.tsx`
+- [x] Port ParentSettings to `components/screens/parent-settings-content.tsx` (split if > 200 lines)
+- [x] Port ParentReport to `components/screens/parent-report-content.tsx`
+- [x] Wire ParentGate into child layout
+- [x] Install bcryptjs for password hashing
+- [x] Build compiles with zero errors
+- [x] Manual test: gate -> dashboard (DB data) -> settings (persist) -> report (aggregated)
 
 ## Acceptance Criteria
 
