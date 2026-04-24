@@ -21,7 +21,7 @@ Updated all documentation to reflect the evolution from **frontend-only (localSt
 
 ### 3. AI Content Generation
 - **Old:** Static questions in code
-- **New:** Dynamic generation via https://9router.remotestaff.vn/v1 (model: advance-model)
+- **New:** Dynamic generation via `${AI_ENDPOINT}` env var (model: advance-model)
   - 5–10 questions generated per lesson start
   - Cached in AIQuestion table, reused across sessions
   - Validated JSON before storing
@@ -169,7 +169,7 @@ VPS
 │
 └── Environment
     ├── DATABASE_URL (PostgreSQL connection)
-    ├── AI_ENDPOINT (https://9router.remotestaff.vn/v1)
+    ├── AI_ENDPOINT (see .env.example)
     ├── AI_MODEL (advance-model)
     └── NODE_ENV (production)
 ```

@@ -209,9 +209,15 @@ tailwind.config.ts        -- Extended theme with all design tokens
    DATABASE_URL=postgresql://bap:bap_dev_pass@localhost:5432/bap_number_adventure
    AI_ENDPOINT=https://9router.remotestaff.vn/v1
    AI_MODEL=advance-model
+   AI_API_KEY=<your-api-key>
    ```
 
 3. Create `.env` (gitignored) with same values for local dev.
+
+4. Verify `.env` is in `.gitignore` (never commit secrets):
+   ```bash
+   grep -q "^\.env$" .gitignore || echo ".env" >> .gitignore
+   ```
 
 ### Step 3: Prisma Schema
 
@@ -227,13 +233,14 @@ datasource db {
 }
 
 model Parent {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  password  String
-  name      String
-  children  Child[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  pinHash      String?  // bcrypt hashed 4-digit parent gate
+  name         String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  children     Child[]
 }
 
 model Child {

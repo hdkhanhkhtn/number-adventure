@@ -18,7 +18,7 @@ All screens designed in Claude Design and exported as a runnable HTML prototype.
 
 **Stack:** Next.js 14+ (frontend + API) · TypeScript · Tailwind · PostgreSQL · Prisma · Docker  
 **Backend:** API Routes + Prisma ORM + PostgreSQL  
-**AI Integration:** https://9router.remotestaff.vn/v1 (advance-model)  
+**AI Integration:** `${AI_ENDPOINT}` env var (advance-model) — configure in `.env`  
 **Persistence:** PostgreSQL (source of truth) + React Context (cache) + localStorage (fallback)  
 **Goal:** Full-stack implementation with real database, AI-driven content, parent dashboard.
 

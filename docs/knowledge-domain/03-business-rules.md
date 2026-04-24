@@ -7,7 +7,7 @@
 | Generation trigger | When GameSession starts → check DB cache |
 | Cache hit | Reuse 5–10 stored AIQuestion records |
 | Cache miss | Generate via `/api/ai/generate` → save to DB |
-| AI endpoint | https://9router.remotestaff.vn/v1, model: advance-model |
+| AI endpoint | `${AI_ENDPOINT}` env var, model: `${AI_MODEL}` env var |
 | Response format | Strict JSON with prompt, options[], correctAnswer |
 | Validation | Backend validates before storing (schema check) |
 | Reuse | Same questions reused across multiple sessions (reduces API calls) |

@@ -5,12 +5,14 @@
 ### Parent
 ```prisma
 model Parent {
-  id        String   @id @default(cuid())
-  email     String   @unique
+  id           String   @id @default(cuid())
+  email        String   @unique
   passwordHash String
-  pin       String?  // 4-digit parent gate
-  createdAt DateTime @default(now())
-  children  Child[]
+  pinHash      String?  // bcrypt hashed 4-digit parent gate
+  name         String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  children     Child[]
 }
 ```
 

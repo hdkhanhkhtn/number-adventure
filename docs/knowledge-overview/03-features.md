@@ -28,8 +28,10 @@
 
 | Endpoint | Method | Purpose |
 |---|---|---|
+| `/api/auth/register` | POST | Register parent account |
+| `/api/auth/login` | POST | Parent email + password login |
 | `/api/auth/session` | GET | Get current child session |
-| `/api/auth/pin` | POST | Verify parent PIN |
+| `/api/auth/pin` | POST | Verify parent PIN (gate) |
 | `/api/children` | GET, POST | Child profiles |
 | `/api/children/:id/settings` | PUT | Update ChildSettings |
 | `/api/children/:id/stickers` | GET | Earned stickers |
@@ -43,7 +45,7 @@
 
 ## Out of Scope (MVP)
 
-- User authentication (password-based)
+- `/parent/progress` detail drill-down page (deferred to Phase 2 — parent dashboard covers high-level report)
 - Cloud sync / multi-device
 - Multiplayer / leaderboards
 - In-app purchases

@@ -279,7 +279,7 @@ function generateLocalQuestions(gameType: string, count: number): AnyQuestion[] 
 
 4. **POST /api/ai/generate-questions** (`app/api/ai/generate-questions/route.ts`):
    - Body: `{ lessonId, gameType, difficulty?, count? }`
-   - Calls AI endpoint: `https://9router.remotestaff.vn/v1` with model `advance-model`
+   - Calls AI endpoint: `process.env.AI_ENDPOINT` with model `process.env.AI_MODEL`
    - Prompt asks for structured JSON matching the game type's question schema
    - Validates AI response against expected schema
    - Stores validated questions in `AIQuestion` table

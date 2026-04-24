@@ -16,7 +16,7 @@
 | Styling | Tailwind CSS |
 | ORM | Prisma |
 | Database | PostgreSQL |
-| AI | https://9router.remotestaff.vn/v1 (advance-model) |
+| AI | `${AI_ENDPOINT}` env var (advance-model) |
 | Audio | Web Speech API (MVP), Google TTS (optional) |
 | Animation | Framer Motion + CSS keyframes |
 | State | React Context (UI cache only -- DB is source of truth) |

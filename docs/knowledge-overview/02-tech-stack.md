@@ -26,7 +26,7 @@
 
 | Service | Endpoint | Purpose |
 |---|---|---|
-| AI Content API | https://9router.remotestaff.vn/v1 | Generate game questions (JSON) |
+| AI Content API | `${AI_ENDPOINT}` (env var) | Generate game questions (JSON) |
 | Model | advance-model | Question generation |
 | Response | Validated JSON | Cached in DB, reused per lesson |
 
