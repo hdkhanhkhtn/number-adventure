@@ -59,24 +59,33 @@ NumberAdventure/
 app/api/
   ├── auth/
   │   ├── session/route.ts           # GET current child
+  │   ├── login/route.ts             # POST parent login
+  │   ├── register/route.ts          # POST parent register
   │   └── pin/route.ts               # POST parent PIN verify
   ├── children/
   │   ├── route.ts                   # GET list, POST create
-  │   └── [childId]/
-  │       ├── settings/route.ts      # PUT ChildSettings
+  │   └── [id]/
+  │       ├── settings/route.ts      # GET/PATCH ChildSettings
   │       └── stickers/route.ts      # GET earned stickers
   ├── sessions/
-  │   ├── start/route.ts             # POST create GameSession
-  │   ├── attempt/route.ts           # POST GameAttempt
-  │   └── complete/route.ts          # POST complete GameSession
+  │   ├── route.ts                   # POST create GameSession
+  │   └── [id]/
+  │       ├── route.ts               # PATCH complete GameSession
+  │       └── attempts/route.ts      # POST GameAttempt
   ├── ai/
-  │   └── generate/route.ts          # POST → calls AI endpoint
+  │   └── generate-questions/route.ts # POST → calls AI endpoint
   ├── progress/
-  │   └── route.ts                   # GET GameSession[] + streak
-  ├── parent-report/
-  │   └── route.ts                   # GET simple report
-  └── stickers/
-      └── route.ts                   # GET all stickers + earned
+  │   └── [childId]/route.ts         # GET GameSession[] + streak
+  ├── report/
+  │   └── [childId]/route.ts         # GET aggregated progress report
+  ├── lessons/
+  │   └── [lessonId]/route.ts        # GET lesson data
+  ├── stickers/
+  │   └── route.ts                   # GET all stickers + earned
+  ├── worlds/
+  │   └── route.ts                   # GET world list
+  └── streaks/
+      └── [childId]/route.ts         # GET streak data
 ```
 
 ### Prisma (Database)
@@ -96,10 +105,13 @@ app/
     home/page.tsx
     worlds/[worldId]/page.tsx        # World screen
     play/[gameType]/[lessonId]/page.tsx  # Game screen
+    reward/page.tsx
+    stickers/page.tsx
   (parent)/
     layout.tsx                       # Parent shell + PIN gate
     dashboard/page.tsx               # Parent dashboard
     settings/page.tsx                # Parent settings
+    report/page.tsx                  # Parent progress report
 
 components/
   ui/
@@ -119,6 +131,19 @@ components/
     AppShell.tsx
     IOSFrame.tsx
     MascotBap.tsx
+  parent/
+    parent-gate.tsx                  # PIN entry modal
+    metric-card.tsx                  # Progress metric card
+    skill-row.tsx                    # Skill line item
+    menu-row.tsx                     # Menu option row
+    panel.tsx                        # Styled panel container
+    lang-option.tsx                  # Language toggle
+    setting-row.tsx                  # Setting line item
+    weekly-chart.tsx                 # Progress chart
+  screens/
+    parent-dashboard-content.tsx
+    parent-settings-content.tsx
+    parent-report-content.tsx
 
 lib/
   db/
