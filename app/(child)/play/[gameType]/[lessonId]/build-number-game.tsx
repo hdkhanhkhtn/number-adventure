@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { GameContainer } from '@/components/game/game-container';
 import { GameHud } from '@/components/game/game-hud';
 import { SlotColumn } from '@/components/game/slot-column';
@@ -21,6 +21,7 @@ interface Props {
 export function BuildNumberGame({ questions, onComplete, onExit, onAttempt }: Props) {
   const [tens, setTens] = useState(0);
   const [ones, setOnes] = useState(0);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const { playCorrect, playWrong, playLevelComplete } = useSoundEffects();
 
@@ -29,6 +30,12 @@ export function BuildNumberGame({ questions, onComplete, onExit, onAttempt }: Pr
 
   useEffect(() => { setTens(0); setOnes(0); }, [round]);
 
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
+  }, []);
+
   const current = tens * 10 + ones;
   const match = q ? current === q.target : false;
 
@@ -36,7 +43,7 @@ export function BuildNumberGame({ questions, onComplete, onExit, onAttempt }: Pr
     if (!q) return;
     const correct = current === q.target;
     onAttempt(String(current), correct);
-    if (correct) { playCorrect(); setTimeout(() => { playLevelComplete(); handleCorrect(); }, 1000); }
+    if (correct) { playCorrect(); timeoutRef.current = setTimeout(() => { playLevelComplete(); handleCorrect(); }, 1000); }
     else { playWrong(); handleWrong(); }
   };
 

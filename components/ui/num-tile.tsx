@@ -82,7 +82,6 @@ export function NumTile({ n, state = 'idle', onClick, size = 'md', color = 'sun'
       disabled={state === 'disabled'}
       aria-disabled={state === 'disabled'}
       aria-label={`Number ${n}`}
-      aria-pressed={state === 'correct' || state === 'wrong'}
       tabIndex={state === 'disabled' ? -1 : 0}
       onKeyDown={handleKeyDown}
       style={{

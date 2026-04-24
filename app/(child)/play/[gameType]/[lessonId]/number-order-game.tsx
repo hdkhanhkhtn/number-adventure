@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { GameContainer } from '@/components/game/game-container';
 import { GameHud } from '@/components/game/game-hud';
 import { NumTile } from '@/components/ui/num-tile';
@@ -17,6 +17,7 @@ interface Props {
 
 export function NumberOrderGame({ questions, onComplete, onExit, onAttempt }: Props) {
   const [picked, setPicked] = useState<number | null>(null);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const { playCorrect, playWrong, playLevelComplete } = useSoundEffects();
 
@@ -25,12 +26,18 @@ export function NumberOrderGame({ questions, onComplete, onExit, onAttempt }: Pr
 
   useEffect(() => { setPicked(null); }, [round]);
 
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
+  }, []);
+
   const pick = useCallback((n: number) => {
     if (!q || picked !== null) return;
     setPicked(n);
     const correct = n === q.target;
     onAttempt(String(n), correct);
-    if (correct) { playCorrect(); setTimeout(() => { playLevelComplete(); handleCorrect(); }, 900); }
+    if (correct) { playCorrect(); timeoutRef.current = setTimeout(() => { playLevelComplete(); handleCorrect(); }, 900); }
     else { playWrong(); handleWrong(); }
   }, [q, picked, handleCorrect, handleWrong, onAttempt, playCorrect, playWrong, playLevelComplete]);
 

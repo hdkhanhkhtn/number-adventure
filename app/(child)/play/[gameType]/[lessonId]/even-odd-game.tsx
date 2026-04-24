@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { GameContainer } from '@/components/game/game-container';
 import { GameHud } from '@/components/game/game-hud';
 import { Basket } from '@/components/game/basket';
@@ -17,6 +17,7 @@ interface Props {
 
 export function EvenOddGame({ questions, onComplete, onExit, onAttempt }: Props) {
   const [picked, setPicked] = useState<'even' | 'odd' | null>(null);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const { playCorrect, playWrong, playLevelComplete } = useSoundEffects();
 
@@ -29,6 +30,12 @@ export function EvenOddGame({ questions, onComplete, onExit, onAttempt }: Props)
   // Reset picked when round advances
   useEffect(() => { setPicked(null); }, [round]);
 
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
+  }, []);
+
   const drop = useCallback((choice: 'even' | 'odd') => {
     if (!q || picked) return;
     setPicked(choice);
@@ -36,7 +43,7 @@ export function EvenOddGame({ questions, onComplete, onExit, onAttempt }: Props)
     onAttempt(choice, correct);
     if (correct) {
       playCorrect();
-      setTimeout(() => { playLevelComplete(); handleCorrect(); }, 900);
+      timeoutRef.current = setTimeout(() => { playLevelComplete(); handleCorrect(); }, 900);
     } else {
       playWrong();
       handleWrong();

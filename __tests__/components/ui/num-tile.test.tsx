@@ -142,19 +142,19 @@ describe('NumTile', () => {
     expect(onClick).toHaveBeenCalled();
   });
 
-  it('sets aria-pressed when correct', () => {
+  it('does not have aria-pressed on correct state (game tile, not toggle button)', () => {
     render(<NumTile n={5} state="correct" />);
-    expect(screen.getByRole('button')).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('button')).not.toHaveAttribute('aria-pressed');
   });
 
-  it('sets aria-pressed when wrong', () => {
+  it('does not have aria-pressed on wrong state (game tile, not toggle button)', () => {
     render(<NumTile n={5} state="wrong" />);
-    expect(screen.getByRole('button')).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('button')).not.toHaveAttribute('aria-pressed');
   });
 
-  it('does not set aria-pressed when idle', () => {
+  it('does not have aria-pressed on idle state', () => {
     render(<NumTile n={5} state="idle" />);
-    expect(screen.getByRole('button')).toHaveAttribute('aria-pressed', 'false');
+    expect(screen.getByRole('button')).not.toHaveAttribute('aria-pressed');
   });
 
   it('applies different styles for correct state', () => {

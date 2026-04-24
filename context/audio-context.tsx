@@ -11,12 +11,12 @@ interface AudioContextValue {
   sfxEnabled: boolean;
   musicEnabled: boolean;
   voiceEnabled: boolean;
-  voiceStyle: string;
+  voiceStyle: VoiceStyle;
   kidLang: string;
   setSfxEnabled: (v: boolean) => void;
   setMusicEnabled: (v: boolean) => void;
   setVoiceEnabled: (v: boolean) => void;
-  setVoiceStyle: (v: string) => void;
+  setVoiceStyle: (v: VoiceStyle) => void;
   setKidLang: (v: string) => void;
   // AudioService methods
   speakNumber: (n: number) => void;
@@ -53,7 +53,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
   const [sfxEnabled, setSfxEnabled] = useState(true);
   const [musicEnabled, setMusicEnabled] = useState(true);
   const [voiceEnabled, setVoiceEnabled] = useState(true);
-  const [voiceStyle, setVoiceStyle] = useState<string>('Friendly');
+  const [voiceStyle, setVoiceStyle] = useState<VoiceStyle>('Friendly');
   const [kidLang, setKidLang] = useState<string>('en');
 
   // Build AudioConfig from current state — memoized to avoid object churn
@@ -61,7 +61,7 @@ export function AudioProvider({ children }: { children: React.ReactNode }) {
     voiceEnabled,
     sfxEnabled,
     musicEnabled,
-    voiceStyle: (voiceStyle as VoiceStyle) ?? 'Friendly',
+    voiceStyle: voiceStyle ?? 'Friendly',
     kidLang,
   }), [voiceEnabled, sfxEnabled, musicEnabled, voiceStyle, kidLang]);
 
