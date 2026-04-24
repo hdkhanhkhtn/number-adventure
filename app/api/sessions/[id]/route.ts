@@ -15,7 +15,8 @@ export async function GET(_request: NextRequest, { params }: Params) {
     });
     if (!session) return NextResponse.json({ error: 'Session not found' }, { status: 404 });
     return NextResponse.json({ session });
-  } catch {
+  } catch (e) {
+    console.error('[api/sessions/id GET] Error:', e);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -33,6 +34,11 @@ export async function PATCH(request: NextRequest, { params }: Params) {
     });
     if (!session) return NextResponse.json({ error: 'Session not found' }, { status: 404 });
 
+    // Guard against completing an already-completed session (prevents double streak/sticker)
+    if (session.status === 'completed') {
+      return NextResponse.json({ session }, { status: 409 });
+    }
+
     // Complete session
     const updated = await prisma.gameSession.update({
       where: { id },
@@ -49,7 +55,8 @@ export async function PATCH(request: NextRequest, { params }: Params) {
     }
 
     return NextResponse.json({ session: updated, streak, sticker });
-  } catch {
+  } catch (e) {
+    console.error('[api/sessions/id PATCH] Error:', e);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -118,7 +125,15 @@ async function awardSticker(childId: string, worldId: string) {
     });
   }
 
-  await prisma.childSticker.create({ data: { childId, stickerId: stickerRecord.id } });
+  try {
+    await prisma.childSticker.create({ data: { childId, stickerId: stickerRecord.id } });
+  } catch (e: unknown) {
+    // P2002 = unique constraint violation — concurrent request already awarded this sticker
+    if (e && typeof e === 'object' && 'code' in e && (e as { code: string }).code === 'P2002') {
+      return null;
+    }
+    throw e;
+  }
 
   return { id: stickerRecord.id, emoji: stickerRecord.emoji, name: stickerRecord.name };
 }

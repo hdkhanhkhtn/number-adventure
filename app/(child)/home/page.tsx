@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useGameProgress } from '@/context/game-progress-context';
 import { HomeScreen } from '@/components/screens/home-screen';
 import type { MascotColor } from '@/lib/types/common';
+import { STICKER_DEFS } from '@/src/data/game-config/sticker-defs';
 
 interface ProgressData {
   weekDays: boolean[];
@@ -16,7 +17,7 @@ export default function HomePage() {
   const [streak, setStreak] = useState(0);
   const [weekDays, setWeekDays] = useState<boolean[]>(Array(7).fill(false));
   const [stickerCount, setStickerCount] = useState(0);
-  const stickerTotal = 40;
+  const stickerTotal = STICKER_DEFS.length;
 
   const childId = state.childId;
   const profile = state.profile;

@@ -34,7 +34,8 @@ export async function POST(request: NextRequest, { params }: Params) {
     });
 
     return NextResponse.json({ attemptId: attempt.id }, { status: 201 });
-  } catch {
+  } catch (e) {
+    console.error('[api/sessions/id/attempts POST] Error:', e);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

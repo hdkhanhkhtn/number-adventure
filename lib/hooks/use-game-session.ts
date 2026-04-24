@@ -20,6 +20,14 @@ export function useGameSession(childId: string, lessonId: string) {
   const [sessionId, setSessionId] = useState<string | null>(null);
 
   const startSession = useCallback(async (): Promise<string | null> => {
+    // Guest users (Phase B local-only) skip DB session creation to avoid FK violations.
+    // Phase C will wire real auth and remove this guard.
+    if (childId.startsWith('guest_')) return null;
+
+    // Clear stale session ID from previous game before setting a new one
+    if (typeof window !== 'undefined') {
+      sessionStorage.removeItem('currentSessionId');
+    }
     try {
       const res = await fetch('/api/sessions', {
         method: 'POST',

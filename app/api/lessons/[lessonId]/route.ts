@@ -35,7 +35,8 @@ export async function GET(request: NextRequest, { params }: Params) {
       lesson: { ...template, bestStars },
       questions: questions.map((q) => ({ id: q.id, payload: q.payload })),
     });
-  } catch {
+  } catch (e) {
+    console.error('[api/lessons/lessonId GET] Error:', e);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

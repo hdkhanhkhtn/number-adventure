@@ -9,6 +9,8 @@ import type { MascotColor } from '@/lib/types/common';
 interface SessionResult {
   session: { stars: number };
   sticker?: { emoji: string; name: string } | null;
+  correct?: number;
+  total?: number;
 }
 
 function RewardInner() {
@@ -33,8 +35,8 @@ function RewardInner() {
   if (!result || !profile) return null;
 
   const stars = result.session.stars;
-  const correct = stars === 3 ? 5 : stars === 2 ? 4 : 3;
-  const total = 5;
+  const total = result.total ?? 5;
+  const correct = result.correct ?? total;
 
   return (
     <RewardContent

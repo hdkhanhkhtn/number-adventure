@@ -55,8 +55,28 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       questions: created.map((q) => ({ id: q.id, payload: q.payload })),
     });
-  } catch {
+  } catch (e) {
+    console.error('[api/ai/generate-questions] Error:', e);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}
+
+function isValidQuestion(gameType: GameType, q: unknown): q is AnyQuestion {
+  if (!q || typeof q !== 'object') return false;
+  const obj = q as Record<string, unknown>;
+  switch (gameType) {
+    case 'hear-tap':
+      return typeof obj.target === 'number' && Array.isArray(obj.options) && obj.options.length >= 2;
+    case 'build-number':
+      return typeof obj.target === 'number';
+    case 'even-odd':
+      return typeof obj.number === 'number' && typeof obj.isEven === 'boolean';
+    case 'number-order':
+      return Array.isArray(obj.seq) && typeof obj.hideIdx === 'number' && Array.isArray(obj.options);
+    case 'add-take':
+      return typeof obj.a === 'number' && typeof obj.b === 'number' && Array.isArray(obj.options);
+    default:
+      return false;
   }
 }
 
@@ -105,8 +125,7 @@ async function tryAIGeneration(
     const parsed = JSON.parse(content) as { questions?: unknown[] };
     if (!Array.isArray(parsed.questions) || parsed.questions.length === 0) return null;
 
-    // Basic structure validation
-    return parsed.questions.slice(0, count) as AnyQuestion[];
+    return parsed.questions.filter(q => isValidQuestion(gameType, q)).slice(0, count) as AnyQuestion[];
   } catch {
     return null;
   }

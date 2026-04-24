@@ -36,12 +36,8 @@ export type AnyQuestion =
   | NumberOrderQuestion
   | AddTakeQuestion;
 
-export type GameType =
-  | 'hear-tap'
-  | 'build-number'
-  | 'even-odd'
-  | 'number-order'
-  | 'add-take';
+// Canonical definition lives in lib/types/common — re-exported here for convenience
+export type { GameType } from '@/lib/types/common';
 
 export interface GameState {
   round: number;

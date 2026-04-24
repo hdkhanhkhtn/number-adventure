@@ -14,7 +14,8 @@ export async function GET(_request: NextRequest, { params }: Params) {
       longestStreak: streak?.longestStreak ?? 0,
       lastPlayDate: streak?.lastPlayDate?.toISOString() ?? null,
     });
-  } catch {
+  } catch (e) {
+    console.error('[api/streaks/childId GET] Error:', e);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

@@ -27,7 +27,8 @@ export async function GET(_request: NextRequest, { params }: Params) {
       total: STICKER_DEFS.length,
       collected: earnedMap.size,
     });
-  } catch {
+  } catch (e) {
+    console.error('[api/children/id/stickers GET] Error:', e);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

@@ -25,33 +25,14 @@ export default function ChildLayout({ children }: { children: React.ReactNode })
     if (hydrated && state.childId) setStep('ready');
   }, [hydrated, state.childId]);
 
-  const handleProfileDone = async (profile: { name: string; age: number; color: MascotColor }) => {
-    try {
-      // Register parent + child in DB
-      const regRes = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: `guest_${Date.now()}@bap.local`, password: 'guest', name: 'Parent' }),
-      });
-      const { parentId } = await regRes.json() as { parentId?: string };
-      if (!parentId) throw new Error('Registration failed');
-
-      const childRes = await fetch('/api/children', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ parentId, name: profile.name, age: profile.age, color: profile.color }),
-      });
-      const { child } = await childRes.json() as { child?: { id: string } };
-      if (!child?.id) throw new Error('Child creation failed');
-
-      setChild(child.id, { id: child.id, ...profile });
-      setStep('ready');
-    } catch {
-      // On failure still proceed with local profile (graceful degradation)
-      const tempId = `local_${Date.now()}`;
-      setChild(tempId, { id: tempId, ...profile });
-      setStep('ready');
-    }
+  // Phase B: store profile locally with a stable UUID-based guest ID.
+  // DB registration is deferred to Phase C (auth wiring).
+  // When childId starts with 'guest_', session-related API calls are skipped
+  // in useGameSession to avoid FK violations.
+  const handleProfileDone = (profile: { name: string; age: number; color: MascotColor }) => {
+    const guestId = `guest_${crypto.randomUUID()}`;
+    setChild(guestId, { id: guestId, ...profile });
+    setStep('ready');
   };
 
   // Not hydrated yet — show nothing to prevent flash

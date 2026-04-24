@@ -79,7 +79,8 @@ export async function GET(_request: NextRequest, { params }: Params) {
     });
 
     return NextResponse.json({ worldProgress, weekDays });
-  } catch {
+  } catch (e) {
+    console.error('[api/progress/childId GET] Error:', e);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

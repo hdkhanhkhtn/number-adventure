@@ -8,9 +8,9 @@ export function calculateStars(hearts: number): number {
 }
 
 /** Build a GameResult from final state */
-export function buildGameResult(hearts: number, totalRounds: number): GameResult {
+export function buildGameResult(hearts: number, totalRounds: number, initialHearts = 3): GameResult {
   const stars = calculateStars(hearts);
-  const lost = 3 - hearts;
+  const lost = initialHearts - hearts;
   const correct = Math.max(0, totalRounds - lost);
   return { stars, correct, total: totalRounds };
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { use, useEffect, useState } from 'react';
+import { use, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useGameProgress } from '@/context/game-progress-context';
 import { useGameSession } from '@/lib/hooks/use-game-session';
@@ -44,8 +44,13 @@ export default function PlayPage({ params }: { params: Promise<{ gameType: strin
   const lesson = LESSON_TEMPLATES.find((l) => l.id === lessonId);
   const validGameType = VALID_GAME_TYPES.includes(gameType as GameType) ? (gameType as GameType) : null;
 
+  // Guard against React Strict Mode double-invocation creating duplicate sessions
+  const hasStarted = useRef(false);
+
   useEffect(() => {
     if (!validGameType) return;
+    if (hasStarted.current) return;
+    hasStarted.current = true;
     let cancelled = false;
     (async () => {
       await startSession();
@@ -53,14 +58,15 @@ export default function PlayPage({ params }: { params: Promise<{ gameType: strin
       if (!cancelled) { setQuestions(qs); setLoading(false); }
     })();
     return () => { cancelled = true; };
-  }, [lessonId, validGameType]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleComplete = async (result: GameResult) => {
     const sessionResult = await completeSession(result.stars);
-    // Cache result for reward page
-    sessionStorage.setItem('lastGameResult', JSON.stringify(
-      sessionResult ?? { session: { stars: result.stars } },
-    ));
+    // Cache result for reward page — include correct count from GameResult
+    const payload = sessionResult
+      ? { ...sessionResult, correct: result.correct, total: result.total }
+      : { session: { stars: result.stars }, correct: result.correct, total: result.total };
+    sessionStorage.setItem('lastGameResult', JSON.stringify(payload));
     const worldId = lesson?.worldId ?? '';
     router.push(`/reward?worldId=${worldId}`);
   };
