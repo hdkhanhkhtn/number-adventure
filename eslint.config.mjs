@@ -7,9 +7,11 @@ const eslintConfig = defineConfig([
   ...nextTs,
   {
     rules: {
-      // These patterns (hydration flag, reset-on-round, read-from-storage) are
-      // legitimate React idioms that this rule flags incorrectly.
+      // Legitimate idioms that these rules flag incorrectly:
+      // - set-state-in-effect: hydration flag, reset-on-round, read-from-storage
+      // - purity: Math.random() inside useMemo is intentional (generate once, memoize)
       'react-hooks/set-state-in-effect': 'off',
+      'react-hooks/purity': 'off',
     },
   },
   // Override default ignores of eslint-config-next.
