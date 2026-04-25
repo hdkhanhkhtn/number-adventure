@@ -53,6 +53,33 @@ BEFORE attempting ANY fix:
 
 ---
 
+## Backlog & Issue Tracking Protocol
+
+When investigation reveals issues that are **real but out of scope** for the current fix (architectural debt, adjacent bugs, missing tests):
+
+**Step 1 — Add TODO comment in code**
+```typescript
+// TODO(phase-2b)[important]: <adjacent issue found during debug> — see BACKLOG.md #<N>
+// FIXME(perf): <performance issue found> — see BACKLOG.md #<N>
+```
+
+**Step 2 — Append to `plans/BACKLOG.md`**
+```markdown
+| N | <description> | <file>:<line> | debug | Phase 2B | #<github-issue> |
+```
+
+**Step 3 — Create GitHub Issue for Important items**
+```bash
+gh issue create \
+  --title "fix(<scope>): <description>" \
+  --body "Discovered during debug of <issue>.\nFile: <file>:<line>\nRoot cause: <explanation>" \
+  --label "important,<phase-label>"
+```
+
+> Do NOT let backlog items distract from the current fix. Note them, track them, stay focused.
+
+---
+
 ## RED FLAGS — If You're Thinking This, STOP
 
 | Rationalization | Why It's Wrong |

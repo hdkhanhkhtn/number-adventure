@@ -347,7 +347,62 @@ hotfix/<tên>      # production critical
 
 ---
 
-## 6. Roadmap
+## 6. Issue & Backlog Tracking
+
+### Nguồn phát sinh issues
+
+Ba agents tự động phát hiện và track issues:
+
+| Agent | Trigger | Loại issues |
+|---|---|---|
+| `code-reviewer` | Sau cook/implement | Logic errors, security, perf, style |
+| `tester` | Sau test suite | Coverage gaps, flaky tests, missing edge cases |
+| `debugger` | Khi debug | Adjacent bugs, architectural debt |
+
+Mỗi agent khi tìm thấy issue **tự động** làm:
+1. Thêm TODO comment vào code tại vị trí issue
+2. Append vào `plans/BACKLOG.md`
+3. Tạo GitHub Issue *(chỉ với Important — không tạo cho Suggestion)*
+
+### TODO comment format
+
+```typescript
+// TODO(phase-2b)[important]: <mô tả> — see BACKLOG.md #<N>
+// TODO(phase-2c)[suggestion]: <mô tả> — see BACKLOG.md #<N>
+// FIXME(perf): <performance issue> — see BACKLOG.md #<N>
+```
+
+### Kiểm tra tồn đọng trước khi bắt đầu phase mới
+
+```bash
+# TODO còn trong code
+grep -rn "TODO\|FIXME" app/ lib/ components/ context/ \
+  --include="*.ts" --include="*.tsx"
+
+# Filter theo phase tiếp theo
+grep -rn "TODO(phase-2b)" app/ lib/ components/
+
+# GitHub Issues tồn đọng
+gh issue list --state open
+gh issue list --label "phase-2b"
+```
+
+### Khi resolve
+
+```bash
+# 1. Fix code + remove TODO comment
+# 2. Move entry → Resolved trong plans/BACKLOG.md
+gh issue close <number> --comment "Fixed in PR #<pr>"
+```
+
+### File BACKLOG.md
+
+`plans/BACKLOG.md` là nguồn sự thật duy nhất cho tất cả issues tồn đọng.
+Xem: [`plans/BACKLOG.md`](../../plans/BACKLOG.md)
+
+---
+
+## 7. Roadmap
 
 | Phase | Trạng thái | Nội dung |
 |---|---|---|

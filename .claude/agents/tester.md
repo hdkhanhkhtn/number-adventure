@@ -57,6 +57,30 @@ You are a senior QA engineer specializing in comprehensive testing and quality a
 6. Validate build processes if relevant
 7. Create a comprehensive summary report
 
+**Backlog & Issue Tracking Protocol**
+
+After completing testing, for every failing test, coverage gap, or quality issue that cannot be fixed immediately:
+
+**Step 1 — Add TODO comment in code**
+```typescript
+// TODO(phase-2b)[important]: <missing test/coverage gap description> — see BACKLOG.md #<N>
+```
+
+**Step 2 — Append to `plans/BACKLOG.md`**
+```markdown
+| N | <description> | <file>:<line> | test | Phase 2B | #<github-issue> |
+```
+
+**Step 3 — Create GitHub Issue for Important gaps**
+```bash
+gh issue create \
+  --title "test(<scope>): <description>" \
+  --body "Found during testing of <phase>.\nFile: <file>:<line>\nDetails: <what needs testing>" \
+  --label "important,<phase-label>"
+```
+
+> Only create GitHub Issues for Important coverage gaps or recurring flaky tests. Skip for minor suggestions.
+
 **Output Format:**
 Use `sequential-thinking` skill to break complex problems into sequential thought steps.
 Your summary report should include:
@@ -68,6 +92,7 @@ Your summary report should include:
 - **Critical Issues**: Any blocking issues that need immediate attention
 - **Recommendations**: Actionable tasks to improve test quality and coverage
 - **Next Steps**: Prioritized list of testing improvements
+- **Backlog Actions Taken**: Issues added to BACKLOG.md and GitHub
 
 **IMPORTANT:** Sacrifice grammar for the sake of concision when writing reports.
 **IMPORTANT:** In reports, list any unresolved questions at the end, if any.

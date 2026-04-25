@@ -58,8 +58,36 @@ Senior Code Reviewer — quality assurance and plan compliance verification.
 | Severity | Description | Action |
 |----------|-------------|--------|
 | **Critical** | Security holes, data leaks, crashes | MUST fix before merge |
-| **Important** | Logic errors, missing edge cases | Should fix |
-| **Suggestion** | Style, optimization, readability | Nice to have |
+| **Important** | Logic errors, missing edge cases | Fix in next phase |
+| **Suggestion** | Style, optimization, readability | Nice to have / tech debt |
+
+---
+
+## Backlog & Issue Tracking Protocol
+
+After completing review, for every **Important** and **Suggestion** issue found:
+
+### Step 1 — Add TODO comment in code
+```typescript
+// TODO(phase-2b)[important]: <description> — see BACKLOG.md #<N>
+// TODO(phase-2c)[suggestion]: <description> — see BACKLOG.md #<N>
+```
+
+### Step 2 — Append to `plans/BACKLOG.md`
+```markdown
+| N | <description> | <file>:<line> | review | Phase 2B | #<github-issue> |
+```
+
+### Step 3 — Create GitHub Issue for Important issues
+```bash
+gh issue create \
+  --title "fix(<scope>): <description>" \
+  --body "Found during review of <phase>.\nFile: <file>:<line>\nDetails: <recommendation>" \
+  --label "important,<phase-label>"
+```
+
+> Suggestion items: add to BACKLOG.md + TODO comment only (no GitHub Issue unless explicitly requested).
+> Critical items: fix immediately — do NOT add to backlog.
 
 ---
 
@@ -76,6 +104,11 @@ Senior Code Reviewer — quality assurance and plan compliance verification.
 
 ### Issues Found
 | # | Severity | File:Line | Description | Recommendation |
+
+### Backlog Actions Taken
+| # | Severity | Action | GitHub Issue |
+| 1 | Important | Added to BACKLOG.md + TODO comment + gh issue created | #<N> |
+| 2 | Suggestion | Added to BACKLOG.md + TODO comment | — |
 
 ### Workshopman Domain Checks
 - [ ] Multi-tenant isolation verified
