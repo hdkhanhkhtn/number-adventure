@@ -3,18 +3,19 @@ import type { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import type { InputJsonValue } from '@prisma/client/runtime/library';
 import { generateLocalQuestions } from '@/lib/game-engine/question-loader';
+import { GAME_REGISTRY } from '@/lib/game-engine/registry';
 import type { GameType, AnyQuestion } from '@/lib/game-engine/types';
 
-const VALID_GAME_TYPES: GameType[] = [
-  'hear-tap', 'build-number', 'even-odd', 'number-order', 'add-take',
-];
+const VALID_GAME_TYPES = Object.keys(GAME_REGISTRY) as GameType[];
 
 const QUESTION_SCHEMAS: Record<GameType, string> = {
-  'hear-tap':     '{"target": number, "options": number[4]}',
-  'build-number': '{"target": number (11-70)}',
-  'even-odd':     '{"number": number (2-19), "isEven": boolean}',
-  'number-order': '{"seq": number[5], "hideIdx": number (1-3), "target": number, "options": number[3]}',
-  'add-take':     '{"a": number, "b": number, "op": "+" | "-", "target": number, "options": number[4]}',
+  'hear-tap':       '{"target": number, "options": number[4]}',
+  'build-number':   '{"target": number (11-70)}',
+  'even-odd':       '{"number": number (2-19), "isEven": boolean}',
+  'number-order':   '{"seq": number[5], "hideIdx": number (1-3), "target": number, "options": number[3]}',
+  'add-take':       '{"a": number, "b": number, "op": "+" | "-", "target": number, "options": number[4]}',
+  'count-objects':  '{"type": "count-objects", "items": ["emoji"], "answer": number, "choices": [number, number, number, number]}',
+  'number-writing': '{"type": "number-writing", "digit": number (0-9), "dotPath": [{"x": number, "y": number, "label": number}], "totalDots": number}',
 };
 
 /** POST /api/ai/generate-questions — generate and cache AI questions for a lesson */
@@ -75,6 +76,10 @@ function isValidQuestion(gameType: GameType, q: unknown): q is AnyQuestion {
       return Array.isArray(obj.seq) && typeof obj.hideIdx === 'number' && Array.isArray(obj.options);
     case 'add-take':
       return typeof obj.a === 'number' && typeof obj.b === 'number' && Array.isArray(obj.options);
+    case 'count-objects':
+      return typeof obj.type === 'string' && Array.isArray(obj.items) && typeof obj.answer === 'number' && Array.isArray(obj.choices);
+    case 'number-writing':
+      return typeof obj.type === 'string' && typeof obj.digit === 'number' && Array.isArray(obj.dotPath) && typeof obj.totalDots === 'number';
     default:
       return false;
   }

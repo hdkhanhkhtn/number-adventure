@@ -21,3 +21,12 @@ export function generateNumberOrderQuestion(min = 1, max = 10): NumberOrderQuest
 export function generateNumberOrderQuestions(count: number, min = 1, max = 10): NumberOrderQuestion[] {
   return Array.from({ length: count }, () => generateNumberOrderQuestion(min, max));
 }
+
+import type { GameEngine } from './registry';
+
+export const numberOrderEngine: GameEngine = {
+  generateQuestions: (count, difficulty) => {
+    const maxMap: Record<string, number> = { easy: 10, medium: 30, hard: 100 };
+    return generateNumberOrderQuestions(count, 1, maxMap[difficulty ?? 'easy'] ?? 10);
+  },
+};

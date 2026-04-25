@@ -17,3 +17,12 @@ export function generateAddTakeQuestion(min = 1, max = 10): AddTakeQuestion {
 export function generateAddTakeQuestions(count: number, min = 1, max = 10): AddTakeQuestion[] {
   return Array.from({ length: count }, () => generateAddTakeQuestion(min, max));
 }
+
+import type { GameEngine } from './registry';
+
+export const addTakeEngine: GameEngine = {
+  generateQuestions: (count, difficulty) => {
+    const maxMap: Record<string, number> = { easy: 10, medium: 20, hard: 50 };
+    return generateAddTakeQuestions(count, 1, maxMap[difficulty ?? 'easy'] ?? 10);
+  },
+};
