@@ -26,7 +26,7 @@ describe('adjustDifficulty', () => {
     });
 
     it('demotes from hard to medium after 2 consecutive low-accuracy sessions', () => {
-      let state = { ...baseState(), currentDifficulty: 'hard' as const };
+      let state: DifficultyState = { ...baseState(), currentDifficulty: 'hard' };
       let result = adjustDifficulty(state, 0.4, 'hard');
       state = result.state;
       result = adjustDifficulty(state, 0.4, 'hard');
@@ -35,7 +35,7 @@ describe('adjustDifficulty', () => {
     });
 
     it('does not demote below easy', () => {
-      let state = { ...baseState(), currentDifficulty: 'easy' as const };
+      let state: DifficultyState = { ...baseState(), currentDifficulty: 'easy' };
       for (let i = 0; i < 5; i++) {
         const result = adjustDifficulty(state, 0.3, 'hard');
         state = result.state;
@@ -67,7 +67,7 @@ describe('adjustDifficulty', () => {
 
   describe('Promotion (accuracy > 85% for 3 consecutive sessions)', () => {
     it('promotes from easy to medium after 3 consecutive high-accuracy sessions', () => {
-      let state = { ...baseState(), currentDifficulty: 'easy' as const };
+      let state: DifficultyState = { ...baseState(), currentDifficulty: 'easy' };
       let result = adjustDifficulty(state, 0.9, 'hard');
       state = result.state;
       expect(state.streak).toBe(1);
@@ -83,7 +83,7 @@ describe('adjustDifficulty', () => {
     });
 
     it('promotes from medium to hard after 3 consecutive high-accuracy sessions', () => {
-      let state = { ...baseState(), currentDifficulty: 'medium' as const };
+      let state: DifficultyState = { ...baseState(), currentDifficulty: 'medium' };
       for (let i = 0; i < 3; i++) {
         const result = adjustDifficulty(state, 0.95, 'hard');
         state = result.state;
@@ -92,7 +92,7 @@ describe('adjustDifficulty', () => {
     });
 
     it('does not promote above hard', () => {
-      let state = { ...baseState(), currentDifficulty: 'hard' as const };
+      let state: DifficultyState = { ...baseState(), currentDifficulty: 'hard' };
       for (let i = 0; i < 5; i++) {
         const result = adjustDifficulty(state, 0.99, 'hard');
         state = result.state;
@@ -101,7 +101,7 @@ describe('adjustDifficulty', () => {
     });
 
     it('resets streak after promotion', () => {
-      let state = { ...baseState(), currentDifficulty: 'easy' as const };
+      let state: DifficultyState = { ...baseState(), currentDifficulty: 'easy' };
       for (let i = 0; i < 3; i++) {
         const result = adjustDifficulty(state, 0.9, 'hard');
         state = result.state;
@@ -110,7 +110,7 @@ describe('adjustDifficulty', () => {
     });
 
     it('breaks promotion streak on lower accuracy', () => {
-      let state = { ...baseState(), currentDifficulty: 'easy' as const };
+      let state: DifficultyState = { ...baseState(), currentDifficulty: 'easy' };
       let result = adjustDifficulty(state, 0.9, 'hard');
       state = result.state;
       expect(state.streak).toBe(1);
@@ -123,7 +123,7 @@ describe('adjustDifficulty', () => {
 
   describe('parentCeiling constraint', () => {
     it('never promotes above parentCeiling=easy', () => {
-      let state = { ...baseState(), currentDifficulty: 'easy' as const };
+      let state: DifficultyState = { ...baseState(), currentDifficulty: 'easy' };
       for (let i = 0; i < 5; i++) {
         const result = adjustDifficulty(state, 0.95, 'easy');
         state = result.state;
@@ -132,7 +132,7 @@ describe('adjustDifficulty', () => {
     });
 
     it('caps promotion at parentCeiling=medium', () => {
-      let state = { ...baseState(), currentDifficulty: 'easy' as const };
+      let state: DifficultyState = { ...baseState(), currentDifficulty: 'easy' };
       for (let i = 0; i < 3; i++) {
         let result = adjustDifficulty(state, 0.9, 'medium');
         state = result.state;
@@ -149,7 +149,7 @@ describe('adjustDifficulty', () => {
     });
 
     it('allows demotion even with ceiling constraint', () => {
-      let state = { ...baseState(), currentDifficulty: 'hard' as const };
+      let state: DifficultyState = { ...baseState(), currentDifficulty: 'hard' };
       let result = adjustDifficulty(state, 0.3, 'hard'); // ceiling=hard, allow demotion
       state = result.state;
       result = adjustDifficulty(state, 0.3, 'hard'); // demotion from hard to medium
@@ -260,7 +260,7 @@ describe('adjustDifficulty', () => {
     });
 
     it('returns correct previous difficulty value', () => {
-      const state = { ...baseState(), currentDifficulty: 'hard' as const };
+      const state: DifficultyState = { ...baseState(), currentDifficulty: 'hard' };
       const result = adjustDifficulty(state, 0.3, 'hard');
       expect(result.previous).toBe('hard');
     });
@@ -282,8 +282,8 @@ describe('adjustDifficulty', () => {
     });
 
     it('returns changed=false even with parentCeiling cap (no actual change)', () => {
-      let state = { ...baseState(), currentDifficulty: 'medium' as const };
-      let result;
+      let state: DifficultyState = { ...baseState(), currentDifficulty: 'medium' };
+      let result: ReturnType<typeof adjustDifficulty> | undefined;
       for (let i = 0; i < 3; i++) {
         result = adjustDifficulty(state, 0.9, 'medium');
         state = result.state;
@@ -297,12 +297,12 @@ describe('adjustDifficulty', () => {
 
   describe('Full session sequences', () => {
     it('simulates realistic mixed-accuracy sequence without adjustment', () => {
-      let state = {
+      let state: DifficultyState = {
         easeFactor: 2.5,
         interval: 1,
         streak: 0,
         consecutiveFails: 0,
-        currentDifficulty: 'medium' as const,
+        currentDifficulty: 'medium',
         totalSessions: 0,
       };
 
@@ -318,16 +318,16 @@ describe('adjustDifficulty', () => {
     });
 
     it('simulates consistent high-accuracy sequence with promotion', () => {
-      let state = {
+      let state: DifficultyState = {
         easeFactor: 2.5,
         interval: 1,
         streak: 0,
         consecutiveFails: 0,
-        currentDifficulty: 'easy' as const,
+        currentDifficulty: 'easy',
         totalSessions: 3,
       };
 
-      let result;
+      let result: ReturnType<typeof adjustDifficulty> | undefined;
       for (let i = 0; i < 3; i++) {
         result = adjustDifficulty(state, 0.92, 'hard');
         state = result.state;
@@ -335,7 +335,7 @@ describe('adjustDifficulty', () => {
 
       expect(state.currentDifficulty).toBe('medium');
       expect(state.totalSessions).toBe(6);
-      expect(result.changed).toBe(true);
+      expect(result!.changed).toBe(true);
     });
   });
 });
