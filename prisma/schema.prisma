@@ -97,6 +97,7 @@ model GameAttempt {
   question AIQuestion? @relation(fields: [questionId], references: [id])
 
   @@index([sessionId])
+  @@index([sessionId, createdAt(sort: Desc)])
 }
 
 model AIQuestion {
@@ -154,6 +155,11 @@ model DifficultyProfile {
   consecutiveFails  Int      @default(0)
   currentDifficulty String   @default("easy")
   totalSessions     Int      @default(0)
+  // Phase 2B: sliding-window band adjustment fields
+  currentBand         String   @default("easy")  // easy | medium | hard — sliding-window result
+  windowAccuracy      Float    @default(0)        // accuracy over last 10 attempts (0.0–1.0)
+  bandLockedUntil     String?                     // sessionId of last change; lock expires on new session
+  consecutiveTriggers Int      @default(0)        // consecutive windows meeting promotion threshold
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 

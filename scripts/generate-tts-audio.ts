@@ -1,3 +1,4 @@
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-nocheck
 /**
  * Build-time script: generate MP3 files for numbers 0-20 in vi-VN and en-US.

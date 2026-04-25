@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma';
 import { getStickersByWorld } from '@/src/data/game-config/sticker-defs';
 import { adjustDifficulty } from '@/lib/game-engine/difficulty-adjuster';
 import type { DifficultyState } from '@/lib/game-engine/difficulty-adjuster';
+import { computeSlidingWindowAdjustment } from '@/lib/game-engine/sliding-window-adjuster';
 import type { Difficulty } from '@/lib/types/common';
 
 type Params = { params: Promise<{ id: string }> };
@@ -64,8 +65,8 @@ export async function PATCH(request: NextRequest, { params }: Params) {
       sticker = await awardSticker(session.childId, session.lesson.worldId);
     }
 
-    // Update SM-2 difficulty profile
-    const difficulty = await updateDifficultyProfile(session);
+    // Update SM-2 difficulty profile + run sliding-window band adjustment
+    const difficulty = await updateDifficultyProfile(session, id);
 
     return NextResponse.json({ session: updated, streak, sticker, difficulty });
   } catch (e) {
@@ -161,11 +162,14 @@ async function awardSticker(childId: string, worldId: string) {
   return { id: stickerRecord.id, emoji: stickerRecord.emoji, name: stickerRecord.name };
 }
 
-async function updateDifficultyProfile(session: {
-  childId: string;
-  attempts: { correct: boolean }[];
-  lesson: { gameType: string };
-}) {
+async function updateDifficultyProfile(
+  session: {
+    childId: string;
+    attempts: { correct: boolean }[];
+    lesson: { gameType: string };
+  },
+  sessionId: string,
+) {
   const { attempts, childId, lesson } = session;
   if (!attempts.length) return null;
 
@@ -194,6 +198,7 @@ async function updateDifficultyProfile(session: {
 
   const result = adjustDifficulty(state, accuracy, parentCeiling);
 
+  // SM-2 upsert
   await prisma.difficultyProfile.upsert({
     where: { childId_gameType: { childId, gameType } },
     create: {
@@ -216,11 +221,68 @@ async function updateDifficultyProfile(session: {
     },
   });
 
+  // ── Phase 2B: Sliding-window band adjustment ──────────────────────────
+  // Query last 10 attempts for this child + gameType (across all sessions)
+  const recentAttempts = await prisma.gameAttempt.findMany({
+    where: { session: { childId, lesson: { gameType } } },
+    orderBy: { createdAt: 'desc' },
+    take: 10,
+    select: { correct: true, sessionId: true },
+  });
+
+  // Count distinct completed sessions and total attempts for data gate
+  const [sessionStats, attemptStats] = await Promise.all([
+    prisma.gameSession.aggregate({
+      where: { childId, lesson: { gameType }, status: 'completed' },
+      _count: { id: true },
+    }),
+    prisma.gameAttempt.aggregate({
+      where: { session: { childId, lesson: { gameType } } },
+      _count: { id: true },
+    }),
+  ]);
+
+  const profile = await prisma.difficultyProfile.findUnique({
+    where: { childId_gameType: { childId, gameType } },
+  });
+
+  let band = existing?.currentBand ?? 'easy';
+  let windowAccuracy = 0;
+
+  if (profile) {
+    const windowResult = computeSlidingWindowAdjustment({
+      recentAttempts,
+      distinctSessionCount: sessionStats._count.id,
+      totalAttemptCount: attemptStats._count.id,
+      currentBand: (profile.currentBand ?? profile.currentDifficulty) as Difficulty,
+      consecutiveTriggers: profile.consecutiveTriggers ?? 0,
+      bandLockedUntil: profile.bandLockedUntil,
+      currentSessionId: sessionId,
+      easeFactor: profile.easeFactor,
+      parentCeiling,
+    });
+
+    await prisma.difficultyProfile.update({
+      where: { childId_gameType: { childId, gameType } },
+      data: {
+        currentBand: windowResult.newBand,
+        windowAccuracy: windowResult.windowAccuracy,
+        consecutiveTriggers: windowResult.consecutiveTriggers,
+        bandLockedUntil: windowResult.bandLockedUntil,
+      },
+    });
+
+    band = windowResult.newBand;
+    windowAccuracy = windowResult.windowAccuracy;
+  }
+
   return {
     previous: result.previous,
     current: result.state.currentDifficulty,
     accuracy,
     changed: result.changed,
+    band,
+    windowAccuracy,
   };
 }
 

@@ -134,7 +134,7 @@ describe('adjustDifficulty', () => {
     it('caps promotion at parentCeiling=medium', () => {
       let state: DifficultyState = { ...baseState(), currentDifficulty: 'easy' };
       for (let i = 0; i < 3; i++) {
-        let result = adjustDifficulty(state, 0.9, 'medium');
+        const result = adjustDifficulty(state, 0.9, 'medium');
         state = result.state;
       }
       expect(state.currentDifficulty).toBe('medium');
