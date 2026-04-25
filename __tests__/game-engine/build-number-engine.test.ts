@@ -4,11 +4,11 @@ import {
 } from '@/lib/game-engine/build-number-engine';
 
 describe('generateBuildNumberQuestion', () => {
-  it('returns target in range [11, 70]', () => {
+  it('returns target in default range [1, 99]', () => {
     for (let i = 0; i < 100; i++) {
       const q = generateBuildNumberQuestion();
-      expect(q.target).toBeGreaterThanOrEqual(11);
-      expect(q.target).toBeLessThanOrEqual(70);
+      expect(q.target).toBeGreaterThanOrEqual(1);
+      expect(q.target).toBeLessThanOrEqual(99);
     }
   });
 
@@ -19,11 +19,11 @@ describe('generateBuildNumberQuestion', () => {
     }
   });
 
-  it('target is always a two-digit number (11-70)', () => {
+  it('respects explicit min/max range', () => {
     for (let i = 0; i < 100; i++) {
-      const q = generateBuildNumberQuestion();
-      expect(q.target).toBeGreaterThan(10);
-      expect(q.target).toBeLessThan(71);
+      const q = generateBuildNumberQuestion(10, 50);
+      expect(q.target).toBeGreaterThanOrEqual(10);
+      expect(q.target).toBeLessThanOrEqual(50);
     }
   });
 });
@@ -39,11 +39,11 @@ describe('generateBuildNumberQuestions', () => {
     expect(generateBuildNumberQuestions(0)).toHaveLength(0);
   });
 
-  it('each question in the batch has valid target range', () => {
+  it('each question in the batch has valid target range (default)', () => {
     const questions = generateBuildNumberQuestions(30);
     questions.forEach((q) => {
-      expect(q.target).toBeGreaterThanOrEqual(11);
-      expect(q.target).toBeLessThanOrEqual(70);
+      expect(q.target).toBeGreaterThanOrEqual(1);
+      expect(q.target).toBeLessThanOrEqual(99);
     });
   });
 });
