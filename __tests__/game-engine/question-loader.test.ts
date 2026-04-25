@@ -54,13 +54,31 @@ describe('generateLocalQuestions', () => {
     });
   });
 
-  it('falls back to hear-tap for unknown game type', () => {
-    // Cast unknown type to test the default branch
+  it('returns empty array for unknown game type (registry miss)', () => {
+    // Registry has no entry for unknown types — returns [] instead of silent fallback
     const qs = generateLocalQuestions('unknown-game' as GameType, 3);
+    expect(qs).toHaveLength(0);
+  });
+
+  it('generates count-objects questions', () => {
+    const qs = generateLocalQuestions('count-objects', 3);
     expect(qs).toHaveLength(3);
     qs.forEach((q) => {
-      expect(q).toHaveProperty('target');
-      expect(q).toHaveProperty('options');
+      expect(q).toHaveProperty('type', 'count-objects');
+      expect(q).toHaveProperty('items');
+      expect(q).toHaveProperty('answer');
+      expect(q).toHaveProperty('choices');
+    });
+  });
+
+  it('generates number-writing questions', () => {
+    const qs = generateLocalQuestions('number-writing', 3);
+    expect(qs).toHaveLength(3);
+    qs.forEach((q) => {
+      expect(q).toHaveProperty('type', 'number-writing');
+      expect(q).toHaveProperty('digit');
+      expect(q).toHaveProperty('dotPath');
+      expect(q).toHaveProperty('totalDots');
     });
   });
 
