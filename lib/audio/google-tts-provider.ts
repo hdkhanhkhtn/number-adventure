@@ -17,7 +17,9 @@ export class GoogleTTSProvider implements AudioProvider {
   async speak(text: string, options?: SpeakOptions): Promise<void> {
     if (!this.isAvailable()) return;
 
-    const lang = options?.lang ?? 'en-US';
+    // Allowlist lang to prevent path traversal via URL injection
+    const rawLang = options?.lang ?? 'en-US';
+    const lang = rawLang === 'vi-VN' ? 'vi-VN' : 'en-US';
     const slug = this.textToSlug(text);
     const src = `/audio/tts/${lang}/${slug}.mp3`;
 
@@ -33,7 +35,7 @@ export class GoogleTTSProvider implements AudioProvider {
 
       const ctx = Howler.ctx;
       if (ctx && ctx.state === 'suspended') {
-        ctx.resume().then(() => this.currentHowl?.play());
+        ctx.resume().then(() => this.currentHowl?.play()).catch(() => {});
       } else {
         this.currentHowl.play();
       }

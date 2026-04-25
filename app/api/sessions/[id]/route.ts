@@ -28,8 +28,9 @@ export async function GET(_request: NextRequest, { params }: Params) {
 export async function PATCH(request: NextRequest, { params }: Params) {
   try {
     const { id } = await params;
+    // Client hint used as fallback only — server computes stars from recorded attempts
     const body = await request.json() as { stars?: number };
-    const stars = Math.min(3, Math.max(0, body.stars ?? 0));
+    const clientStars = Math.min(3, Math.max(0, body.stars ?? 0));
 
     const session = await prisma.gameSession.findUnique({
       where: { id },
@@ -41,6 +42,12 @@ export async function PATCH(request: NextRequest, { params }: Params) {
     if (session.status === 'completed') {
       return NextResponse.json({ session }, { status: 409 });
     }
+
+    // Compute stars server-side to prevent client inflation.
+    // Fall back to client hint if no attempts recorded (e.g., first-attempt-wins edge case).
+    const stars = session.attempts.length > 0
+      ? computeStarsFromAttempts(session.attempts)
+      : clientStars;
 
     // Complete session
     const updated = await prisma.gameSession.update({
@@ -65,6 +72,16 @@ export async function PATCH(request: NextRequest, { params }: Params) {
     console.error('[api/sessions/id PATCH] Error:', e);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
+}
+
+/** Compute star rating from recorded attempts (server-authoritative). */
+function computeStarsFromAttempts(attempts: { correct: boolean }[]): number {
+  if (!attempts.length) return 0;
+  const accuracy = attempts.filter((a) => a.correct).length / attempts.length;
+  if (accuracy >= 0.85) return 3;
+  if (accuracy >= 0.65) return 2;
+  if (accuracy > 0) return 1;
+  return 0;
 }
 
 async function updateStreak(childId: string) {

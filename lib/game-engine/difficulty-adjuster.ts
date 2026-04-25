@@ -67,9 +67,8 @@ export function adjustDifficulty(
     if (streak >= PROMOTE_STREAK_REQUIRED && idx < DIFFICULTY_ORDER.length - 1) {
       newDifficulty = DIFFICULTY_ORDER[idx + 1];
       streak = 0; // reset after promotion
-    }
-    // Demote: accuracy < 65% for 2 consecutive sessions
-    if (consecutiveFails >= DEMOTE_STREAK_REQUIRED && idx > 0) {
+    // Demote: accuracy < 65% for 2 consecutive sessions (else-if prevents dual-fire)
+    } else if (consecutiveFails >= DEMOTE_STREAK_REQUIRED && idx > 0) {
       newDifficulty = DIFFICULTY_ORDER[idx - 1];
       consecutiveFails = 0; // reset after demotion
     }
