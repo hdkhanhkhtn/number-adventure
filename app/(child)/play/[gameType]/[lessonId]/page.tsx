@@ -54,7 +54,9 @@ export default function PlayPage({ params }: { params: Promise<{ gameType: strin
     let cancelled = false;
     (async () => {
       await startSession();
-      const qs = await loadQuestions(lessonId, validGameType, lesson?.questionCount ?? 5);
+      const qs = await loadQuestions(
+        lessonId, validGameType, lesson?.questionCount ?? 5, lesson?.difficulty ?? 'easy',
+      );
       if (!cancelled) { setQuestions(qs); setLoading(false); }
     })();
     return () => { cancelled = true; };
