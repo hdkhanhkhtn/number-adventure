@@ -56,6 +56,22 @@ export const GAME_TYPES: GameTypeConfig[] = [
     worlds: ['math-kitchen'],
     numberRange: { easy: [1, 10], medium: [1, 20], hard: [1, 50] },
   },
+  {
+    id: 'count-objects',
+    name: 'Counting Objects',
+    description: 'Count the objects and tap the right number',
+    emoji: '🔢',
+    worlds: ['counting-meadow'],
+    numberRange: { easy: [1, 5], medium: [1, 10], hard: [1, 20] },
+  },
+  {
+    id: 'number-writing',
+    name: 'Number Writing',
+    description: 'Tap the dots in order to trace each digit',
+    emoji: '✏️',
+    worlds: ['writing-workshop'],
+    numberRange: { easy: [0, 4], medium: [0, 6], hard: [0, 9] },
+  },
 ];
 
 export function getGameType(id: GameType): GameTypeConfig | undefined {

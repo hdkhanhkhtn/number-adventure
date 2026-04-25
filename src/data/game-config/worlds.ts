@@ -69,6 +69,28 @@ export const WORLDS: WorldConfig[] = [
     lessonCount: 9,
     unlockOrder: 4,
   },
+  {
+    id: 'counting-meadow',
+    name: 'Counting Meadow',
+    subtitle: 'Count objects',
+    color: 'sun',
+    bg: '#FFE6A8',
+    emoji: '🌼',
+    gameTypes: ['count-objects'],
+    lessonCount: 9,
+    unlockOrder: 5,
+  },
+  {
+    id: 'writing-workshop',
+    name: 'Writing Workshop',
+    subtitle: 'Trace digits',
+    color: 'lavender',
+    bg: '#D9C7F0',
+    emoji: '✏️',
+    gameTypes: ['number-writing'],
+    lessonCount: 9,
+    unlockOrder: 6,
+  },
 ];
 
 /** Look up world config by id */
