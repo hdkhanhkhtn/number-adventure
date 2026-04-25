@@ -60,7 +60,7 @@ export function CountObjectsGame({ questions, onComplete, onExit, onAttempt }: P
   if (!q) return null;
 
   return (
-    <GameContainer variant="sage">
+    <GameContainer variant="sun">
       <Sparkles count={6} color="#FFD36E" />
       <GameHud hearts={hearts} progress={round} total={totalRounds} onClose={onExit} />
 

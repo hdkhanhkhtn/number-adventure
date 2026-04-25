@@ -179,7 +179,7 @@ export function NumberWritingGame({ questions, onComplete, onExit, onAttempt }: 
                     ? '0 0 0 4px rgba(255,211,78,0.4), 0 4px 8px rgba(0,0,0,0.12)'
                     : '0 2px 4px rgba(0,0,0,0.1)',
                   transition: 'background 0.2s, box-shadow 0.2s',
-                  zIndex: 2,
+                  zIndex: isNext ? 3 : isCompleted ? 1 : 2,
                   padding: 0,
                 }}
               >
