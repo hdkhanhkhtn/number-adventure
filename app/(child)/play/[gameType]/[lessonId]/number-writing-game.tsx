@@ -29,8 +29,9 @@ export function NumberWritingGame({ questions, onComplete, onExit, onAttempt }: 
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const { playCorrect, playWrong, playLevelComplete } = useSoundEffects();
+  // autoAdvanceOnWrong=false: wrong dot tap only costs a heart; child retries same digit
   const { round, hearts, question, totalRounds, handleCorrect, handleWrong } =
-    useGame<AnyQuestion>(questions, onComplete);
+    useGame<AnyQuestion>(questions, onComplete, { autoAdvanceOnWrong: false });
   const q = question as NumberWritingQuestion | null;
 
   // Reset per-round state when round changes

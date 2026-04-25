@@ -22,20 +22,10 @@ function generateChoices(answer: number, min: number, max: number): number[] {
     choices.add(c);
   }
 
-  // Fill remaining with wider range if needed
-  let guard = 0;
-  while (choices.size < 4 && guard++ < 20) {
-    const n = randomInt(Math.max(min, answer - 5), Math.min(max, answer + 5));
-    if (n !== answer) choices.add(n);
-  }
-
-  // Deterministic fallback
-  let fill = 1;
-  while (choices.size < 4) {
-    const n = answer + fill;
-    if (n >= min && n <= max) choices.add(n);
-    fill = fill > 0 ? -fill : -fill + 1;
-    fill++;
+  // Deterministic fallback: scan outward from answer until 4 unique choices found
+  for (let offset = 1; choices.size < 4 && offset <= max - min + 1; offset++) {
+    if (answer + offset <= max) choices.add(answer + offset);
+    if (choices.size < 4 && answer - offset >= min) choices.add(answer - offset);
   }
 
   return [...choices].sort(() => Math.random() - 0.5);

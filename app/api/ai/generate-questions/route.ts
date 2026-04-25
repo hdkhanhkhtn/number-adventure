@@ -29,7 +29,8 @@ export async function POST(request: NextRequest) {
     };
 
     const { lessonId, gameType, difficulty = 'easy' } = body;
-    const count = Math.min(body.count ?? 5, 50);
+    const rawCount = body.count;
+    const count = Math.min(Number.isFinite(rawCount) && rawCount! > 0 ? rawCount! : 5, 50);
 
     if (!lessonId || !gameType) {
       return NextResponse.json({ error: 'lessonId and gameType are required' }, { status: 400 });
@@ -77,9 +78,9 @@ function isValidQuestion(gameType: GameType, q: unknown): q is AnyQuestion {
     case 'add-take':
       return typeof obj.a === 'number' && typeof obj.b === 'number' && Array.isArray(obj.options);
     case 'count-objects':
-      return typeof obj.type === 'string' && Array.isArray(obj.items) && typeof obj.answer === 'number' && Array.isArray(obj.choices);
+      return obj.type === 'count-objects' && Array.isArray(obj.items) && typeof obj.answer === 'number' && Array.isArray(obj.choices);
     case 'number-writing':
-      return typeof obj.type === 'string' && typeof obj.digit === 'number' && Array.isArray(obj.dotPath) && typeof obj.totalDots === 'number';
+      return obj.type === 'number-writing' && typeof obj.digit === 'number' && Array.isArray(obj.dotPath) && typeof obj.totalDots === 'number';
     default:
       return false;
   }

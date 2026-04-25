@@ -65,7 +65,10 @@ export default function PlayPage({ params }: { params: Promise<{ gameType: strin
       if (!cancelled) { setQuestions(qs); setLoading(false); }
     })();
     return () => { cancelled = true; };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  // Intentionally runs once on mount only. hasStarted ref guards against
+  // React Strict Mode double-invocation creating duplicate game sessions.
+  }, []);
 
   const handleComplete = async (result: GameResult) => {
     const sessionResult = await completeSession(result.stars);
