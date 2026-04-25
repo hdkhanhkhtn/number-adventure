@@ -150,16 +150,16 @@ describe('BigButton', () => {
   });
 
   it('maintains opacity when disabled', () => {
-    const { container } = render(<BigButton disabled>Click</BigButton>);
+    render(<BigButton disabled>Click</BigButton>);
     const button = screen.getByRole('button');
-    const style = window.getComputedStyle(button);
+    window.getComputedStyle(button);
 
     // When disabled, opacity should be reduced (0.5)
     expect(button).toBeInTheDocument();
   });
 
   it('changes cursor when disabled', () => {
-    const { container } = render(<BigButton disabled>Click</BigButton>);
+    render(<BigButton disabled>Click</BigButton>);
     const button = screen.getByRole('button');
 
     expect(button).toBeInTheDocument();
@@ -167,7 +167,7 @@ describe('BigButton', () => {
   });
 
   it('accepts undefined onClick', () => {
-    const user = userEvent.setup();
+    userEvent.setup();
     render(<BigButton>Click</BigButton>);
 
     expect(() => {

@@ -17,8 +17,7 @@ jest.mock('@/components/ui/icon-btn', () => ({
     children,
     ...props
   }: any) => (
-    // eslint-disable-next-line react/button-has-type
-    <button onClick={onClick} aria-label={ariaLabel} {...props}>
+    <button onClick={onClick} aria-label={ariaLabel} type="button" {...props}>
       {children}
     </button>
   ),
@@ -138,7 +137,7 @@ describe('GameHud', () => {
   });
 
   it('renders all three main sections: close button, progress, hearts', () => {
-    const { container } = render(<GameHud hearts={3} progress={2} total={5} onClose={jest.fn()} />);
+    render(<GameHud hearts={3} progress={2} total={5} onClose={jest.fn()} />);
 
     // Close button (via IconBtn)
     expect(screen.getByRole('button', { name: /Exit game/i })).toBeInTheDocument();

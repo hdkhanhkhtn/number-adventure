@@ -33,6 +33,8 @@ const eslintConfig = defineConfig([
     ".claude/**",
     "handoff/**",
     "plans/**",
+    // Auto-generated coverage reports
+    "coverage/**",
     // Prototype JSX source files (not compiled, used for reference only)
     "src/*.jsx",
     "src/*.js",
