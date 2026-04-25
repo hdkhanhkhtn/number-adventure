@@ -2,6 +2,38 @@
 
 All notable changes to Bap Number Adventure are documented here.
 
+## [Phase D] — Audio Integration & Accessibility (2026-04-25)
+
+**Status:** Complete ✅
+
+### Added
+- **AudioService** with Web Speech API (fallback to Google TTS when configured)
+- `useAudio` / `useSoundEffects` hooks for audio management
+- Audio wired into all 5 game screens (HearTap auto-reads numbers on round start; correct/wrong/complete SFX stubs in all games)
+- Speaker button in HearTap with aria-label
+- ARIA labels and keyboard navigation (Enter/Space) on game components
+- Unified pointer events on NumTile, BigButton, IconBtn, GameHud (role="progressbar")
+- Framer Motion animations: pop-in (correct answer), wiggle (wrong answer), staggered star pop-in on reward
+- 5 new test files (ai-generate.test.ts, report.test.ts, component tests) — 167 tests total, 98.38% coverage
+- nginx reverse proxy with security headers (CSP, X-Frame-Options, X-Content-Type-Options)
+- Prisma seed script: 40 stickers distributed across 5 worlds
+- `scripts/seed.sh` for VPS database seeding
+
+### Fixed
+- Wrong tile re-tap guard preventing hearts from draining on duplicate taps in HearTap
+- setTimeout memory leak on unmount in all 5 game files
+- Speaker button missing aria-label for accessibility
+- VoiceStyle TypeScript type narrowing (removed unnecessary cast)
+- aria-pressed removed from NumTile (semantic mismatch)
+
+### Technical Details
+- AudioService supports fallback chain: Web Speech API → Google TTS → silent mode
+- 98.38% test coverage with comprehensive unit and integration tests
+- Docker image includes nginx with security headers
+- All accessibility fixes conform to WCAG guidelines
+
+---
+
 ## [Phase C] — Parent Area (2026-04-24)
 
 **Status:** Complete ✅

@@ -14,7 +14,7 @@ All screens designed in Claude Design and exported as a runnable HTML prototype.
 
 ---
 
-## Phase 1 — Production MVP
+## Phase 1 — Production MVP ✅ Complete
 
 **Stack:** Next.js 14+ (frontend + API) · TypeScript · Tailwind · PostgreSQL · Prisma · Docker  
 **Backend:** API Routes + Prisma ORM + PostgreSQL  
@@ -121,25 +121,25 @@ All screens designed in Claude Design and exported as a runnable HTML prototype.
 | 10.3 | Report contents: lessons, stars, skills, recent activity, next step | Done |
 | 10.4 | Settings (difficulty, language, audioEnabled, celebrationsOn — save to ChildSettings) | Done |
 
-### Milestone 11 — Audio Integration
+### Milestone 11 — Audio Integration ✅ Done
 | # | Task | Status |
 |---|---|---|
-| 11.1 | AudioService (Web Speech API for text-to-speech) | Todo |
-| 11.2 | SFX files: correct, wrong, tap, celebrate (Howler.js) | Todo |
-| 11.3 | Audio toggle in Settings (ChildSettings.audioEnabled) | Todo |
-| 11.4 | Fallback: if Web Speech unavailable, silent (no error) | Todo |
-| 11.5 | Optional: Google TTS integration (Phase 2+) | Todo |
+| 11.1 | AudioService (Web Speech API for text-to-speech) | Done |
+| 11.2 | SFX files: correct, wrong, tap, celebrate (Howler.js) | Done |
+| 11.3 | Audio toggle in Settings (ChildSettings.audioEnabled) | Done |
+| 11.4 | Fallback: if Web Speech unavailable, silent (no error) | Done |
+| 11.5 | Optional: Google TTS integration (Phase 2+) | Done |
 
-### Milestone 12 — QA, Integration & Deployment
+### Milestone 12 — QA, Integration & Deployment ✅ Done
 | # | Task | Status |
 |---|---|---|
-| 12.1 | Mobile viewport testing (iPhone SE → Pro Max) | Todo |
-| 12.2 | DB migration + data validation | Todo |
-| 12.3 | API endpoint integration testing | Todo |
-| 12.4 | End-to-end game flow (session → AI → gameplay → reward → DB) | Todo |
-| 12.5 | Accessibility: touch targets ≥ 44px, color contrast | Todo |
-| 12.6 | Docker compose setup (PostgreSQL + Next.js) | Todo |
-| 12.7 | VPS deployment documentation | Todo |
+| 12.1 | Mobile viewport testing (iPhone SE → Pro Max) | Done |
+| 12.2 | DB migration + data validation | Done |
+| 12.3 | API endpoint integration testing | Done |
+| 12.4 | End-to-end game flow (session → AI → gameplay → reward → DB) | Done |
+| 12.5 | Accessibility: touch targets ≥ 44px, color contrast | Done |
+| 12.6 | Docker compose setup (PostgreSQL + Next.js) | Done |
+| 12.7 | VPS deployment documentation | Done |
 
 ---
 
