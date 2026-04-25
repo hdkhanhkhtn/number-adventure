@@ -25,12 +25,13 @@ export async function loadQuestions(
   lessonId: string,
   gameType: GameType,
   count = 5,
+  difficulty: 'easy' | 'medium' | 'hard' = 'easy',
 ): Promise<AnyQuestion[]> {
   try {
     const res = await fetch('/api/ai/generate-questions', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ lessonId, gameType, count }),
+      body: JSON.stringify({ lessonId, gameType, count, difficulty }),
     });
     if (!res.ok) throw new Error('AI generation failed');
     const data = await res.json() as { questions: { id: string; payload: AnyQuestion }[] };

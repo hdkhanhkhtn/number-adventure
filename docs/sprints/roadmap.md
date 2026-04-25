@@ -69,49 +69,51 @@ All screens designed in Claude Design and exported as a runnable HTML prototype.
 | 4.4 | useProgress hook (fetch from `/api/progress`) | Done |
 | 4.5 | Theme + mascot color provider | Done |
 
-### Milestone 5 — Onboarding Screens
+### Milestone 5 — Onboarding Screens ⏭ Deferred
 | # | Task | Status |
 |---|---|---|
-| 5.1 | Splash screen (auto-advance 2.2s) | Todo |
-| 5.2 | Welcome screen (language toggle EN/VI/BI) | Todo |
-| 5.3 | Profile setup wizard (name → age → mascot color, POST `/api/children`) | Todo |
+| 5.1 | Splash screen (auto-advance 2.2s) | Deferred |
+| 5.2 | Welcome screen (language toggle EN/VI/BI) | Deferred |
+| 5.3 | Profile setup wizard (name → age → mascot color, POST `/api/children`) | Deferred |
 
-### Milestone 6 — Child Home & Navigation
-| # | Task | Status |
-|---|---|---|
-| 6.1 | Home screen (avatar, StreakCard, daily mission card) | Todo |
-| 6.2 | World Map screen (`/worlds/:worldId`, 5 worlds, locked/unlocked) | Todo |
-| 6.3 | Level List screen (winding path, star badges from DB) | Todo |
-| 6.4 | Sticker Book screen (4-col grid, from ChildSticker table) | Todo |
-| 6.5 | StreakCard component (display current + longest streak) | Todo |
+> Guest flow is MVP-intentional; full onboarding deferred to Phase 2.
 
-### Milestone 7 — Game Engine & AI Integration
+### Milestone 6 — Child Home & Navigation ✅ Done
 | # | Task | Status |
 |---|---|---|
-| 7.1 | Config-driven game engine (`lib/game-engine/`) | Todo |
-| 7.2 | Call `/api/ai/generate` on lesson start (fetch + cache) | Todo |
-| 7.3 | Difficulty scaling (easy / medium / hard from ChildSettings) | Todo |
-| 7.4 | `useGame` hook (session state, hearts, scoring) | Todo |
-| 7.5 | `useSession` hook (track GameSession, GameAttempt) | Todo |
-| 7.6 | `useAudio` hook (Web Speech API, Howler.js for SFX) | Todo |
-| 7.7 | Level config data (`data/worlds/`) — static reference | Todo |
+| 6.1 | Home screen (avatar, StreakCard, daily mission card) | Done |
+| 6.2 | World Map screen (`/worlds/:worldId`, 5 worlds, locked/unlocked) | Done |
+| 6.3 | Level List screen (winding path, star badges from DB) | Done |
+| 6.4 | Sticker Book screen (4-col grid, from ChildSticker table) | Done |
+| 6.5 | StreakCard component (display current + longest streak) | Done |
 
-### Milestone 8 — Mini-Games
+### Milestone 7 — Game Engine & AI Integration ✅ Done
 | # | Task | Status |
 |---|---|---|
-| 8.1 | **Hear & Tap** — listen to number, tap correct tile | Todo |
-| 8.2 | **Number Order** — find missing number in sequence | Todo |
-| 8.3 | **Build the Number** — compose tens + ones | Todo |
-| 8.4 | **Even or Odd** — sort number into correct basket | Todo |
-| 8.5 | **Math Kitchen (AddTake)** — visual addition/subtraction | Todo |
+| 7.1 | Config-driven game engine (`lib/game-engine/`) | Done |
+| 7.2 | Call `/api/ai/generate` on lesson start (fetch + cache) | Done |
+| 7.3 | Difficulty scaling (easy / medium / hard from ChildSettings) | Done |
+| 7.4 | `useGame` hook (session state, hearts, scoring) | Done |
+| 7.5 | `useSession` hook (track GameSession, GameAttempt) | Done |
+| 7.6 | `useAudio` hook (Web Speech API, Howler.js for SFX) | Done |
+| 7.7 | Level config data (`data/worlds/`) — static reference | Done |
 
-### Milestone 9 — Reward & Celebration
+### Milestone 8 — Mini-Games ✅ Done
 | # | Task | Status |
 |---|---|---|
-| 9.1 | Reward screen (stars, correct count, sticker unlock check) | Todo |
-| 9.2 | Confetti + pop-in animations (Framer Motion) | Todo |
-| 9.3 | Sticker unlock flow (save to ChildSticker, show in book) | Todo |
-| 9.4 | StreakCard on reward screen | Todo |
+| 8.1 | **Hear & Tap** — listen to number, tap correct tile | Done |
+| 8.2 | **Number Order** — find missing number in sequence | Done |
+| 8.3 | **Build the Number** — compose tens + ones | Done |
+| 8.4 | **Even or Odd** — sort number into correct basket | Done |
+| 8.5 | **Math Kitchen (AddTake)** — visual addition/subtraction | Done |
+
+### Milestone 9 — Reward & Celebration ✅ Done
+| # | Task | Status |
+|---|---|---|
+| 9.1 | Reward screen (stars, correct count, sticker unlock check) | Done |
+| 9.2 | Confetti + pop-in animations (Framer Motion) | Done |
+| 9.3 | Sticker unlock flow (save to ChildSticker, show in book) | Done |
+| 9.4 | StreakCard on reward screen | Done |
 
 ### Milestone 10 — Parent Area (Phase C) ✅ Done
 | # | Task | Status |
