@@ -1,15 +1,16 @@
 import type { HearTapQuestion } from './types';
 
 /** Generate a HearTap question: listen to a number, tap the correct tile */
-export function generateHearTapQuestion(max = 20): HearTapQuestion {
-  // Guard: need at least 4 distinct numbers in range [1..effectiveMax]
-  const effectiveMax = Math.max(max, 4);
-  const target = 1 + Math.floor(Math.random() * effectiveMax);
+export function generateHearTapQuestion(min = 1, max = 20): HearTapQuestion {
+  const range = max - min + 1;
+  const effectiveRange = Math.max(range, 4);
+  const effectiveMax = min + effectiveRange - 1;
+  const target = min + Math.floor(Math.random() * effectiveRange);
   const opts = new Set([target]);
-  while (opts.size < 4) opts.add(1 + Math.floor(Math.random() * effectiveMax));
+  while (opts.size < 4) opts.add(min + Math.floor(Math.random() * (effectiveMax - min + 1)));
   return { target, options: [...opts].sort(() => Math.random() - 0.5) };
 }
 
-export function generateHearTapQuestions(count: number, max = 20): HearTapQuestion[] {
-  return Array.from({ length: count }, () => generateHearTapQuestion(max));
+export function generateHearTapQuestions(count: number, min = 1, max = 20): HearTapQuestion[] {
+  return Array.from({ length: count }, () => generateHearTapQuestion(min, max));
 }

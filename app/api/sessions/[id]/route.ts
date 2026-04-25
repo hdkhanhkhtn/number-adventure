@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getStickersByWorld } from '@/src/data/game-config/sticker-defs';
+import { adjustDifficulty } from '@/lib/game-engine/difficulty-adjuster';
+import type { DifficultyState } from '@/lib/game-engine/difficulty-adjuster';
+import type { Difficulty } from '@/lib/types/common';
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -25,12 +28,13 @@ export async function GET(_request: NextRequest, { params }: Params) {
 export async function PATCH(request: NextRequest, { params }: Params) {
   try {
     const { id } = await params;
+    // Client hint used as fallback only — server computes stars from recorded attempts
     const body = await request.json() as { stars?: number };
-    const stars = Math.min(3, Math.max(0, body.stars ?? 0));
+    const clientStars = Math.min(3, Math.max(0, body.stars ?? 0));
 
     const session = await prisma.gameSession.findUnique({
       where: { id },
-      include: { lesson: true },
+      include: { attempts: true, lesson: true },
     });
     if (!session) return NextResponse.json({ error: 'Session not found' }, { status: 404 });
 
@@ -38,6 +42,12 @@ export async function PATCH(request: NextRequest, { params }: Params) {
     if (session.status === 'completed') {
       return NextResponse.json({ session }, { status: 409 });
     }
+
+    // Compute stars server-side to prevent client inflation.
+    // Fall back to client hint if no attempts recorded (e.g., first-attempt-wins edge case).
+    const stars = session.attempts.length > 0
+      ? computeStarsFromAttempts(session.attempts)
+      : clientStars;
 
     // Complete session
     const updated = await prisma.gameSession.update({
@@ -54,11 +64,24 @@ export async function PATCH(request: NextRequest, { params }: Params) {
       sticker = await awardSticker(session.childId, session.lesson.worldId);
     }
 
-    return NextResponse.json({ session: updated, streak, sticker });
+    // Update SM-2 difficulty profile
+    const difficulty = await updateDifficultyProfile(session);
+
+    return NextResponse.json({ session: updated, streak, sticker, difficulty });
   } catch (e) {
     console.error('[api/sessions/id PATCH] Error:', e);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
+}
+
+/** Compute star rating from recorded attempts (server-authoritative). */
+function computeStarsFromAttempts(attempts: { correct: boolean }[]): number {
+  if (!attempts.length) return 0;
+  const accuracy = attempts.filter((a) => a.correct).length / attempts.length;
+  if (accuracy >= 0.85) return 3;
+  if (accuracy >= 0.65) return 2;
+  if (accuracy > 0) return 1;
+  return 0;
 }
 
 async function updateStreak(childId: string) {
@@ -136,5 +159,68 @@ async function awardSticker(childId: string, worldId: string) {
   }
 
   return { id: stickerRecord.id, emoji: stickerRecord.emoji, name: stickerRecord.name };
+}
+
+async function updateDifficultyProfile(session: {
+  childId: string;
+  attempts: { correct: boolean }[];
+  lesson: { gameType: string };
+}) {
+  const { attempts, childId, lesson } = session;
+  if (!attempts.length) return null;
+
+  const correct = attempts.filter((a) => a.correct).length;
+  const accuracy = correct / attempts.length;
+  const { gameType } = lesson;
+
+  // Fetch parent difficulty ceiling (default 'hard' if no settings)
+  const settings = await prisma.childSettings.findUnique({ where: { childId } });
+  const parentCeiling: Difficulty = (settings?.difficulty ?? 'hard') as Difficulty;
+
+  // Fetch existing profile or use SM-2 defaults
+  const existing = await prisma.difficultyProfile.findUnique({
+    where: { childId_gameType: { childId, gameType } },
+  });
+  const state: DifficultyState = existing
+    ? {
+        easeFactor: existing.easeFactor,
+        interval: existing.interval,
+        streak: existing.streak,
+        consecutiveFails: existing.consecutiveFails,
+        currentDifficulty: existing.currentDifficulty as Difficulty,
+        totalSessions: existing.totalSessions,
+      }
+    : { easeFactor: 2.5, interval: 1, streak: 0, consecutiveFails: 0, currentDifficulty: 'easy', totalSessions: 0 };
+
+  const result = adjustDifficulty(state, accuracy, parentCeiling);
+
+  await prisma.difficultyProfile.upsert({
+    where: { childId_gameType: { childId, gameType } },
+    create: {
+      childId,
+      gameType,
+      easeFactor: result.state.easeFactor,
+      interval: result.state.interval,
+      streak: result.state.streak,
+      consecutiveFails: result.state.consecutiveFails,
+      currentDifficulty: result.state.currentDifficulty,
+      totalSessions: result.state.totalSessions,
+    },
+    update: {
+      easeFactor: result.state.easeFactor,
+      interval: result.state.interval,
+      streak: result.state.streak,
+      consecutiveFails: result.state.consecutiveFails,
+      currentDifficulty: result.state.currentDifficulty,
+      totalSessions: result.state.totalSessions,
+    },
+  });
+
+  return {
+    previous: result.previous,
+    current: result.state.currentDifficulty,
+    accuracy,
+    changed: result.changed,
+  };
 }
 

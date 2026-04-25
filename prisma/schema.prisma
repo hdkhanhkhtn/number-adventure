@@ -28,11 +28,12 @@ model Child {
   createdAt DateTime       @default(now())
   updatedAt DateTime       @updatedAt
 
-  parent   Parent         @relation(fields: [parentId], references: [id])
-  settings ChildSettings?
-  sessions GameSession[]
-  stickers ChildSticker[]
-  streak   Streak?
+  parent             Parent              @relation(fields: [parentId], references: [id])
+  settings           ChildSettings?
+  sessions           GameSession[]
+  stickers           ChildSticker[]
+  streak             Streak?
+  difficultyProfiles DifficultyProfile[]
 
   @@index([parentId])
 }
@@ -141,4 +142,23 @@ model Streak {
   updatedAt     DateTime  @updatedAt
 
   child Child @relation(fields: [childId], references: [id], onDelete: Cascade)
+}
+
+model DifficultyProfile {
+  id                String   @id @default(cuid())
+  childId           String
+  gameType          String
+  easeFactor        Float    @default(2.5)
+  interval          Int      @default(1)
+  streak            Int      @default(0)
+  consecutiveFails  Int      @default(0)
+  currentDifficulty String   @default("easy")
+  totalSessions     Int      @default(0)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  child Child @relation(fields: [childId], references: [id], onDelete: Cascade)
+
+  @@unique([childId, gameType])
+  @@index([childId])
 }

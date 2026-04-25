@@ -35,9 +35,9 @@ describe('generateHearTapQuestion', () => {
     }
   });
 
-  it('options are within [1, max] when max=5', () => {
+  it('options are within [min, max] when min=1, max=5', () => {
     for (let i = 0; i < 50; i++) {
-      const q = generateHearTapQuestion(5);
+      const q = generateHearTapQuestion(1, 5);
       q.options.forEach((opt) => {
         expect(opt).toBeGreaterThanOrEqual(1);
         expect(opt).toBeLessThanOrEqual(5);
@@ -45,18 +45,18 @@ describe('generateHearTapQuestion', () => {
     }
   });
 
-  it('target is within [1, max] when max=10', () => {
+  it('target is within [min, max] when min=1, max=10', () => {
     for (let i = 0; i < 50; i++) {
-      const q = generateHearTapQuestion(10);
+      const q = generateHearTapQuestion(1, 10);
       expect(q.target).toBeGreaterThanOrEqual(1);
       expect(q.target).toBeLessThanOrEqual(10);
     }
   });
 
   it('options are 4 unique values', () => {
-    // Run many times — since max=20 we have 20 possible values, uniqueness should hold
+    // Run many times — since range [1,20] has 20 possible values, uniqueness should hold
     for (let i = 0; i < 50; i++) {
-      const q = generateHearTapQuestion(20);
+      const q = generateHearTapQuestion(1, 20);
       const unique = new Set(q.options);
       expect(unique.size).toBe(4);
     }

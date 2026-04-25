@@ -99,7 +99,7 @@ describe('POST /api/ai/generate-questions', () => {
     expect(res.status).toBe(200);
     expect(body.questions).toHaveLength(2);
     expect(body.questions[0].id).toBe('q-1');
-    expect(mockGenerateLocal).toHaveBeenCalledWith('hear-tap', 2);
+    expect(mockGenerateLocal).toHaveBeenCalledWith('hear-tap', 2, 'easy');
   });
 
   it('creates questions in prisma with correct data', async () => {
@@ -138,7 +138,7 @@ describe('POST /api/ai/generate-questions', () => {
     const res = await POST(req);
 
     expect(res.status).toBe(200);
-    expect(mockGenerateLocal).toHaveBeenCalledWith('build-number', 50);
+    expect(mockGenerateLocal).toHaveBeenCalledWith('build-number', 50, 'easy');
   });
 
   it('defaults count to 5 when not provided', async () => {
@@ -151,7 +151,7 @@ describe('POST /api/ai/generate-questions', () => {
     const res = await POST(req);
 
     expect(res.status).toBe(200);
-    expect(mockGenerateLocal).toHaveBeenCalledWith('even-odd', 5);
+    expect(mockGenerateLocal).toHaveBeenCalledWith('even-odd', 5, 'easy');
   });
 
   it('returns 500 when prisma throws', async () => {

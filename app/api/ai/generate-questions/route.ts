@@ -39,9 +39,9 @@ export async function POST(request: NextRequest) {
 
     const validatedGameType = gameType as GameType;
 
-    // Try AI generation first
+    // Try AI generation first; pass difficulty so fallback uses the correct number range
     const questions = await tryAIGeneration(validatedGameType, difficulty, count)
-      ?? generateLocalQuestions(validatedGameType, count);
+      ?? generateLocalQuestions(validatedGameType, count, difficulty as 'easy' | 'medium' | 'hard');
 
     // Store in AIQuestion table
     const created = await Promise.all(

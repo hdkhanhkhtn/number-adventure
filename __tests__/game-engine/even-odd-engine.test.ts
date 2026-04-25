@@ -4,11 +4,11 @@ import {
 } from '@/lib/game-engine/even-odd-engine';
 
 describe('generateEvenOddQuestion', () => {
-  it('returns number in range [2, 19]', () => {
+  it('returns number in default range [1, 20]', () => {
     for (let i = 0; i < 100; i++) {
       const q = generateEvenOddQuestion();
-      expect(q.number).toBeGreaterThanOrEqual(2);
-      expect(q.number).toBeLessThanOrEqual(19);
+      expect(q.number).toBeGreaterThanOrEqual(1);
+      expect(q.number).toBeLessThanOrEqual(20);
     }
   });
 
@@ -43,6 +43,14 @@ describe('generateEvenOddQuestion', () => {
       expect(Number.isInteger(q.number)).toBe(true);
     }
   });
+
+  it('respects explicit min/max range', () => {
+    for (let i = 0; i < 100; i++) {
+      const q = generateEvenOddQuestion(1, 50);
+      expect(q.number).toBeGreaterThanOrEqual(1);
+      expect(q.number).toBeLessThanOrEqual(50);
+    }
+  });
 });
 
 describe('generateEvenOddQuestions', () => {
@@ -56,12 +64,12 @@ describe('generateEvenOddQuestions', () => {
     expect(generateEvenOddQuestions(0)).toHaveLength(0);
   });
 
-  it('all questions in the batch satisfy isEven invariant', () => {
+  it('all questions in the batch satisfy isEven invariant (default range)', () => {
     const questions = generateEvenOddQuestions(30);
     questions.forEach((q) => {
       expect(q.isEven).toBe(q.number % 2 === 0);
-      expect(q.number).toBeGreaterThanOrEqual(2);
-      expect(q.number).toBeLessThanOrEqual(19);
+      expect(q.number).toBeGreaterThanOrEqual(1);
+      expect(q.number).toBeLessThanOrEqual(20);
     });
   });
 });
