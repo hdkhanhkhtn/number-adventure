@@ -267,9 +267,28 @@ describe('windowAccuracy', () => {
     expect(result.windowAccuracy).toBeCloseTo(0.7, 5);
   });
 
-  it('returns 0 windowAccuracy when data gate blocks', () => {
+  it('returns real windowAccuracy from recentAttempts even when gate 1 blocks', () => {
+    // baseInput has recentAttempts: makeAttempts(8, 10) = 80% accuracy
+    // but totalAttemptCount: 5 triggers gate 1 — real accuracy should still be reported
     const result = computeSlidingWindowAdjustment(
       baseInput({ totalAttemptCount: 5 }),
+    );
+    expect(result.windowAccuracy).toBeCloseTo(0.8);
+    expect(result.changed).toBe(false); // gate still blocks band change
+  });
+
+  it('returns partial window accuracy when gate 2 blocks (recentAttempts < 10)', () => {
+    // 6 correct out of 8 attempts = 75%; gate 2 fires but accuracy is still real
+    const result = computeSlidingWindowAdjustment(
+      baseInput({ recentAttempts: makeAttempts(6, 8) }),
+    );
+    expect(result.windowAccuracy).toBeCloseTo(0.75);
+    expect(result.changed).toBe(false);
+  });
+
+  it('returns 0 windowAccuracy when there are no attempts at all', () => {
+    const result = computeSlidingWindowAdjustment(
+      baseInput({ recentAttempts: [], totalAttemptCount: 0 }),
     );
     expect(result.windowAccuracy).toBe(0);
   });
