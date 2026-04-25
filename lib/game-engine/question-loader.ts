@@ -1,18 +1,6 @@
 import type { AnyQuestion, GameType } from './types';
 import type { Difficulty } from '@/lib/types/common';
-import { generateHearTapQuestions } from './hear-tap-engine';
-import { generateBuildNumberQuestions } from './build-number-engine';
-import { generateEvenOddQuestions } from './even-odd-engine';
-import { generateNumberOrderQuestions } from './number-order-engine';
-import { generateAddTakeQuestions } from './add-take-engine';
-import { getGameType } from '@/src/data/game-config/game-types';
-
-/** Get [min, max] number range for a game type at given difficulty */
-function getRange(gameType: GameType, difficulty: Difficulty): [number, number] {
-  const config = getGameType(gameType);
-  if (!config) return [1, 10];
-  return config.numberRange[difficulty];
-}
+import { GAME_REGISTRY } from './registry';
 
 /** Generate questions locally based on game type + difficulty */
 export function generateLocalQuestions(
@@ -20,15 +8,9 @@ export function generateLocalQuestions(
   count: number,
   difficulty: Difficulty = 'easy',
 ): AnyQuestion[] {
-  const [min, max] = getRange(gameType, difficulty);
-  switch (gameType) {
-    case 'hear-tap':     return generateHearTapQuestions(count, min, max);
-    case 'build-number': return generateBuildNumberQuestions(count, min, max);
-    case 'even-odd':     return generateEvenOddQuestions(count, min, max);
-    case 'number-order': return generateNumberOrderQuestions(count, min, max);
-    case 'add-take':     return generateAddTakeQuestions(count, min, max);
-    default:             return generateHearTapQuestions(count, min, max);
-  }
+  const engine = GAME_REGISTRY[gameType as keyof typeof GAME_REGISTRY];
+  if (!engine) return [];
+  return engine.generateQuestions(count, difficulty);
 }
 
 /**

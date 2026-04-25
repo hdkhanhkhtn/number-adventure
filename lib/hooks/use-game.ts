@@ -7,6 +7,10 @@ import { buildGameResult } from '@/lib/game-engine/score-calculator';
 interface UseGameOptions {
   totalRounds?: number;
   initialHearts?: number;
+  /** When false, wrong answers decrement hearts but do NOT auto-advance the round.
+   *  Use for sequential games (e.g. number-writing) where the child must retry
+   *  the same question rather than skip to the next one. Default: true. */
+  autoAdvanceOnWrong?: boolean;
 }
 
 /**
@@ -18,7 +22,7 @@ export function useGame<Q>(
   onComplete: (result: GameResult) => void,
   options: UseGameOptions = {},
 ) {
-  const { initialHearts = 3 } = options;
+  const { initialHearts = 3, autoAdvanceOnWrong = true } = options;
   const [round, setRound] = useState(0);
   const [hearts, setHearts] = useState(initialHearts);
   const completedRef = useRef(false);
@@ -57,12 +61,15 @@ export function useGame<Q>(
   const handleWrong = useCallback(() => {
     setHearts((h) => {
       const next = Math.max(0, h - 1);
-      // Advance on wrong too — game continues regardless
-      if (timerRef.current) clearTimeout(timerRef.current);
-      timerRef.current = setTimeout(() => advance(next), 900);
+      if (autoAdvanceOnWrong) {
+        // Default: advance round after short delay so child sees the miss
+        if (timerRef.current) clearTimeout(timerRef.current);
+        timerRef.current = setTimeout(() => advance(next), 900);
+      }
+      // autoAdvanceOnWrong=false: only deduct heart, keep same question for retry
       return next;
     });
-  }, [advance]);
+  }, [advance, autoAdvanceOnWrong]);
 
   return { round, hearts, question, totalRounds, handleCorrect, handleWrong };
 }

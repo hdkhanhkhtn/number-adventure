@@ -18,19 +18,18 @@ export type MascotMood = 'happy' | 'wink' | 'think' | 'sleep' | 'celebrate';
 export type MascotColor = 'sun' | 'sage' | 'coral' | 'lavender' | 'sky';
 
 // ── Game ───────────────────────────────────────────────────
-export type GameType =
-  | 'hear-tap'
-  | 'build-number'
-  | 'even-odd'
-  | 'number-order'
-  | 'add-take';
+// Derived from the central registry — add new game types there, not here
+import type { GAME_REGISTRY } from '@/lib/game-engine/registry';
+export type GameType = keyof typeof GAME_REGISTRY;
 
 export type WorldId =
   | 'number-garden'
   | 'counting-castle'
   | 'even-odd-house'
   | 'number-sequence'
-  | 'math-kitchen';
+  | 'math-kitchen'
+  | 'counting-meadow'
+  | 'writing-workshop';
 
 export type Difficulty = 'easy' | 'medium' | 'hard';
 

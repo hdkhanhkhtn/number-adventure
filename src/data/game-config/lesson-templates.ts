@@ -67,6 +67,28 @@ export const LESSON_TEMPLATES: LessonTemplate[] = [
   { id: 'mk-07', worldId: 'math-kitchen', gameType: 'add-take', order: 7, title: 'Add to 50',     difficulty: 'hard',   questionCount: 12, passingStars: 2 },
   { id: 'mk-08', worldId: 'math-kitchen', gameType: 'add-take', order: 8, title: 'Take from 50',  difficulty: 'hard',   questionCount: 12, passingStars: 2 },
   { id: 'mk-09', worldId: 'math-kitchen', gameType: 'add-take', order: 9, title: 'Chef Master',   difficulty: 'hard',   questionCount: 15, passingStars: 2 },
+
+  // ── Counting Meadow (count-objects) ──────────────────────
+  { id: 'cm-01', worldId: 'counting-meadow', gameType: 'count-objects', order: 1, title: 'Count to 3',      difficulty: 'easy',   questionCount: 8,  passingStars: 1 },
+  { id: 'cm-02', worldId: 'counting-meadow', gameType: 'count-objects', order: 2, title: 'Count to 5',      difficulty: 'easy',   questionCount: 8,  passingStars: 1 },
+  { id: 'cm-03', worldId: 'counting-meadow', gameType: 'count-objects', order: 3, title: 'How Many?',       difficulty: 'easy',   questionCount: 10, passingStars: 1 },
+  { id: 'cm-04', worldId: 'counting-meadow', gameType: 'count-objects', order: 4, title: 'Count to 7',      difficulty: 'medium', questionCount: 10, passingStars: 2 },
+  { id: 'cm-05', worldId: 'counting-meadow', gameType: 'count-objects', order: 5, title: 'Count to 10',     difficulty: 'medium', questionCount: 10, passingStars: 2 },
+  { id: 'cm-06', worldId: 'counting-meadow', gameType: 'count-objects', order: 6, title: 'Quick Count',     difficulty: 'medium', questionCount: 12, passingStars: 2 },
+  { id: 'cm-07', worldId: 'counting-meadow', gameType: 'count-objects', order: 7, title: 'Count to 15',     difficulty: 'hard',   questionCount: 12, passingStars: 2 },
+  { id: 'cm-08', worldId: 'counting-meadow', gameType: 'count-objects', order: 8, title: 'Count to 20',     difficulty: 'hard',   questionCount: 12, passingStars: 2 },
+  { id: 'cm-09', worldId: 'counting-meadow', gameType: 'count-objects', order: 9, title: 'Counting Master', difficulty: 'hard',   questionCount: 15, passingStars: 2 },
+
+  // ── Writing Workshop (number-writing) ───────────────────
+  { id: 'ww-01', worldId: 'writing-workshop', gameType: 'number-writing', order: 1, title: 'Write 0 & 1',    difficulty: 'easy',   questionCount: 6,  passingStars: 1 },
+  { id: 'ww-02', worldId: 'writing-workshop', gameType: 'number-writing', order: 2, title: 'Write 2 & 3',    difficulty: 'easy',   questionCount: 6,  passingStars: 1 },
+  { id: 'ww-03', worldId: 'writing-workshop', gameType: 'number-writing', order: 3, title: 'Write 0-4',      difficulty: 'easy',   questionCount: 8,  passingStars: 1 },
+  { id: 'ww-04', worldId: 'writing-workshop', gameType: 'number-writing', order: 4, title: 'Write 5 & 6',    difficulty: 'medium', questionCount: 8,  passingStars: 2 },
+  { id: 'ww-05', worldId: 'writing-workshop', gameType: 'number-writing', order: 5, title: 'Write 0-6',      difficulty: 'medium', questionCount: 10, passingStars: 2 },
+  { id: 'ww-06', worldId: 'writing-workshop', gameType: 'number-writing', order: 6, title: 'Speed Write',    difficulty: 'medium', questionCount: 10, passingStars: 2 },
+  { id: 'ww-07', worldId: 'writing-workshop', gameType: 'number-writing', order: 7, title: 'Write 7, 8, 9',  difficulty: 'hard',   questionCount: 10, passingStars: 2 },
+  { id: 'ww-08', worldId: 'writing-workshop', gameType: 'number-writing', order: 8, title: 'Write All',      difficulty: 'hard',   questionCount: 12, passingStars: 2 },
+  { id: 'ww-09', worldId: 'writing-workshop', gameType: 'number-writing', order: 9, title: 'Writing Master', difficulty: 'hard',   questionCount: 12, passingStars: 2 },
 ];
 
 export function getLessonsForWorld(worldId: WorldId): LessonTemplate[] {

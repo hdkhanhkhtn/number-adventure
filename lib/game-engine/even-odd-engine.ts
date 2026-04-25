@@ -10,3 +10,12 @@ export function generateEvenOddQuestion(min = 1, max = 20): EvenOddQuestion {
 export function generateEvenOddQuestions(count: number, min = 1, max = 20): EvenOddQuestion[] {
   return Array.from({ length: count }, () => generateEvenOddQuestion(min, max));
 }
+
+import type { GameEngine } from './registry';
+
+export const evenOddEngine: GameEngine = {
+  generateQuestions: (count, difficulty) => {
+    const maxMap: Record<string, number> = { easy: 10, medium: 20, hard: 50 };
+    return generateEvenOddQuestions(count, 1, maxMap[difficulty ?? 'easy'] ?? 10);
+  },
+};

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useGameProgress } from '@/context/game-progress-context';
 import { useGameSession } from '@/lib/hooks/use-game-session';
 import { loadQuestions } from '@/lib/game-engine/question-loader';
+import { GAME_REGISTRY } from '@/lib/game-engine/registry';
 import type { AnyQuestion, GameType } from '@/lib/game-engine/types';
 import type { GameResult } from '@/lib/game-engine/types';
 import { LESSON_TEMPLATES } from '@/src/data/game-config/lesson-templates';
@@ -13,8 +14,10 @@ import { BuildNumberGame } from './build-number-game';
 import { EvenOddGame } from './even-odd-game';
 import { NumberOrderGame } from './number-order-game';
 import { AddTakeGame } from './add-take-game';
+import { CountObjectsGame } from './count-objects-game';
+import { NumberWritingGame } from './number-writing-game';
 
-const VALID_GAME_TYPES: GameType[] = ['hear-tap', 'build-number', 'even-odd', 'number-order', 'add-take'];
+const VALID_GAME_TYPES = Object.keys(GAME_REGISTRY) as GameType[];
 
 type GameProps = {
   questions: AnyQuestion[];
@@ -24,11 +27,13 @@ type GameProps = {
 };
 
 const GAME_MAP: Record<GameType, React.ComponentType<GameProps>> = {
-  'hear-tap':     HearTapGame as React.ComponentType<GameProps>,
-  'build-number': BuildNumberGame as React.ComponentType<GameProps>,
-  'even-odd':     EvenOddGame as React.ComponentType<GameProps>,
-  'number-order': NumberOrderGame as React.ComponentType<GameProps>,
-  'add-take':     AddTakeGame as React.ComponentType<GameProps>,
+  'hear-tap':       HearTapGame as React.ComponentType<GameProps>,
+  'build-number':   BuildNumberGame as React.ComponentType<GameProps>,
+  'even-odd':       EvenOddGame as React.ComponentType<GameProps>,
+  'number-order':   NumberOrderGame as React.ComponentType<GameProps>,
+  'add-take':       AddTakeGame as React.ComponentType<GameProps>,
+  'count-objects':  CountObjectsGame as React.ComponentType<GameProps>,
+  'number-writing': NumberWritingGame as React.ComponentType<GameProps>,
 };
 
 export default function PlayPage({ params }: { params: Promise<{ gameType: string; lessonId: string }> }) {
@@ -60,7 +65,10 @@ export default function PlayPage({ params }: { params: Promise<{ gameType: strin
       if (!cancelled) { setQuestions(qs); setLoading(false); }
     })();
     return () => { cancelled = true; };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  // Intentionally runs once on mount only. hasStarted ref guards against
+  // React Strict Mode double-invocation creating duplicate game sessions.
+  }, []);
 
   const handleComplete = async (result: GameResult) => {
     const sessionResult = await completeSession(result.stars);
