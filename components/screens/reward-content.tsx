@@ -7,6 +7,7 @@ import { StarRow } from '@/components/ui/star-row';
 import { Sparkles } from '@/components/ui/sparkles';
 import { Confetti } from '@/components/ui/confetti';
 import { StatDisplay } from './stat-display';
+import { StreakCard } from '@/components/ui/streak-card';
 import type { MascotColor } from '@/lib/types/common';
 
 export interface RewardContentProps {
@@ -14,6 +15,7 @@ export interface RewardContentProps {
   correct: number;
   total: number;
   sticker?: { emoji: string; name: string } | null;
+  streak?: { currentStreak: number; longestStreak: number } | null;
   onContinue: () => void;
   profileName: string;
   profileColor?: MascotColor;
@@ -21,7 +23,7 @@ export interface RewardContentProps {
 
 /** Celebration screen shown after completing a game */
 export function RewardContent({
-  stars, correct, total, sticker, onContinue, profileName, profileColor = 'sun',
+  stars, correct, total, sticker, streak, onContinue, profileName, profileColor = 'sun',
 }: RewardContentProps) {
   const message = stars === 3 ? 'Amazing, ' : stars === 2 ? 'Great job, ' : 'Good try, ';
 
@@ -73,6 +75,12 @@ export function RewardContent({
               <div style={{ fontSize: 11, fontWeight: 700, color: '#5D3F94', letterSpacing: 0.5 }}>NEW STICKER!</div>
               <div style={{ fontSize: 16, fontWeight: 700, color: '#2D3A2E' }}>{sticker.name}</div>
             </div>
+          </div>
+        )}
+
+        {streak && streak.currentStreak > 0 && (
+          <div style={{ marginTop: 14, width: '100%' }}>
+            <StreakCard currentStreak={streak.currentStreak} longestStreak={streak.longestStreak} />
           </div>
         )}
 

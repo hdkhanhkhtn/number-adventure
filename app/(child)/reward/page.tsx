@@ -9,6 +9,7 @@ import type { MascotColor } from '@/lib/types/common';
 interface SessionResult {
   session: { stars: number };
   sticker?: { emoji: string; name: string } | null;
+  streak?: { currentStreak: number; longestStreak: number } | null;
   correct?: number;
   total?: number;
 }
@@ -44,6 +45,7 @@ function RewardInner() {
       correct={correct}
       total={total}
       sticker={result.sticker ?? null}
+      streak={result.streak ?? null}
       profileName={profile.name}
       profileColor={profile.color as MascotColor}
       onContinue={() => {

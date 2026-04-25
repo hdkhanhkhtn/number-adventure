@@ -16,6 +16,7 @@ export default function HomePage() {
   const { state } = useGameProgress();
   const router = useRouter();
   const [streak, setStreak] = useState(0);
+  const [longestStreak, setLongestStreak] = useState(0);
   const [weekDays, setWeekDays] = useState<boolean[]>(Array(7).fill(false));
   const [stickerCount, setStickerCount] = useState(0);
   const [showGate, setShowGate] = useState(false);
@@ -30,7 +31,10 @@ export default function HomePage() {
     // Fetch streak
     fetch(`/api/streaks/${childId}`)
       .then((r) => r.json())
-      .then((d: { currentStreak?: number }) => setStreak(d.currentStreak ?? 0))
+      .then((d: { currentStreak?: number; longestStreak?: number }) => {
+        setStreak(d.currentStreak ?? 0);
+        setLongestStreak(d.longestStreak ?? 0);
+      })
       .catch(() => undefined);
 
     // Fetch progress (for weekDays)
@@ -53,6 +57,7 @@ export default function HomePage() {
       <HomeScreen
         profile={{ name: profile.name, color: profile.color as MascotColor }}
         streak={streak}
+        longestStreak={longestStreak}
         weekDays={weekDays}
         stickerCount={stickerCount}
         stickerTotal={stickerTotal}

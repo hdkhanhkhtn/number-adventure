@@ -7,11 +7,13 @@ import { IconBtn } from '@/components/ui/icon-btn';
 import { Tag } from '@/components/ui/tag';
 import { Sparkles } from '@/components/ui/sparkles';
 import { QuickTile } from './quick-tile';
+import { StreakCard } from '@/components/ui/streak-card';
 import type { MascotColor } from '@/lib/types/common';
 
 export interface HomeScreenProps {
   profile: { name: string; color: MascotColor };
   streak: number;
+  longestStreak: number;
   weekDays: boolean[];
   stickerCount: number;
   stickerTotal: number;
@@ -21,11 +23,9 @@ export interface HomeScreenProps {
   onParent: () => void;
 }
 
-const WEEK_LABELS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
-
 /** Main child home screen */
 export function HomeScreen({
-  profile, streak, weekDays, stickerCount, stickerTotal,
+  profile, streak, longestStreak, weekDays, stickerCount, stickerTotal,
   onPlay, onMap, onStickers, onParent,
 }: HomeScreenProps) {
   return (
@@ -98,30 +98,8 @@ export function HomeScreen({
         </div>
 
         {/* Weekly progress */}
-        <div style={{ marginTop: 'auto', padding: 14, borderRadius: 20, background: '#FFF8EC', border: '2px solid rgba(46,90,58,0.12)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-            <div style={{ fontSize: 13, color: '#6B7A6C', fontWeight: 600 }}>This week</div>
-            <div style={{ fontSize: 13, color: '#2F6A3C', fontWeight: 700 }}>
-              {weekDays.filter(Boolean).length} of 7 days
-            </div>
-          </div>
-          <div style={{ display: 'flex', gap: 6 }}>
-            {WEEK_LABELS.map((d, i) => (
-              <div key={i} style={{ flex: 1, textAlign: 'center' }}>
-                <div style={{
-                  width: '100%', paddingBottom: '100%', borderRadius: 10,
-                  background: weekDays[i] ? '#FFD36E' : '#F0EADD',
-                  border: '2px solid ' + (weekDays[i] ? '#C79528' : 'rgba(46,90,58,0.15)'),
-                  position: 'relative', marginBottom: 4,
-                }}>
-                  {weekDays[i] && (
-                    <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14 }}>⭐</div>
-                  )}
-                </div>
-                <div style={{ fontSize: 10, color: '#6B7A6C', fontWeight: 600 }}>{d}</div>
-              </div>
-            ))}
-          </div>
+        <div style={{ marginTop: 'auto' }}>
+          <StreakCard currentStreak={streak} longestStreak={longestStreak} weekData={weekDays} />
         </div>
       </div>
     </div>
