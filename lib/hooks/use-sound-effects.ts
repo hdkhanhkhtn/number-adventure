@@ -1,25 +1,36 @@
 'use client';
-// Sound effects hook — stub implementations, real SFX via Howler.js in Phase 2
-import { useContext } from 'react';
+
+import { useCallback, useContext } from 'react';
 import { AudioCtx } from '@/context/audio-context';
+import { playSfx } from '@/lib/audio/sfx-sprite-map';
 
 export function useSoundEffects() {
   const { sfxEnabled } = useContext(AudioCtx);
 
-  const playCorrect = () => {
+  const playCorrect = useCallback(() => {
     if (!sfxEnabled) return;
-    // TODO: Play correct-answer SFX via Howler.js
-  };
+    playSfx('correct');
+  }, [sfxEnabled]);
 
-  const playWrong = () => {
+  const playWrong = useCallback(() => {
     if (!sfxEnabled) return;
-    // TODO: Play wrong-answer SFX via Howler.js
-  };
+    playSfx('wrong');
+  }, [sfxEnabled]);
 
-  const playLevelComplete = () => {
+  const playLevelComplete = useCallback(() => {
     if (!sfxEnabled) return;
-    // TODO: Play level-complete SFX via Howler.js
-  };
+    playSfx('level-complete');
+  }, [sfxEnabled]);
 
-  return { playCorrect, playWrong, playLevelComplete };
+  const playTap = useCallback(() => {
+    if (!sfxEnabled) return;
+    playSfx('tap');
+  }, [sfxEnabled]);
+
+  const playStarEarn = useCallback(() => {
+    if (!sfxEnabled) return;
+    playSfx('star-earn');
+  }, [sfxEnabled]);
+
+  return { playCorrect, playWrong, playLevelComplete, playTap, playStarEarn };
 }
