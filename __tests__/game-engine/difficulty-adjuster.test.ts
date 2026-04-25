@@ -1,5 +1,4 @@
 import { adjustDifficulty, DifficultyState } from '@/lib/game-engine/difficulty-adjuster';
-import type { Difficulty } from '@/lib/types/common';
 
 const baseState = (): DifficultyState => ({
   easeFactor: 2.5,

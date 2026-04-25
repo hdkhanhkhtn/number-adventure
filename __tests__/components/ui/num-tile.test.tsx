@@ -13,8 +13,7 @@ import { NumTile } from '@/components/ui/num-tile';
 jest.mock('framer-motion', () => ({
   motion: {
     button: React.forwardRef((props: any, ref: any) => (
-      // eslint-disable-next-line react/button-has-type
-      <button ref={ref} {...props} />
+      <button ref={ref} {...props} type="button" />
     )),
   },
   AnimatePresence: ({ children }: any) => <>{children}</>,
@@ -158,11 +157,11 @@ describe('NumTile', () => {
   });
 
   it('applies different styles for correct state', () => {
-    const { container } = render(<NumTile n={5} state="correct" />);
+    render(<NumTile n={5} state="correct" />);
     const button = screen.getByRole('button');
 
     // Check for specific CSS properties set for correct state
-    const style = window.getComputedStyle(button);
+    window.getComputedStyle(button);
     // Opacity should be set; the actual values depend on Framer Motion which we mocked
     expect(button).toBeInTheDocument();
   });
