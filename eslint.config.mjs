@@ -14,6 +14,14 @@ const eslintConfig = defineConfig([
       'react-hooks/purity': 'off',
     },
   },
+  {
+    // Test files use `any` for mocks and forwardRef wrappers — these rules are too strict here
+    files: ['**/__tests__/**', '**/*.test.ts', '**/*.test.tsx'],
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'off',
+      'react/display-name': 'off',
+    },
+  },
   // Override default ignores of eslint-config-next.
   globalIgnores([
     // Default ignores of eslint-config-next:
