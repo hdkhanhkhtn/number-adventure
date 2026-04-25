@@ -69,8 +69,11 @@ export async function trySyncNow(): Promise<void> {
         });
         if (res.ok && item.id != null) {
           await db.delete(STORE_NAME, item.id);
+        } else if (!res.ok && res.status >= 400 && res.status < 500 && item.id != null) {
+          // Permanent client error (session deleted, invalid payload) — discard this item
+          await db.delete(STORE_NAME, item.id);
         } else {
-          break; // stop on first failure, retry later
+          break; // transient server error or unexpected state — stop drain, retry later
         }
       } catch {
         break; // network error — stop draining, will retry next trigger

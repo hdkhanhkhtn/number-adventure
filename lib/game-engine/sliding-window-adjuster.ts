@@ -83,9 +83,16 @@ export function computeSlidingWindowAdjustment(
     parentCeiling,
   } = input;
 
+  // Compute accuracy from available attempts early so all return paths report real data.
+  // Uses a partial window when recentAttempts < WINDOW_SIZE (gates below haven't fired yet).
+  const windowSlice = recentAttempts.slice(0, Math.min(WINDOW_SIZE, recentAttempts.length));
+  const windowAccuracy = windowSlice.length > 0
+    ? windowSlice.filter((a) => a.correct).length / windowSlice.length
+    : 0;
+
   const noChange: SlidingWindowResult = {
     newBand: currentBand,
-    windowAccuracy: 0,
+    windowAccuracy,
     consecutiveTriggers,
     bandLockedUntil,
     changed: false,
@@ -100,11 +107,7 @@ export function computeSlidingWindowAdjustment(
   if (recentAttempts.length < WINDOW_SIZE) {
     return noChange;
   }
-
-  // Compute accuracy over the window
-  const windowSlice = recentAttempts.slice(0, WINDOW_SIZE);
-  const correctCount = windowSlice.filter((a) => a.correct).length;
-  const windowAccuracy = correctCount / WINDOW_SIZE;
+  // windowAccuracy is already computed above; at this point slice is exactly WINDOW_SIZE
 
   // Gate 3: cooldown lock — only one adjustment per session
   if (bandLockedUntil === currentSessionId) {
