@@ -48,6 +48,7 @@ export function ParentDashboardContent() {
 
   const streak = report?.streak ?? { currentStreak: 0, longestStreak: 0 };
   const totalMin = (report?.recentActivity ?? []).reduce((s, v) => s + v, 0);
+  const isEmpty = !childId || childId.startsWith('guest_') || (!report || (report.lessonsCompleted === 0 && report.totalStars === 0));
 
   return (
     <div style={{ position: 'relative', minHeight: '100vh', background: '#F5F3ED', fontFamily: 'var(--font-parent)' }}>
@@ -78,42 +79,53 @@ export function ParentDashboardContent() {
           </div>
         </div>
 
-        {/* Metrics grid */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-          <MetricCard label="Tuần này" value={`${totalMin} phút`} sub="Thời gian chơi" accent="#5FB36A" />
-          <MetricCard label="Chuỗi ngày" value={`${streak.currentStreak} ngày`} sub="🔥 liên tiếp" accent="#C14A2A" />
-          <MetricCard label="Độ chính xác" value={report && report.games.length > 0 ? `${Math.round(report.games.reduce((s, g) => s + g.accuracy, 0) / report.games.length)}%` : '—'} sub="trung bình" accent="#2E6F93" />
-          <MetricCard label="Ngôi sao" value={`${report?.totalStars ?? 0} ⭐`} sub="đã thu thập" accent="#B87C0E" />
-        </div>
-
-        {/* Weekly chart */}
-        <div style={{ background: '#fff', borderRadius: 20, padding: 16, border: '1px solid rgba(0,0,0,0.06)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 14 }}>
-            <div style={{ fontSize: 15, fontWeight: 700, color: '#1F2A1F' }}>Hoạt động tuần này</div>
-            <div style={{ fontSize: 12, color: '#6B7A6C' }}>mục tiêu 15ph/ngày</div>
+        {isEmpty ? (
+          <div style={{ background: '#fff', borderRadius: 20, padding: 24, textAlign: 'center', border: '1px solid rgba(0,0,0,0.06)' }}>
+            <BapMascot size={64} color={profile?.color ?? 'sage'} mood="happy" />
+            <div style={{ fontSize: 17, fontWeight: 700, color: '#1F2A1F', marginTop: 12 }}>Chưa có hoạt động</div>
+            <div style={{ fontSize: 14, color: '#6B7A6C', marginTop: 6, lineHeight: 1.5 }}>Bé chưa chơi trò nào. Hãy bắt đầu khám phá!</div>
+            <button
+              onClick={() => router.push('/home')}
+              style={{ marginTop: 16, padding: '12px 24px', borderRadius: 999, background: '#2E5A3A', color: '#fff', fontSize: 15, fontWeight: 700, border: 'none', cursor: 'pointer' }}
+            >
+              Bắt đầu chơi
+            </button>
           </div>
-          <WeeklyChart data={report?.recentActivity ?? Array(7).fill(0)} goal={15} height={100} />
-        </div>
-
-        {/* Skills breakdown */}
-        {report && report.games.length > 0 && (
-          <div style={{ background: '#fff', borderRadius: 20, padding: 16, border: '1px solid rgba(0,0,0,0.06)' }}>
-            <div style={{ fontSize: 15, fontWeight: 700, color: '#1F2A1F', marginBottom: 12 }}>Kỹ năng</div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              {report.games.map(g => (
-                <SkillRow
-                  key={g.type} label={g.label}
-                  value={g.accuracy / 100}
-                  color={SKILL_COLORS[g.type] ?? '#9AA69A'}
-                  badge={g.accuracy >= 80 ? 'Giỏi' : g.accuracy >= 50 ? 'Đang học' : 'Mới bắt đầu'}
-                />
-              ))}
+        ) : (
+          <>
+            {/* Metrics grid */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+              <MetricCard label="Tuần này" value={`${totalMin} phút`} sub="Thời gian chơi" accent="#5FB36A" />
+              <MetricCard label="Chuỗi ngày" value={`${streak.currentStreak} ngày`} sub="🔥 liên tiếp" accent="#C14A2A" />
+              <MetricCard label="Độ chính xác" value={report && report.games.length > 0 ? `${Math.round(report.games.reduce((s, g) => s + g.accuracy, 0) / report.games.length)}%` : '—'} sub="trung bình" accent="#2E6F93" />
+              <MetricCard label="Ngôi sao" value={`${report?.totalStars ?? 0} ⭐`} sub="đã thu thập" accent="#B87C0E" />
             </div>
-          </div>
-        )}
 
-        {/* Streak card */}
-        <StreakCard currentStreak={streak.currentStreak} longestStreak={streak.longestStreak} />
+            {/* Weekly chart */}
+            <div style={{ background: '#fff', borderRadius: 20, padding: 16, border: '1px solid rgba(0,0,0,0.06)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 14 }}>
+                <div style={{ fontSize: 15, fontWeight: 700, color: '#1F2A1F' }}>Hoạt động tuần này</div>
+                <div style={{ fontSize: 12, color: '#6B7A6C' }}>mục tiêu 15ph/ngày</div>
+              </div>
+              <WeeklyChart data={report?.recentActivity ?? Array(7).fill(0)} goal={15} height={100} />
+            </div>
+
+            {/* Skills breakdown */}
+            {report && report.games.length > 0 && (
+              <div style={{ background: '#fff', borderRadius: 20, padding: 16, border: '1px solid rgba(0,0,0,0.06)' }}>
+                <div style={{ fontSize: 15, fontWeight: 700, color: '#1F2A1F', marginBottom: 12 }}>Kỹ năng</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  {report.games.map(g => (
+                    <SkillRow key={g.type} label={g.label} value={g.accuracy / 100} color={SKILL_COLORS[g.type] ?? '#9AA69A'} badge={g.accuracy >= 80 ? 'Giỏi' : g.accuracy >= 50 ? 'Đang học' : 'Mới bắt đầu'} />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Streak card */}
+            <StreakCard currentStreak={streak.currentStreak} longestStreak={streak.longestStreak} />
+          </>
+        )}
 
         {/* Action menu */}
         <div style={{ background: '#fff', borderRadius: 20, border: '1px solid rgba(0,0,0,0.06)', overflow: 'hidden' }}>

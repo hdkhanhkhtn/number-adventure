@@ -7,14 +7,16 @@ import { IconBtn } from '@/components/ui/icon-btn';
 import { ParentSettingsTimeTab } from './parent-settings-time-tab';
 import { ParentSettingsLangTab } from './parent-settings-lang-tab';
 import { ParentSettingsAudioTab } from './parent-settings-audio-tab';
+import { ParentSettingsSecurityTab } from './parent-settings-security-tab';
 import type { ChildSettings } from '@/lib/types/common';
 
-type Tab = 'time' | 'lang' | 'audio';
+type Tab = 'time' | 'lang' | 'audio' | 'security';
 
 const TABS: { key: Tab; label: string }[] = [
   { key: 'time', label: '⏱ Thời gian' },
   { key: 'lang', label: '🌏 Ngôn ngữ' },
   { key: 'audio', label: '🔊 Âm thanh' },
+  { key: 'security', label: '🔒 Bảo mật' },
 ];
 
 const DEFAULTS: ChildSettings = {
@@ -100,6 +102,7 @@ export function ParentSettingsContent() {
         {tab === 'time' && <ParentSettingsTimeTab settings={settings} onChange={handleChange} />}
         {tab === 'lang' && <ParentSettingsLangTab settings={settings} onChange={handleChange} />}
         {tab === 'audio' && <ParentSettingsAudioTab settings={settings} onChange={handleChange} />}
+        {tab === 'security' && <ParentSettingsSecurityTab childId={childId} />}
       </div>
     </div>
   );
