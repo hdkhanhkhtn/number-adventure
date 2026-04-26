@@ -21,6 +21,8 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   output: 'standalone',
+  // Silence Turbopack conflict warning — serwist uses webpack plugin for SW generation only
+  turbopack: {},
   async headers() {
     return [
       {
