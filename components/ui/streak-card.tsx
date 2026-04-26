@@ -4,22 +4,25 @@ export interface StreakCardProps {
   currentStreak: number;
   longestStreak: number;
   weekData?: boolean[]; // 7 booleans Mon–Sun, true = completed
+  onTap?: () => void;
 }
 
 const DAYS = ['M', 'Tu', 'W', 'Th', 'F', 'Sa', 'Su'];
 
 /** Shows flame + streak count + 7-day dot calendar */
-export function StreakCard({ currentStreak, longestStreak, weekData = [] }: StreakCardProps) {
+export function StreakCard({ currentStreak, longestStreak, weekData = [], onTap }: StreakCardProps) {
   const days = Array.from({ length: 7 }, (_, i) => weekData[i] ?? false);
 
   return (
     <div
+      onClick={onTap}
       style={{
         background: '#FFF8EC',
         borderRadius: 'var(--r-lg)',
         border: '2px solid rgba(46,90,58,0.12)',
         padding: 16,
         boxShadow: 'var(--shadow-card)',
+        cursor: onTap ? 'pointer' : 'default',
       }}
     >
       {/* Header: flame + streak count + longest */}
