@@ -16,6 +16,9 @@ import { NumberOrderGame } from './number-order-game';
 import { AddTakeGame } from './add-take-game';
 import { CountObjectsGame } from './count-objects-game';
 import { NumberWritingGame } from './number-writing-game';
+import { useSessionTimer } from '@/lib/hooks/use-session-timer';
+import { TimeUpOverlay } from '@/components/screens/time-up-overlay';
+import { ExitConfirmModal } from '@/components/game/exit-confirm-modal';
 
 const VALID_GAME_TYPES = Object.keys(GAME_REGISTRY) as GameType[];
 
@@ -42,6 +45,11 @@ export default function PlayPage({ params }: { params: Promise<{ gameType: strin
   const router = useRouter();
   const [questions, setQuestions] = useState<AnyQuestion[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showTimeUp, setShowTimeUp] = useState(false);
+  const [showExitConfirm, setShowExitConfirm] = useState(false);
+
+  const dailyMin = state.settings?.dailyMin ?? 15;
+  const { timeUp } = useSessionTimer(dailyMin);
 
   const childId = state.childId ?? 'guest';
   const { startSession, submitAttempt, completeSession } = useGameSession(childId, lessonId);
@@ -51,6 +59,13 @@ export default function PlayPage({ params }: { params: Promise<{ gameType: strin
 
   // Guard against React Strict Mode double-invocation creating duplicate sessions
   const hasStarted = useRef(false);
+
+  // Redirect immediately if today's limit already reached before game loads
+  useEffect(() => {
+    if (timeUp && loading) {
+      router.replace('/home');
+    }
+  }, [timeUp, loading, router]);
 
   useEffect(() => {
     if (!validGameType) return;
@@ -77,6 +92,11 @@ export default function PlayPage({ params }: { params: Promise<{ gameType: strin
       ? { ...sessionResult, correct: result.correct, total: result.total }
       : { session: { stars: result.stars }, correct: result.correct, total: result.total };
     sessionStorage.setItem('lastGameResult', JSON.stringify(payload));
+
+    if (timeUp) {
+      setShowTimeUp(true);
+      return;
+    }
     const worldId = lesson?.worldId ?? '';
     router.push(`/reward?worldId=${worldId}`);
   };
@@ -96,11 +116,23 @@ export default function PlayPage({ params }: { params: Promise<{ gameType: strin
 
   const GameComponent = GAME_MAP[validGameType];
   return (
-    <GameComponent
-      questions={questions}
-      onComplete={handleComplete}
-      onExit={() => router.back()}
-      onAttempt={handleAttempt}
-    />
+    <>
+      <GameComponent
+        questions={questions}
+        onComplete={handleComplete}
+        onExit={() => setShowExitConfirm(true)}
+        onAttempt={handleAttempt}
+      />
+      {showTimeUp && <TimeUpOverlay />}
+      {showExitConfirm && (
+        <ExitConfirmModal
+          onStay={() => setShowExitConfirm(false)}
+          onQuit={async () => {
+            await completeSession(0);
+            router.push(`/worlds/${lesson?.worldId ?? ''}`);
+          }}
+        />
+      )}
+    </>
   );
 }
