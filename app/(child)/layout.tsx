@@ -25,11 +25,35 @@ export default function ChildLayout({ children }: { children: React.ReactNode })
     if (hydrated && state.childId) setStep('ready');
   }, [hydrated, state.childId]);
 
-  // Phase B: store profile locally with a stable UUID-based guest ID.
-  // DB registration is deferred to Phase C (auth wiring).
+  const [registering, setRegistering] = useState(false);
+
+  // TODO Phase 2E: if state.childId?.startsWith('guest_') && parentId cookie exists → show "Save your progress" prompt
+
+  // Attempt DB registration; fall back to guest mode on auth/network failure.
   // When childId starts with 'guest_', session-related API calls are skipped
   // in useGameSession to avoid FK violations.
-  const handleProfileDone = (profile: { name: string; age: number; color: MascotColor }) => {
+  const handleProfileDone = async (profile: { name: string; age: number; color: MascotColor }) => {
+    if (registering) return;
+    setRegistering(true);
+    try {
+      const res = await fetch('/api/children', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(profile),
+      });
+      if (res.status === 201) {
+        const { child } = await res.json();
+        setChild(child.id, { id: child.id, ...profile });
+        setStep('ready');
+        return;
+      }
+      // 401 = no parent auth; other statuses → fall through to guest mode
+    } catch {
+      console.warn('[onboarding] DB registration failed, using guest mode');
+    } finally {
+      setRegistering(false);
+    }
     const guestId = `guest_${crypto.randomUUID()}`;
     setChild(guestId, { id: guestId, ...profile });
     setStep('ready');
