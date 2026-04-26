@@ -1,8 +1,17 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-// Routes accessible without a session token
-const PUBLIC_API_PATHS = ['/api/auth/register', '/api/auth/login'];
+// Routes accessible without a bap-session token (use parentId cookie for auth instead)
+const PUBLIC_API_PATHS = [
+  '/api/auth/register',
+  '/api/auth/login',
+  '/api/auth/pin',
+  '/api/auth/pin/setup',
+  '/api/auth/session',
+  '/api/auth/profile',
+  '/api/children',
+  '/api/report',
+];
 
 /**
  * Auth middleware — two responsibilities:
