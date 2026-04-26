@@ -172,8 +172,8 @@ All screens designed in Claude Design and exported as a runnable HTML prototype.
 - 4-digit PIN gate with bcryptjs + rate limiting
 - Parent settings security tab (PIN change, progress reset)
 - Daily session timer with time-up overlay
-- Guest-to-DB child registration on parent auth
 - Session persistence (localStorage)
+- Basic onboarding shell (splash → welcome → profile setup in child layout)
 
 ### Phase 2E — Screen Polish & Overlays ✅ Done
 - World intro overlay (first visit to world)
@@ -186,10 +186,51 @@ All screens designed in Claude Design and exported as a runnable HTML prototype.
 
 ---
 
-## Phase 3 — Social / Engagement 📋 Planned
+## Phase 3 — Stability, Content & Growth 🔄 In Progress
 
-- Parent-to-child encouragement messages
-- Weekly email report for parents
-- Leaderboard (friends/family only)
-- Classroom mode (teacher dashboard)
-- Cloud sync (optional account)
+**Goal:** Fix navigation/flow issues, complete settings, expand content with AI pipeline, add social features.
+
+### Phase 3A — Navigation & Onboarding Redesign 🔜 Next
+**Focus:** Fix blank screens, stabilize user flows, complete onboarding + settings
+
+| # | Task | Priority |
+|---|---|---|
+| 3A-01 | Fix blank screen when profile is null — redirect to onboarding instead of `return null` | Critical |
+| 3A-02 | Guest→DB migration: show "Save your progress" prompt when parent logs in after guest session | Critical |
+| 3A-03 | Onboarding redesign — complete replacement: multi-step wizard (language → profile → first world intro) | High |
+| 3A-04 | Navigation polish: back navigation, deep-link handling, transition animations | High |
+| 3A-05 | Settings completeness: volume slider, high-contrast toggle, reduce-motion toggle | Medium |
+| 3A-06 | Settings completeness: bedtime mode, daily break reminder, game hints toggle | Medium |
+| 3A-07 | Parent settings: game rotation control (auto / favorites / all games) | Medium |
+
+### Phase 3B — AI Content Pipeline & World Expansion 📋 Planned
+**Focus:** Lesson content generated via AI/Google — replace static hardcoded templates
+
+| # | Task | Priority |
+|---|---|---|
+| 3B-01 | AI lesson content generator script: use Claude/Gemini API to generate lesson titles, descriptions, learning objectives per world | High |
+| 3B-02 | Dynamic lesson seeding: move lesson templates from static TS file → DB (Prisma Lesson table), seeded by AI script | High |
+| 3B-03 | Google TTS audio pack generation: run existing `scripts/generate-tts-audio.ts` to generate all number audio files (EN + VI) | High |
+| 3B-04 | World 6: Counting Meadow (count-objects) — full lesson set with AI-generated content | Medium |
+| 3B-05 | World 7: Writing Workshop (number-writing) — full lesson set with AI-generated content | Medium |
+| 3B-06 | Admin script: add new worlds/lessons without code changes (JSON config → AI expand → DB seed) | Medium |
+
+### Phase 3C — Social & Multi-Profile 📋 Planned
+**Focus:** Multi-child support, parent engagement, shareable progress
+
+| # | Task | Priority |
+|---|---|---|
+| 3C-01 | Multi-child profiles: UI to add/switch between children (Prisma schema already supports children[]) | High |
+| 3C-02 | Parent-to-child encouragement messages: parent writes, child sees on home screen | Medium |
+| 3C-03 | Weekly progress email report for parents | Medium |
+| 3C-04 | Export child progress as PDF/CSV (parent dashboard) | Low |
+| 3C-05 | Leaderboard (friends/family only, opt-in) | Low |
+
+---
+
+## Phase 4 — Cloud & Scale 📋 Future
+
+- Cloud sync / optional account (replace localStorage-only)
+- Classroom mode (teacher dashboard, student management)
+- Push notifications (requires native wrapper)
+- In-app bilingual content pack (downloadable language packs)

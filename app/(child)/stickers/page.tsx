@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useGameProgress } from '@/context/game-progress-context';
+import { SkeletonScreen } from '@/components/ui/skeleton-screen';
 import { GardenBg } from '@/components/ui/garden-bg';
 import { IconBtn } from '@/components/ui/icon-btn';
 import { ProgressBar } from '@/components/ui/progress-bar';
@@ -16,12 +17,13 @@ interface StickerEntry {
 }
 
 export default function StickersPage() {
-  const { state } = useGameProgress();
+  const { state, isHydrated } = useGameProgress();
   const router = useRouter();
   const [stickers, setStickers] = useState<StickerEntry[]>([]);
   const [total, setTotal] = useState(40);
   const [selectedSticker, setSelectedSticker] = useState<StickerEntry | null>(null);
 
+  // All hooks before early returns
   useEffect(() => {
     if (!state.childId) return;
     fetch(`/api/children/${state.childId}/stickers`)
@@ -32,6 +34,13 @@ export default function StickersPage() {
       })
       .catch(() => undefined);
   }, [state.childId]);
+
+  // Guards: after all hooks
+  if (!isHydrated) return <SkeletonScreen />;
+  if (!state.childId || !state.profile) {
+    router.replace('/');
+    return null;
+  }
 
   const collected = stickers.filter((s) => s.earned).length;
 

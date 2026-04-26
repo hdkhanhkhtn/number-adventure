@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useGameProgress } from '@/context/game-progress-context';
+import { SkeletonScreen } from '@/components/ui/skeleton-screen';
 import { HomeScreen } from '@/components/screens/home-screen';
 import { ParentGate } from '@/components/parent/parent-gate';
 import type { MascotColor } from '@/lib/types/common';
@@ -13,7 +14,7 @@ interface ProgressData {
 }
 
 export default function HomePage() {
-  const { state } = useGameProgress();
+  const { state, isHydrated } = useGameProgress();
   const router = useRouter();
   const [streak, setStreak] = useState(0);
   const [longestStreak, setLongestStreak] = useState(0);
@@ -23,7 +24,6 @@ export default function HomePage() {
   const stickerTotal = STICKER_DEFS.length;
 
   const childId = state.childId;
-  const profile = state.profile;
 
   useEffect(() => {
     if (!childId) return;
@@ -50,7 +50,13 @@ export default function HomePage() {
       .catch(() => undefined);
   }, [childId]);
 
-  if (!profile) return null;
+  if (!isHydrated) return <SkeletonScreen />;
+  if (!state.childId || !state.profile) {
+    router.replace('/');
+    return null;
+  }
+
+  const profile = state.profile;
 
   return (
     <>

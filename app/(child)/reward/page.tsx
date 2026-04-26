@@ -3,6 +3,7 @@
 import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useGameProgress } from '@/context/game-progress-context';
+import { SkeletonScreen } from '@/components/ui/skeleton-screen';
 import { RewardContent } from '@/components/screens/reward-content';
 import { useSessionTimer } from '@/lib/hooks/use-session-timer';
 import { DailyGoalOverlay } from '@/components/screens/daily-goal-overlay';
@@ -17,7 +18,7 @@ interface SessionResult {
 }
 
 function RewardInner() {
-  const { state } = useGameProgress();
+  const { state, isHydrated } = useGameProgress();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [result, setResult] = useState<SessionResult | null>(null);
@@ -26,7 +27,11 @@ function RewardInner() {
   useEffect(() => {
     const cached = sessionStorage.getItem('lastGameResult');
     if (cached) {
-      setResult(JSON.parse(cached) as SessionResult);
+      try {
+        setResult(JSON.parse(cached) as SessionResult);
+      } catch {
+        setResult({ session: { stars: 1 } });
+      }
       sessionStorage.removeItem('lastGameResult');
     } else {
       // Fallback: minimal result
@@ -46,8 +51,15 @@ function RewardInner() {
     }
   }, [elapsedMin, dailyMin, dailyGoalKey]);
 
+  // Guards: after all hooks
+  if (!isHydrated) return <SkeletonScreen />;
+  if (!state.childId || !state.profile) {
+    router.replace('/');
+    return null;
+  }
+
   const profile = state.profile;
-  if (!result || !profile) return null;
+  if (!result) return null;
 
   const stars = result.session.stars;
   const total = result.total ?? 5;

@@ -20,7 +20,8 @@ Mỗi entry có GitHub Issue link để track trên remote.
 
 | # | Issue | File:Line | Source | Phase | GitHub |
 |---|---|---|---|---|---|
-| — | — | — | — | — | — |
+| 1 | `isHydrated` guard missing in play page — cold load triggers premature redirect to `/` before hydration completes | `app/(child)/play/[gameType]/[lessonId]/page.tsx:108` | review | Phase 3A | #14 |
+| 2 | Write-through localStorage cache fires on `sessionActive` changes (not serialised) — redundant writes on game-intensive pages | `context/game-progress-context.tsx:99` | review | Phase 3A | #15 |
 
 ---
 
@@ -28,7 +29,8 @@ Mỗi entry có GitHub Issue link để track trên remote.
 
 | # | Issue | File:Line | Source | Phase | GitHub |
 |---|---|---|---|---|---|
-| — | — | — | — | — | — |
+| 3 | `pulse` keyframe not self-contained in SkeletonScreen — animation silently no-ops if global CSS missing | `components/ui/skeleton-screen.tsx:16` | review | Phase 3A | — |
+| 4 | `JSON.parse(cached)` in reward page has no try/catch — malformed sessionStorage throws uncaught exception | `app/(child)/reward/page.tsx:33` | review | Phase 3A | — |
 
 ---
 

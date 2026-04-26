@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useGameProgress } from '@/context/game-progress-context';
+import { SkeletonScreen } from '@/components/ui/skeleton-screen';
 import { GardenBg } from '@/components/ui/garden-bg';
 import { IconBtn } from '@/components/ui/icon-btn';
 import { Sparkles } from '@/components/ui/sparkles';
@@ -18,21 +19,17 @@ interface WorldProgress {
 }
 
 export default function WorldsPage() {
-  const { state } = useGameProgress();
+  const { state, isHydrated } = useGameProgress();
   const router = useRouter();
   const [progressMap, setProgressMap] = useState<Record<string, WorldProgress>>({});
   const [showWorldIntro, setShowWorldIntro] = useState(false);
 
+  // All hooks must run unconditionally before any early returns
   useEffect(() => {
     if (!localStorage.getItem('bap-world-intro-seen')) {
       setShowWorldIntro(true);
     }
   }, []);
-
-  const dismissWorldIntro = () => {
-    localStorage.setItem('bap-world-intro-seen', 'true');
-    setShowWorldIntro(false);
-  };
 
   useEffect(() => {
     if (!state.childId) return;
@@ -47,6 +44,18 @@ export default function WorldsPage() {
       })
       .catch(() => undefined);
   }, [state.childId]);
+
+  const dismissWorldIntro = () => {
+    localStorage.setItem('bap-world-intro-seen', 'true');
+    setShowWorldIntro(false);
+  };
+
+  // Guards: after all hooks
+  if (!isHydrated) return <SkeletonScreen />;
+  if (!state.childId || !state.profile) {
+    router.replace('/');
+    return null;
+  }
 
   const worldCards: WorldCardData[] = WORLDS.map((w, idx) => {
     const prog = progressMap[w.id];
