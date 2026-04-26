@@ -145,17 +145,48 @@ All screens designed in Claude Design and exported as a runnable HTML prototype.
 
 ---
 
-## Phase 2 — Content Expansion
+## Phase 2 — Content & Polish Expansion ✅ Complete
 
-- More worlds & levels (Worlds 4–5: Math Kitchen, Big Number Castle)
-- Additional game types (Counting Objects, Number Writing)
-- Difficulty auto-adjustment based on accuracy history
-- PWA support (offline, install to homescreen)
-- Vietnamese + bilingual audio pack
+**Completed:** 2026-04-25 to 2026-04-26
+
+### Phase 2A — Audio Service & Difficulty ✅ Done
+- Web Speech API + Howler.js audio pipeline
+- Sliding-window difficulty adjuster (real-time accuracy tracking)
+- Worlds API endpoints for world unlock/progression
+
+### Phase 2B — PWA & Offline Support ✅ Done
+- Serwist service worker integration (offline caching)
+- Offline fallback page (`/offline`)
+- `useOnline` hook for connectivity state
+- Offline toast notification banner
+- Install-to-homescreen support
+
+### Phase 2C — Game Registry Refactor & New Game Types ✅ Done
+- Count-Objects game type (visual counting)
+- Number-Writing game type (digit input with visual feedback)
+- Game registry refactor (config-driven game loading)
+- 52 component tests for game UIs
+- Next.js 16 upgrade, Turbopack config
+
+### Phase 2D — UX & Auth Polish ✅ Done
+- 4-digit PIN gate with bcryptjs + rate limiting
+- Parent settings security tab (PIN change, progress reset)
+- Daily session timer with time-up overlay
+- Guest-to-DB child registration on parent auth
+- Session persistence (localStorage)
+
+### Phase 2E — Screen Polish & Overlays ✅ Done
+- World intro overlay (first visit to world)
+- Parent onboarding overlay (first-run setup)
+- Sticker earn moment overlay
+- Sticker detail bottom-sheet
+- Streak detail sheet with monthly calendar
+- Daily-goal overlay
+- Middleware→proxy migration (Next.js 16 convention)
 
 ---
 
-## Phase 3 — Social / Engagement
+## Phase 3 — Social / Engagement 📋 Planned
 
 - Parent-to-child encouragement messages
 - Weekly email report for parents

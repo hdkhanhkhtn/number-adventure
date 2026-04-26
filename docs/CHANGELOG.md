@@ -2,6 +2,61 @@
 
 All notable changes to Bap Number Adventure are documented here.
 
+## [Phase 2] — Content & Polish Expansion (2026-04-25 to 2026-04-26)
+
+**Status:** Complete ✅
+
+### Phase 2A — Audio Service & Difficulty Algorithm
+- **AudioService** with Web Speech API (fallback to Google TTS)
+- `useAudio` / `useSoundEffects` hooks for audio management
+- Sliding-window difficulty adjuster (tracks accuracy over last 10 attempts)
+- Real-time difficulty scaling (easy → medium → hard)
+- Worlds API endpoints for world unlock progression
+
+### Phase 2B — PWA & Offline Support
+- **Serwist service worker** for background sync and offline caching
+- Offline fallback page (`/offline`) with retry mechanism
+- `useOnline` hook for real-time connectivity state detection
+- Offline toast notification banner with re-sync indicator
+- Install-to-homescreen PWA manifest + icons
+- 167 tests covering PWA, audio, and service worker logic (98.38% coverage)
+
+### Phase 2C — Game Registry Refactor & New Game Types
+- **Count-Objects** game type (visual counting with draggable objects)
+- **Number-Writing** game type (digit input with visual digit display, overlap handling)
+- Game registry refactor (config-driven game loading, type-safe registration)
+- Dynamic z-index for overlapping digit-8 dots in number-writing
+- 52 new component tests for game UIs (all passing)
+- Next.js 16 upgrade with Turbopack config shim
+
+### Phase 2D — Auth & Security Polish
+- **PIN gate** with 4-digit entry + rate limiting (bcryptjs + exponential backoff)
+- **Parent settings security tab** with PIN change dialog and progress reset confirmation
+- **Daily session timer** with time-up overlay and session restart option
+- **Guest-to-DB registration** (child registered to DB when parent authenticates)
+- Session API: `/api/auth/session`, `/api/sessions/start`, `/api/sessions/complete`
+- Session persistence via localStorage (survives app restart)
+
+### Phase 2E — Screen Polish & User Experience
+- **World intro overlay** (triggered on first visit to each world, localStorage gated)
+- **Parent onboarding overlay** (setup wizard on first parent login)
+- **Sticker earn moment overlay** (celebration when sticker unlocked)
+- **Sticker detail bottom-sheet** (tap sticker in collection for details)
+- **Streak detail sheet** with monthly calendar view and achievement badges
+- **Daily-goal overlay** (progress check at session start)
+- Middleware→proxy migration (`.claude/middleware.ts` → `/proxy.ts` for Next.js 16)
+- Turbopack configuration with serwist offline fallback shims
+- TypeScript `@ts-expect-error` cleanup and config hardening
+
+### Combined Impact
+- All 5 mini-games now support dynamic difficulty
+- Full offline gameplay (cache on first visit, play offline anytime)
+- 4 new game types (count-objects, number-writing, extended registry)
+- Parent experience hardened (security, session management, progress visibility)
+- Child experience polished (overlays, onboarding, daily progression)
+
+---
+
 ## [Phase D] — Audio Integration & Accessibility (2026-04-25)
 
 **Status:** Complete ✅
@@ -130,7 +185,7 @@ All notable changes to Bap Number Adventure are documented here.
 - `useGame()` — Session state, hearts, scoring
 - `useSession()` — Track GameSession, GameAttempt
 - `useAudio()` — Web Speech API + Howler.js integration
-- `useProgress()` — Fetch and display progress
+- `GameProgressContext` — Progress state via React Context
 
 #### Game Engine
 - Config-driven question generation per game type
@@ -185,7 +240,7 @@ All notable changes to Bap Number Adventure are documented here.
 - `PATCH /api/children/[id]/settings` — Update settings
 
 #### Core Hooks & Services
-- `useProgress()` — Progress fetching + caching
+- `GameProgressContext` — Progress fetching + caching via Context
 - `useAudio()` — Text-to-speech + sound effects
 - `useGame()` — Game state machine
 - `AudioService` — Web Speech API wrapper
