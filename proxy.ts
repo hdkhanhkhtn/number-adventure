@@ -14,16 +14,16 @@ const PUBLIC_API_PATHS = [
 ];
 
 /**
- * Auth middleware — two responsibilities:
+ * Proxy (replaces deprecated middleware convention) — two responsibilities:
  * 1. Protects all /api/* routes (except public auth endpoints) via bap-session cookie.
  * 2. Redirects unauthenticated users away from parent UI routes (/dashboard, /report, /settings)
  *    by checking the parentId session cookie set at login.
  *
- * IDOR note: middleware validates session existence here; each route handler
+ * IDOR note: proxy validates session existence here; each route handler
  * must additionally validate that the requested resource belongs to the
  * authenticated parent (e.g. Child.parentId === session.parentId).
  */
-export function middleware(request: NextRequest): NextResponse {
+export function proxy(request: NextRequest): NextResponse {
   const { pathname } = request.nextUrl;
 
   // Guard parent UI routes — redirect to /home if no parentId cookie
