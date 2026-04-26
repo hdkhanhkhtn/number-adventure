@@ -10,6 +10,8 @@ import { MetricCard } from '@/components/parent/metric-card';
 import { SkillRow } from '@/components/parent/skill-row';
 import { MenuRow } from '@/components/parent/menu-row';
 import { WeeklyChart } from '@/components/parent/weekly-chart';
+import { ParentOnboardingOverlay } from '@/components/screens/parent-onboarding-overlay';
+import { StreakDetailSheet } from '@/components/ui/streak-detail-sheet';
 
 interface ReportData {
   lessonsCompleted: number;
@@ -32,6 +34,19 @@ export function ParentDashboardContent() {
   const { childId, profile } = state;
 
   const [report, setReport] = useState<ReportData | null>(null);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [showStreakDetail, setShowStreakDetail] = useState(false);
+
+  useEffect(() => {
+    if (!localStorage.getItem('bap-parent-onboarded')) {
+      setShowOnboarding(true);
+    }
+  }, []);
+
+  const dismissOnboarding = () => {
+    localStorage.setItem('bap-parent-onboarded', 'true');
+    setShowOnboarding(false);
+  };
 
   useEffect(() => {
     if (!childId || childId.startsWith('guest_')) return;
@@ -123,7 +138,7 @@ export function ParentDashboardContent() {
             )}
 
             {/* Streak card */}
-            <StreakCard currentStreak={streak.currentStreak} longestStreak={streak.longestStreak} />
+            <StreakCard currentStreak={streak.currentStreak} longestStreak={streak.longestStreak} onTap={() => setShowStreakDetail(true)} />
           </>
         )}
 
@@ -139,6 +154,13 @@ export function ParentDashboardContent() {
           Bắp Number Adventure · v1.0
         </div>
       </div>
+      {showOnboarding && <ParentOnboardingOverlay onDismiss={dismissOnboarding} />}
+      <StreakDetailSheet
+        visible={showStreakDetail}
+        currentStreak={streak.currentStreak}
+        longestStreak={streak.longestStreak}
+        onClose={() => setShowStreakDetail(false)}
+      />
     </div>
   );
 }
