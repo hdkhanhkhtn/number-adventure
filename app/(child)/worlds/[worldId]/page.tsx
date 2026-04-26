@@ -1,6 +1,6 @@
 'use client';
 
-import { use, useEffect, useState } from 'react';
+import { use, useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useGameProgress } from '@/context/game-progress-context';
 import { GardenBg } from '@/components/ui/garden-bg';
@@ -9,6 +9,7 @@ import { LevelNode, type LevelNodeData } from '@/components/screens/level-node';
 import { WORLDS, getWorld } from '@/src/data/game-config/worlds';
 import { getLessonsForWorld } from '@/src/data/game-config/lesson-templates';
 import type { GardenBgVariant, TileColor, WorldId } from '@/lib/types/common';
+import { WorldUnlockOverlay } from '@/components/screens/world-unlock-overlay';
 
 const BG_VARIANT_MAP: Record<string, GardenBgVariant> = {
   sage: 'sage', sky: 'sky', lavender: 'lavender', sun: 'sun',
@@ -22,6 +23,7 @@ export default function WorldPage({ params }: { params: Promise<{ worldId: strin
   const { state } = useGameProgress();
   const router = useRouter();
   const [starsByLesson, setStarsByLesson] = useState<StarsByLesson>({});
+  const [showUnlockCelebration, setShowUnlockCelebration] = useState(false);
 
   const world = getWorld(worldId as WorldId);
   const worldIndex = WORLDS.findIndex((w) => w.id === worldId);
@@ -36,6 +38,20 @@ export default function WorldPage({ params }: { params: Promise<{ worldId: strin
       })
       .catch(() => undefined);
   }, [state.childId, worldId]);
+
+  useEffect(() => {
+    if (!world) return;
+    const key = `bap-seen-unlock-${worldId}`;
+    // Only show for worlds beyond the first (world index 0 is always available)
+    if (worldIndex > 0 && !localStorage.getItem(key)) {
+      setShowUnlockCelebration(true);
+    }
+  }, [world, worldId, worldIndex]);
+
+  const handleDismissUnlock = useCallback(() => {
+    setShowUnlockCelebration(false);
+    localStorage.setItem(`bap-seen-unlock-${worldId}`, '1');
+  }, [worldId]);
 
   if (!world) return null;
 
@@ -92,6 +108,13 @@ export default function WorldPage({ params }: { params: Promise<{ worldId: strin
           </div>
         </div>
       </div>
+      {showUnlockCelebration && (
+        <WorldUnlockOverlay
+          worldName={world.name}
+          worldEmoji={world.emoji}
+          onDismiss={handleDismissUnlock}
+        />
+      )}
     </div>
   );
 }
