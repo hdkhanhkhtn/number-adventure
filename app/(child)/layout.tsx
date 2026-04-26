@@ -6,6 +6,7 @@ import { useGameProgress } from '@/context/game-progress-context';
 import { SplashScreen } from '@/components/screens/splash-screen';
 import { WelcomeScreen } from '@/components/screens/welcome-screen';
 import { ProfileSetup } from '@/components/screens/profile-setup';
+import { OfflineToast } from '@/components/ui/offline-toast';
 import type { MascotColor } from '@/lib/types/common';
 
 type OnboardStep = 'splash' | 'welcome' | 'setup' | 'ready';
@@ -78,5 +79,10 @@ export default function ChildLayout({ children }: { children: React.ReactNode })
     return <ProfileSetup onDone={handleProfileDone} />;
   }
 
-  return <>{children}</>;
+  return (
+    <>
+      <OfflineToast />
+      {children}
+    </>
+  );
 }

@@ -5,6 +5,8 @@ const withSerwist = withSerwistInit({
   swSrc: "app/sw.ts",
   swDest: "public/sw.js",
   reloadOnOnline: true,
+  // @ts-ignore — fallbacks is valid at runtime but may be absent from older type defs
+  fallbacks: { document: '/offline' },
   // Disable SW in development to avoid caching issues during dev
   disable: process.env.NODE_ENV === "development",
 });
