@@ -142,21 +142,48 @@ One phase at a time, each phase independent: Phase 1 → then Phase 2 → … in
 | Agent        | `tech-lead` → routes to specialists                     |
 | ------------ | ------------------------------------------------------- |
 | Prerequisite | **READ and FOLLOW** `./plans/reports/plans/PLAN-{feature}` |
-| Goal         | Execute implementation plan                             |
+| Goal         | Execute implementation plan on a dedicated feature branch |
+
+**⛔ BRANCH RULE (MANDATORY — runs before any file edit):**
+
+```bash
+# 1. Derive branch name from feature slug (kebab-case, max 50 chars)
+BRANCH="feature/<slug-from-feature-name>"
+
+# 2. Create and switch to branch (from current HEAD)
+git checkout -b "${BRANCH}"
+
+# Report branch name to user before writing any code
+```
+
+If branch already exists → checkout existing branch, do NOT reset it.
+
+**⛔ GIT RULES (NON-NEGOTIABLE):**
+
+```
+❌ NEVER run: git commit
+❌ NEVER run: git push
+❌ NEVER run: gh pr create
+❌ NEVER run: git merge
+
+✅ Only write/edit files on the feature branch
+✅ User controls all git commit / push / PR actions via /git:cp, /git:pr
+```
 
 **STRICT ADHERENCE:**
 
 ```
-1. READ plan FIRST
-2. FOR EACH step:
+1. Create feature branch FIRST (above)
+2. READ plan
+3. FOR EACH step:
    - Implement EXACTLY as specified
    - Mark step complete: [ ] → [x]
-3. IF step seems wrong:
+4. IF step seems wrong:
    - STOP → Document → Request Re-Planning
    - DO NOT implement your own interpretation
 ```
 
-| Exit | All plan phases complete, no unauthorized deviations |
+| Exit | Branch created, all plan phases complete, no commits made, no unauthorized deviations |
 
 ---
 
@@ -200,6 +227,10 @@ FOR EACH checkpoint in PLAN:
 
 Present feature report with:
 
-1. ✅ **Done** — Feature complete
-2. 🚀 **Deploy** → `/deploy:preview`
-3. 📝 **Docs** → `/docs:core`
+1. ✅ **Done** — Feature complete on branch `feature/<slug>`
+2. 🧪 **Test** → `/test:hard` to run full test suite
+3. 🔧 **Fix** → `/fix:team` if issues found
+4. 📬 **Commit & PR** → `/git:cp` then `/git:pr` when ready (user-controlled)
+5. 📝 **Docs** → `/docs:core` after merge
+
+**⚠️ cook:hard stops here. No commits, no push, no PR created automatically.**
