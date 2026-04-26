@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { GardenBg } from '@/components/ui/garden-bg';
 import { BapMascot } from '@/components/ui/bap-mascot';
 import { BigButton } from '@/components/ui/big-button';
@@ -8,6 +9,8 @@ import { Sparkles } from '@/components/ui/sparkles';
 import { Confetti } from '@/components/ui/confetti';
 import { StatDisplay } from './stat-display';
 import { StreakCard } from '@/components/ui/streak-card';
+import { StickerEarnOverlay } from '@/components/screens/sticker-earn-overlay';
+import { StreakDetailSheet } from '@/components/ui/streak-detail-sheet';
 import type { MascotColor } from '@/lib/types/common';
 
 export interface RewardContentProps {
@@ -26,8 +29,18 @@ export function RewardContent({
   stars, correct, total, sticker, streak, onContinue, profileName, profileColor = 'sun',
 }: RewardContentProps) {
   const message = stars === 3 ? 'Amazing, ' : stars === 2 ? 'Great job, ' : 'Good try, ';
+  const [showStickerMoment, setShowStickerMoment] = useState(false);
+  const [stickerMomentDone, setStickerMomentDone] = useState(false);
+  const [showStreakDetail, setShowStreakDetail] = useState(false);
+
+  useEffect(() => {
+    if (!sticker || stickerMomentDone) return;
+    const timer = setTimeout(() => setShowStickerMoment(true), 800);
+    return () => clearTimeout(timer);
+  }, [sticker, stickerMomentDone]);
 
   return (
+    <>
     <div style={{ position: 'absolute', inset: 0 }}>
       <GardenBg variant="sun">
         <Sparkles count={14} color="#FFB84A" />
@@ -80,7 +93,7 @@ export function RewardContent({
 
         {streak && streak.currentStreak > 0 && (
           <div style={{ marginTop: 14, width: '100%' }}>
-            <StreakCard currentStreak={streak.currentStreak} longestStreak={streak.longestStreak} />
+            <StreakCard currentStreak={streak.currentStreak} longestStreak={streak.longestStreak} onTap={() => setShowStreakDetail(true)} />
           </div>
         )}
 
@@ -89,5 +102,21 @@ export function RewardContent({
         </div>
       </div>
     </div>
+    {showStickerMoment && sticker && (
+      <StickerEarnOverlay
+        emoji={sticker.emoji}
+        name={sticker.name}
+        onDismiss={() => { setStickerMomentDone(true); setShowStickerMoment(false); }}
+      />
+    )}
+    {streak && (
+      <StreakDetailSheet
+        visible={showStreakDetail}
+        currentStreak={streak.currentStreak}
+        longestStreak={streak.longestStreak}
+        onClose={() => setShowStreakDetail(false)}
+      />
+    )}
+    </>
   );
 }
