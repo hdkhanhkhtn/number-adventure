@@ -9,6 +9,11 @@ import {
   ExpirationPlugin,
   CacheableResponsePlugin,
 } from "serwist";
+import { fallback } from "@serwist/next/worker";
+
+fallback({
+  document: "/offline",
+});
 
 declare const self: ServiceWorkerGlobalScope & {
   __SW_MANIFEST: Array<{ url: string; revision: string | null }>;
