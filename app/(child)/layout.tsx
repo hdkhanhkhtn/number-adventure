@@ -138,6 +138,10 @@ export default function ChildLayout({ children }: { children: React.ReactNode })
     <>
       <OfflineToast />
       {children}
+      {/* TODO(phase-3a-02)[important]: Plan 3A-02 specifies banner re-shows after 3 sessions.
+           Current dismiss is in-memory only — resets on every page reload, no session counter.
+           Add sessionStorage counter: increment on step→'ready', show banner when count%3===0
+           after first dismiss. See BACKLOG.md #6 */}
       {showMigrateBanner && !migrating && (
         <SaveProgressBanner
           onSave={() => setShowMigrateGate(true)}

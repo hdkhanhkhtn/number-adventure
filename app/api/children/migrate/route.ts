@@ -5,7 +5,12 @@ import { prisma } from '@/lib/prisma';
 /** POST /api/children/migrate — create a DB child for an authenticated parent
  *  from a guest session. Guest data is local-only (no DB rows exist for guest_xxx
  *  child IDs because use-game-session.ts skips all DB writes for guest users).
- *  Migration only needs to CREATE a new child record; no data copy is required. */
+ *  Migration only needs to CREATE a new child record; no data copy is required.
+ *
+ * TODO(phase-3c)[important]: Spec ambiguity — plan.md Validation Summary (line 74) confirms
+ *  guest sessions ARE written to DB under a guest child record and MUST be copied via Prisma
+ *  transaction. Audit use-game-session.ts for guest_* write paths and resolve before Phase 3C.
+ *  See BACKLOG.md #5. */
 export async function POST(request: NextRequest) {
   try {
     const cookieParentId = request.cookies.get('parentId')?.value;
@@ -39,6 +44,8 @@ export async function POST(request: NextRequest) {
       : 'sage';
 
     // Idempotency: return existing child if same name was already migrated
+    // TODO(phase-3a-02)[suggestion]: key on (parentId + name + age) to prevent sibling collision
+    //  (two children named "Alice" at different ages returns wrong record) — see BACKLOG.md #7
     const existing = await prisma.child.findFirst({
       where: { parentId: cookieParentId, name: name.trim() },
       select: { id: true, name: true, age: true, color: true },
