@@ -6,6 +6,8 @@ import { useGameProgress } from '@/context/game-progress-context';
 import { SkeletonScreen } from '@/components/ui/skeleton-screen';
 import { HomeScreen } from '@/components/screens/home-screen';
 import { ParentGate } from '@/components/parent/parent-gate';
+import { EncouragementBanner } from '@/components/screens/encouragement-banner';
+import { ChildSwitcherModal } from '@/components/screens/child-switcher-modal';
 import type { MascotColor } from '@/lib/types/common';
 import { STICKER_DEFS } from '@/src/data/game-config/sticker-defs';
 
@@ -13,14 +15,22 @@ interface ProgressData {
   weekDays: boolean[];
 }
 
+interface EncouragementMsg {
+  id: string;
+  message: string;
+  createdAt: string;
+}
+
 export default function HomePage() {
-  const { state, isHydrated } = useGameProgress();
+  const { state, isHydrated, switchChild } = useGameProgress();
   const router = useRouter();
   const [streak, setStreak] = useState(0);
   const [longestStreak, setLongestStreak] = useState(0);
   const [weekDays, setWeekDays] = useState<boolean[]>(Array(7).fill(false));
   const [stickerCount, setStickerCount] = useState(0);
   const [showGate, setShowGate] = useState(false);
+  const [showSwitcher, setShowSwitcher] = useState(false);
+  const [encouragement, setEncouragement] = useState<EncouragementMsg | null>(null);
   const stickerTotal = STICKER_DEFS.length;
 
   const childId = state.childId;
@@ -48,6 +58,12 @@ export default function HomePage() {
       .then((r) => r.json())
       .then((d: { collected?: number }) => setStickerCount(d.collected ?? 0))
       .catch(() => undefined);
+
+    // Fetch latest unread encouragement message
+    fetch(`/api/parent/encouragement?childId=${childId}`)
+      .then((r) => r.json())
+      .then((d: EncouragementMsg | null) => setEncouragement(d))
+      .catch(() => undefined);
   }, [childId]);
 
   if (!isHydrated) return <SkeletonScreen />;
@@ -71,11 +87,30 @@ export default function HomePage() {
         onMap={() => router.push('/worlds')}
         onStickers={() => router.push('/stickers')}
         onParent={() => setShowGate(true)}
+        onAvatarTap={() => setShowSwitcher(true)}
+        encouragementBanner={
+          encouragement ? (
+            <EncouragementBanner
+              messageId={encouragement.id}
+              message={encouragement.message}
+              onDismiss={() => setEncouragement(null)}
+            />
+          ) : null
+        }
       />
       {showGate && (
         <ParentGate
           onPass={() => { setShowGate(false); router.push('/dashboard'); }}
           onCancel={() => setShowGate(false)}
+        />
+      )}
+      {showSwitcher && (
+        <ChildSwitcherModal
+          activeChildId={childId}
+          onSelect={(child) => {
+            switchChild(child.id, { id: child.id, name: child.name, age: child.age, color: child.color });
+          }}
+          onClose={() => setShowSwitcher(false)}
         />
       )}
     </>
