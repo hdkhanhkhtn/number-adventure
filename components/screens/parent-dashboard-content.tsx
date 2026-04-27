@@ -12,6 +12,8 @@ import { MenuRow } from '@/components/parent/menu-row';
 import { WeeklyChart } from '@/components/parent/weekly-chart';
 import { ParentOnboardingOverlay } from '@/components/screens/parent-onboarding-overlay';
 import { StreakDetailSheet } from '@/components/ui/streak-detail-sheet';
+import { FamilyLeaderboard } from '@/components/screens/family-leaderboard';
+import { exportAsCSV, exportAsPDF, type ProgressExportData } from '@/lib/export/export-progress';
 
 interface ReportData {
   lessonsCompleted: number;
@@ -20,6 +22,14 @@ interface ReportData {
   games: { type: string; label: string; color: string; playCount: number; accuracy: number }[];
   streak: { currentStreak: number; longestStreak: number };
   recommendedNext: string | null;
+}
+
+interface LeaderboardEntry {
+  childId: string;
+  name: string;
+  color: string;
+  totalStars: number;
+  rank: number;
 }
 
 const SKILL_COLORS: Record<string, string> = {
@@ -36,6 +46,8 @@ export function ParentDashboardContent() {
   const [report, setReport] = useState<ReportData | null>(null);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [showStreakDetail, setShowStreakDetail] = useState(false);
+  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
+  const [exporting, setExporting] = useState(false);
 
   useEffect(() => {
     if (!localStorage.getItem('bap-parent-onboarded')) {
@@ -60,6 +72,53 @@ export function ParentDashboardContent() {
       .catch(e => { if (e.name !== 'AbortError') console.error(e); });
     return () => controller.abort();
   }, [childId, router]);
+
+  // Fetch family leaderboard (children ranked by stars this week)
+  useEffect(() => {
+    fetch('/api/parent/children', { credentials: 'include' })
+      .then((r) => (r.ok ? r.json() : []))
+      .then(async (children: { id: string; name: string; color: string }[]) => {
+        if (children.length < 2) return;
+        const weekAgo = new Date();
+        weekAgo.setDate(weekAgo.getDate() - 7);
+        const entries = await Promise.all(
+          children.map(async (c) => {
+            try {
+              const r = await fetch(`/api/report/${c.id}`, { credentials: 'include' });
+              const data: ReportData = r.ok ? await r.json() : { totalStars: 0 };
+              return { childId: c.id, name: c.name, color: c.color, totalStars: data.totalStars ?? 0, rank: 0 };
+            } catch {
+              return { childId: c.id, name: c.name, color: c.color, totalStars: 0, rank: 0 };
+            }
+          })
+        );
+        entries.sort((a, b) => b.totalStars - a.totalStars);
+        setLeaderboard(entries.map((e, i) => ({ ...e, rank: i + 1 })));
+      })
+      .catch(() => undefined);
+  }, []);
+
+  async function handleExport(format: 'csv' | 'pdf') {
+    if (!childId || !report) return;
+    setExporting(true);
+    try {
+      const data: ProgressExportData = {
+        childName: profile?.name ?? 'Child',
+        exportDate: new Date().toISOString().slice(0, 10),
+        sessions: [],
+        totalSessions: report.lessonsCompleted,
+        totalStars: report.totalStars,
+        averageAccuracy: report.games.length > 0
+          ? Math.round(report.games.reduce((s, g) => s + g.accuracy, 0) / report.games.length)
+          : 0,
+        currentStreak: report.streak?.currentStreak ?? 0,
+      };
+      if (format === 'csv') exportAsCSV(data);
+      else await exportAsPDF(data);
+    } finally {
+      setExporting(false);
+    }
+  }
 
   const streak = report?.streak ?? { currentStreak: 0, longestStreak: 0 };
   const totalMin = (report?.recentActivity ?? []).reduce((s, v) => s + v, 0);
@@ -139,6 +198,44 @@ export function ParentDashboardContent() {
 
             {/* Streak card */}
             <StreakCard currentStreak={streak.currentStreak} longestStreak={streak.longestStreak} onTap={() => setShowStreakDetail(true)} />
+
+            {/* Family leaderboard (shown only when 2+ children) */}
+            <FamilyLeaderboard entries={leaderboard} />
+
+            {/* Export progress */}
+            {report && (report.lessonsCompleted > 0 || report.totalStars > 0) && (
+              <div style={{ background: '#fff', borderRadius: 20, padding: 16, border: '1px solid rgba(0,0,0,0.06)' }}>
+                <div style={{ fontSize: 15, fontWeight: 700, color: '#1F2A1F', marginBottom: 12 }}>
+                  Export Progress
+                </div>
+                <div style={{ display: 'flex', gap: 10 }}>
+                  <button
+                    onClick={() => handleExport('csv')}
+                    disabled={exporting}
+                    style={{
+                      flex: 1, padding: '10px 0', borderRadius: 12,
+                      background: '#EDF7EC', border: '1.5px solid #5FB36A',
+                      color: '#2F6A3C', fontWeight: 700, fontSize: 14,
+                      cursor: exporting ? 'wait' : 'pointer',
+                    }}
+                  >
+                    CSV
+                  </button>
+                  <button
+                    onClick={() => handleExport('pdf')}
+                    disabled={exporting}
+                    style={{
+                      flex: 1, padding: '10px 0', borderRadius: 12,
+                      background: '#FFF4DE', border: '1.5px solid #E8A020',
+                      color: '#7A4F00', fontWeight: 700, fontSize: 14,
+                      cursor: exporting ? 'wait' : 'pointer',
+                    }}
+                  >
+                    PDF
+                  </button>
+                </div>
+              </div>
+            )}
           </>
         )}
 

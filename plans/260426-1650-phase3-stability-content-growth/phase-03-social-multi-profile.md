@@ -213,11 +213,11 @@ Weekly email:
 
 ## Todo List
 
-- [ ] 3C-01: Multi-child API routes + context switcher + modal UI
-- [ ] 3C-02: Encouragement message model + API + home banner
-- [ ] 3C-03: Resend integration + cron route + email template + opt-in toggle
-- [ ] 3C-04: Client-side PDF/CSV export from parent dashboard
-- [ ] 3C-05: Family leaderboard (parent's children, opt-in)
+- [x] 3C-01: Multi-child API routes + context switcher + modal UI
+- [x] 3C-02: Encouragement message model + API + home banner
+- [x] 3C-03: Resend integration + cron route + email template + opt-in toggle
+- [x] 3C-04: Client-side PDF/CSV export from parent dashboard
+- [x] 3C-05: Family leaderboard (parent's children, opt-in)
 
 ## Success Criteria
 

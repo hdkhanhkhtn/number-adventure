@@ -40,8 +40,9 @@ export function ParentSettingsContent() {
   const [tab, setTab] = useState<Tab>('time');
   const [settings, setSettings] = useState<Partial<ChildSettings>>(DEFAULTS);
   const [saving, setSaving] = useState(false);
+  const [emailReports, setEmailReports] = useState(true);
 
-  // Load settings from DB on mount
+  // Load child settings from DB on mount
   useEffect(() => {
     if (!childId || childId.startsWith('guest_')) return;
     fetch(`/api/children/${childId}/settings`, { credentials: 'include' })
@@ -49,6 +50,30 @@ export function ParentSettingsContent() {
       .then(data => { if (data?.settings) setSettings(data.settings); })
       .catch(console.error);
   }, [childId]);
+
+  // Load parent-level settings (emailReports) on mount
+  useEffect(() => {
+    fetch('/api/parent/settings', { credentials: 'include' })
+      .then(r => r.ok ? r.json() : null)
+      .then(data => { if (typeof data?.emailReports === 'boolean') setEmailReports(data.emailReports); })
+      .catch(console.error);
+  }, []);
+
+  const handleEmailReportsToggle = async (value: boolean) => {
+    setEmailReports(value);
+    try {
+      const res = await fetch('/api/parent/settings', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ emailReports: value }),
+        credentials: 'include',
+      });
+      if (!res.ok) throw new Error('Save failed');
+    } catch (e) {
+      console.error('Failed to save email reports setting', e);
+      setEmailReports(!value); // rollback
+    }
+  };
 
   // Persist patch to DB and local context; rollback optimistic update on failure
   const handleChange = async (patch: Partial<ChildSettings>) => {
@@ -143,10 +168,24 @@ export function ParentSettingsContent() {
         )}
         {tab === 'security' && <ParentSettingsSecurityTab childId={childId} />}
         {tab === 'gameplay' && (
-          <ParentSettingsGameplayTab
-            appSettings={appSettings}
-            updateAppSettings={updateAppSettings}
-          />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <ParentSettingsGameplayTab
+              appSettings={appSettings}
+              updateAppSettings={updateAppSettings}
+            />
+            <Panel title="Thông báo" sub="Báo cáo tiến độ qua email">
+              <SettingRow
+                label="Báo cáo hàng tuần qua email"
+                last
+                right={
+                  <Toggle
+                    checked={emailReports}
+                    onChange={handleEmailReportsToggle}
+                  />
+                }
+              />
+            </Panel>
+          </div>
         )}
       </div>
     </div>

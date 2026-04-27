@@ -27,6 +27,7 @@ type Action =
   | { type: 'UPDATE_SETTINGS'; payload: Partial<ChildSettings> }
   | { type: 'SET_WORLD'; payload: WorldId | null }
   | { type: 'SET_SESSION_ACTIVE'; payload: boolean }
+  | { type: 'SWITCH_CHILD'; childId: string; profile: ChildProfile }
   | { type: 'CLEAR' };
 
 function reducer(state: GameProgressState, action: Action): GameProgressState {
@@ -41,6 +42,16 @@ function reducer(state: GameProgressState, action: Action): GameProgressState {
       return { ...state, currentWorldId: action.payload };
     case 'SET_SESSION_ACTIVE':
       return { ...state, sessionActive: action.payload };
+    // Switch active child: update identity, clear in-progress session state to avoid
+    // showing stale world/session data from the previous child (I1)
+    case 'SWITCH_CHILD':
+      return {
+        ...state,
+        childId: action.childId,
+        profile: action.profile,
+        currentWorldId: null,
+        sessionActive: false,
+      };
     case 'CLEAR':
       return INITIAL_STATE;
     default:
@@ -52,26 +63,32 @@ function reducer(state: GameProgressState, action: Action): GameProgressState {
 interface GameProgressContextValue {
   state: GameProgressState;
   isHydrated: boolean;
+  activeChildId: string | null;
   setChild: (childId: string, profile: ChildProfile) => void;
   setProfile: (profile: ChildProfile) => void;
   updateSettings: (settings: Partial<ChildSettings>) => void;
   setWorld: (worldId: WorldId | null) => void;
   setSessionActive: (active: boolean) => void;
+  /** Switch active child without resetting world, settings, or session state */
+  switchChild: (childId: string, profile: ChildProfile) => void;
   clear: () => void;
 }
 
 const GameProgressContext = createContext<GameProgressContextValue>({
   state: INITIAL_STATE,
   isHydrated: false,
+  activeChildId: null,
   setChild: () => undefined,
   setProfile: () => undefined,
   updateSettings: () => undefined,
   setWorld: () => undefined,
   setSessionActive: () => undefined,
+  switchChild: () => undefined,
   clear: () => undefined,
 });
 
 const LS_KEY = 'bap-progress-cache';
+const LS_ACTIVE_CHILD_KEY = 'bap-active-child';
 
 export function GameProgressProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(reducer, INITIAL_STATE);
@@ -116,11 +133,18 @@ export function GameProgressProvider({ children }: { children: React.ReactNode }
   const ctx = useMemo<GameProgressContextValue>(() => ({
     state,
     isHydrated,
+    activeChildId: state.childId,
     setChild: (childId, profile) => dispatch({ type: 'SET_CHILD', payload: { childId, profile } }),
     setProfile: (profile) => dispatch({ type: 'SET_PROFILE', payload: profile }),
     updateSettings: (settings) => dispatch({ type: 'UPDATE_SETTINGS', payload: settings }),
     setWorld: (worldId) => dispatch({ type: 'SET_WORLD', payload: worldId }),
     setSessionActive: (active) => dispatch({ type: 'SET_SESSION_ACTIVE', payload: active }),
+    switchChild: (childId, profile) => {
+      dispatch({ type: 'SWITCH_CHILD', childId, profile });
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(LS_ACTIVE_CHILD_KEY, childId);
+      }
+    },
     clear: () => dispatch({ type: 'CLEAR' }),
   }), [state, isHydrated]);
 

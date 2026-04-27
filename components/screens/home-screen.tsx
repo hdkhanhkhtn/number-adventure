@@ -21,12 +21,14 @@ export interface HomeScreenProps {
   onMap: () => void;
   onStickers: () => void;
   onParent: () => void;
+  onAvatarTap?: () => void;
+  encouragementBanner?: React.ReactNode;
 }
 
 /** Main child home screen */
 export function HomeScreen({
   profile, streak, longestStreak, weekDays, stickerCount, stickerTotal,
-  onPlay, onMap, onStickers, onParent,
+  onPlay, onMap, onStickers, onParent, onAvatarTap, encouragementBanner,
 }: HomeScreenProps) {
   return (
     <div style={{ position: 'absolute', inset: 0 }}>
@@ -39,13 +41,18 @@ export function HomeScreen({
       }}>
         {/* Top bar */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{
-            width: 52, height: 52, borderRadius: '50%', background: '#FFF8EC',
-            border: '3px solid #2D3A2E', display: 'flex', alignItems: 'center',
-            justifyContent: 'center', boxShadow: '0 3px 0 rgba(46,90,58,0.2)', overflow: 'hidden',
-          }}>
+          <button
+            onClick={onAvatarTap}
+            style={{
+              width: 52, height: 52, borderRadius: '50%', background: '#FFF8EC',
+              border: '3px solid #2D3A2E', display: 'flex', alignItems: 'center',
+              justifyContent: 'center', boxShadow: '0 3px 0 rgba(46,90,58,0.2)', overflow: 'hidden',
+              cursor: onAvatarTap ? 'pointer' : 'default', padding: 0,
+            }}
+            aria-label="Switch profile"
+          >
             <BapMini size={44} color={profile.color} />
-          </div>
+          </button>
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 12, color: '#6B7A6C', fontWeight: 600 }}>Hi,</div>
             <div style={{ fontSize: 18, fontWeight: 700, color: '#2D3A2E' }}>{profile.name}!</div>
@@ -60,6 +67,9 @@ export function HomeScreen({
           </div>
           <IconBtn color="cream" size={44} onClick={onParent} style={{ fontSize: 18 }}>👤</IconBtn>
         </div>
+
+        {/* Encouragement message from parent */}
+        {encouragementBanner}
 
         {/* Daily mission */}
         <div style={{ marginTop: 18, position: 'relative' }}>

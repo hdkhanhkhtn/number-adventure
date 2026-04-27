@@ -14,9 +14,11 @@ model Parent {
   passwordHash String
   pinHash      String?  // bcrypt hashed 4-digit parent gate
   name         String?
+  emailReports Boolean  @default(true)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
   children     Child[]
+  encouragementMessages EncouragementMessage[]
 }
 
 model Child {
@@ -28,14 +30,29 @@ model Child {
   createdAt DateTime       @default(now())
   updatedAt DateTime       @updatedAt
 
-  parent             Parent              @relation(fields: [parentId], references: [id])
-  settings           ChildSettings?
-  sessions           GameSession[]
-  stickers           ChildSticker[]
-  streak             Streak?
-  difficultyProfiles DifficultyProfile[]
+  parent                Parent               @relation(fields: [parentId], references: [id])
+  settings              ChildSettings?
+  sessions              GameSession[]
+  stickers              ChildSticker[]
+  streak                Streak?
+  difficultyProfiles    DifficultyProfile[]
+  encouragementMessages EncouragementMessage[]
 
   @@index([parentId])
+}
+
+model EncouragementMessage {
+  id        String   @id @default(cuid())
+  parentId  String
+  childId   String
+  message   String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  parent Parent @relation(fields: [parentId], references: [id], onDelete: Cascade)
+  child  Child  @relation(fields: [childId],  references: [id], onDelete: Cascade)
+
+  @@index([childId, createdAt(sort: Desc)])
 }
 
 model ChildSettings {
