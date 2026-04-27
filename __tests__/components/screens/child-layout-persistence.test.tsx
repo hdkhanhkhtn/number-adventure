@@ -23,6 +23,7 @@ jest.mock('@/context/game-progress-context', () => ({
 // Mock next/navigation
 jest.mock('next/navigation', () => ({
   useRouter: jest.fn(),
+  usePathname: jest.fn(() => '/child/home'),
 }));
 
 // Mock all child components with simple divs to isolate ChildLayout logic
@@ -98,6 +99,14 @@ jest.mock('@/components/parent/parent-gate', () => ({
       </button>
     </div>
   ),
+}));
+
+// Mock framer-motion (Phase 3A-04: AnimatePresence + motion.div page transitions)
+jest.mock('framer-motion', () => ({
+  AnimatePresence: ({ children }: any) => children,
+  motion: {
+    div: ({ children, ...props }: any) => <div {...props}>{children}</div>,
+  },
 }));
 
 // Import hooks we need to mock
