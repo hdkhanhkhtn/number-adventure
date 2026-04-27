@@ -12,15 +12,17 @@ import { ParentSettingsTimeTab } from './parent-settings-time-tab';
 import { ParentSettingsLangTab } from './parent-settings-lang-tab';
 import { ParentSettingsAudioTab } from './parent-settings-audio-tab';
 import { ParentSettingsSecurityTab } from './parent-settings-security-tab';
+import { ParentSettingsGameplayTab } from './parent-settings-gameplay-tab';
 import type { ChildSettings } from '@/lib/types/common';
 
-type Tab = 'time' | 'lang' | 'audio' | 'security';
+type Tab = 'time' | 'lang' | 'audio' | 'security' | 'gameplay';
 
 const TABS: { key: Tab; label: string }[] = [
   { key: 'time', label: '⏱ Thời gian' },
   { key: 'lang', label: '🌏 Ngôn ngữ' },
   { key: 'audio', label: '🔊 Âm thanh' },
   { key: 'security', label: '🔒 Bảo mật' },
+  { key: 'gameplay', label: '🎮 Trò chơi' },
 ];
 
 const DEFAULTS: ChildSettings = {
@@ -140,6 +142,12 @@ export function ParentSettingsContent() {
           </div>
         )}
         {tab === 'security' && <ParentSettingsSecurityTab childId={childId} />}
+        {tab === 'gameplay' && (
+          <ParentSettingsGameplayTab
+            appSettings={appSettings}
+            updateAppSettings={updateAppSettings}
+          />
+        )}
       </div>
     </div>
   );
