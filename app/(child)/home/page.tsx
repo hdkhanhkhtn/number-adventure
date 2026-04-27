@@ -89,9 +89,10 @@ export default function HomePage() {
         onParent={() => setShowGate(true)}
         onAvatarTap={() => setShowSwitcher(true)}
         encouragementBanner={
-          encouragement ? (
+          encouragement && childId ? (
             <EncouragementBanner
               messageId={encouragement.id}
+              childId={childId}
               message={encouragement.message}
               onDismiss={() => setEncouragement(null)}
             />

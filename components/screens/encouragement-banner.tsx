@@ -4,12 +4,13 @@ import { useState } from 'react';
 
 interface Props {
   messageId: string;
+  childId: string;
   message: string;
   onDismiss: () => void;
 }
 
 /** Soft warm card shown on child home screen when parent sends an encouragement message */
-export function EncouragementBanner({ messageId, message, onDismiss }: Props) {
+export function EncouragementBanner({ messageId, childId, message, onDismiss }: Props) {
   const [dismissing, setDismissing] = useState(false);
 
   async function handleDismiss() {
@@ -18,7 +19,7 @@ export function EncouragementBanner({ messageId, message, onDismiss }: Props) {
       await fetch('/api/parent/encouragement', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: messageId }),
+        body: JSON.stringify({ id: messageId, childId }),
       });
     } finally {
       onDismiss();
