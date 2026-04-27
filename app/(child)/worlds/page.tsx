@@ -21,6 +21,13 @@ interface WorldProgress {
 export default function WorldsPage() {
   const { state, isHydrated } = useGameProgress();
   const router = useRouter();
+  const handleBack = () => {
+    if (window.history.length > 1) {
+      router.back();
+    } else {
+      router.push('/home');
+    }
+  };
   const [progressMap, setProgressMap] = useState<Record<string, WorldProgress>>({});
   const [showWorldIntro, setShowWorldIntro] = useState(false);
 
@@ -79,7 +86,7 @@ export default function WorldsPage() {
         </GardenBg>
         <div style={{ position: 'relative', zIndex: 1, height: '100%', display: 'flex', flexDirection: 'column' }}>
           <div style={{ padding: '56px 20px 14px', display: 'flex', alignItems: 'center', gap: 12 }}>
-            <IconBtn color="cream" size={48} onClick={() => router.back()}>‹</IconBtn>
+            <IconBtn color="cream" size={48} onClick={handleBack}>‹</IconBtn>
             <div style={{ fontSize: 20, fontWeight: 700, color: '#2D3A2E' }}>World Map</div>
           </div>
           <div className="scroll" style={{ flex: 1, padding: '4px 20px 24px' }}>

@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
+import { AnimatePresence, motion } from 'framer-motion';
 import { useGameProgress } from '@/context/game-progress-context';
 import { SplashScreen } from '@/components/screens/splash-screen';
 import { WelcomeScreen } from '@/components/screens/welcome-screen';
@@ -16,6 +17,7 @@ type OnboardStep = 'splash' | 'welcome' | 'setup' | 'ready';
 export default function ChildLayout({ children }: { children: React.ReactNode }) {
   const { state, setChild } = useGameProgress();
   const router = useRouter();
+  const pathname = usePathname();
 
   // ── All useState declarations first (Rules of Hooks) ──────────────────────
   const [step, setStep] = useState<OnboardStep>('splash');
@@ -59,7 +61,7 @@ export default function ChildLayout({ children }: { children: React.ReactNode })
     } catch { /* private browsing */ }
 
     setHydrated(true);
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);
 
   // After hydration: if child is already registered, jump straight to ready.
   useEffect(() => {
@@ -186,7 +188,17 @@ export default function ChildLayout({ children }: { children: React.ReactNode })
   return (
     <>
       <OfflineToast />
-      {children}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={pathname}
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -8 }}
+          transition={{ duration: 0.2 }}
+        >
+          {children}
+        </motion.div>
+      </AnimatePresence>
       {/* TODO(phase-3a-02)[important]: Plan 3A-02 specifies banner re-shows after 3 sessions.
            Current dismiss is in-memory only — resets on every page reload, no session counter.
            Add sessionStorage counter: increment on step→'ready', show banner when count%3===0
