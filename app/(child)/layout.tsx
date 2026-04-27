@@ -33,13 +33,51 @@ export default function ChildLayout({ children }: { children: React.ReactNode })
 
   // ── All useEffect declarations after all useState/useRef ──────────────────
 
-  // Wait for context to hydrate from localStorage
-  useEffect(() => { setHydrated(true); }, []);
+  // On mount: hydrate state from localStorage and apply persistence rules.
+  // Runs once — reads bap-splash-seen, bap-onboard-step, bap-lang then
+  // decides the correct initial step (splash skip + mid-wizard resume).
+  useEffect(() => {
+    try {
+      const savedLang = localStorage.getItem('bap-lang');
+      if (savedLang) setLang(savedLang);
+    } catch { /* private browsing */ }
 
-  // Skip onboarding if child already registered
+    try {
+      const splashSeen = localStorage.getItem('bap-splash-seen');
+      if (splashSeen) {
+        // Splash already seen — skip it; destination depends on child registration
+        // (childId may not be in context yet; re-check after context hydrates below)
+        const savedStep = localStorage.getItem('bap-onboard-step') as OnboardStep | null;
+        if (savedStep === 'welcome' || savedStep === 'setup') {
+          setStep(savedStep);
+        } else {
+          // No mid-wizard save — go to welcome; childId check below will promote to ready
+          setStep('welcome');
+        }
+      }
+      // If splashSeen is not set: keep default 'splash' step
+    } catch { /* private browsing */ }
+
+    setHydrated(true);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // After hydration: if child is already registered, jump straight to ready.
   useEffect(() => {
     if (hydrated && state.childId) setStep('ready');
   }, [hydrated, state.childId]);
+
+  // Persist step changes to localStorage; remove key on completion.
+  useEffect(() => {
+    if (!hydrated) return;
+    try {
+      if (step === 'ready') {
+        localStorage.removeItem('bap-onboard-step');
+      } else if (step === 'welcome' || step === 'setup') {
+        localStorage.setItem('bap-onboard-step', step);
+      }
+      // 'splash' is never persisted — always show on fresh mount
+    } catch { /* private browsing */ }
+  }, [hydrated, step]);
 
   // Show "save progress" banner when a guest user has a parent session available.
   // Uses sessionChecked ref to avoid a redundant API call on every childId change.
@@ -119,12 +157,23 @@ export default function ChildLayout({ children }: { children: React.ReactNode })
   if (!hydrated) return null;
 
   if (step === 'splash') {
-    return <SplashScreen onReady={() => setStep(state.childId ? 'ready' : 'welcome')} />;
+    return (
+      <SplashScreen
+        onReady={() => {
+          try { localStorage.setItem('bap-splash-seen', '1'); } catch { /* private browsing */ }
+          setStep(state.childId ? 'ready' : 'welcome');
+        }}
+      />
+    );
   }
   if (step === 'welcome') {
     return (
       <WelcomeScreen
-        lang={lang} setLang={setLang}
+        lang={lang}
+        setLang={(l: string) => {
+          setLang(l);
+          try { localStorage.setItem('bap-lang', l); } catch { /* private browsing */ }
+        }}
         onStart={() => setStep('setup')}
         onExistingProfile={() => router.push('/home')}
       />
