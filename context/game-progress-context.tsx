@@ -42,9 +42,16 @@ function reducer(state: GameProgressState, action: Action): GameProgressState {
       return { ...state, currentWorldId: action.payload };
     case 'SET_SESSION_ACTIVE':
       return { ...state, sessionActive: action.payload };
-    // Switches active child without resetting world, settings, or session state
+    // Switch active child: update identity, clear in-progress session state to avoid
+    // showing stale world/session data from the previous child (I1)
     case 'SWITCH_CHILD':
-      return { ...state, childId: action.childId, profile: action.profile };
+      return {
+        ...state,
+        childId: action.childId,
+        profile: action.profile,
+        currentWorldId: null,
+        sessionActive: false,
+      };
     case 'CLEAR':
       return INITIAL_STATE;
     default:
