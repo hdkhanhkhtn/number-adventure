@@ -234,7 +234,7 @@ Runtime:
 
 - [x] 3B-01: Create Zod schema + AI lesson generator script with `--dry-run`
 - [x] 3B-02: Add Lesson metadata fields + migration + lesson-loader.ts + feature flag
-- [ ] 3B-03: Complete TTS script (EN+VI), generate 202 MP3 files, commit
+- [x] 3B-03: Complete TTS script (EN+VI) — script generates 0-100, WaveNet voices, Unicode vi-VN; run `npm run generate:audio` with GOOGLE_APPLICATION_CREDENTIALS to produce 202 MP3 files
 - [ ] 3B-04: World 6 Counting Meadow — 9 lesson templates + AI generation + seed
 - [ ] 3B-05: World 7 Writing Workshop — 9 lesson templates + AI generation + seed
 - [ ] 3B-06: Admin JSON config -> AI expand -> DB seed script
