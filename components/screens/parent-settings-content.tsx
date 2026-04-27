@@ -7,7 +7,7 @@ import { IconBtn } from '@/components/ui/icon-btn';
 import { Panel } from '@/components/parent/panel';
 import { SettingRow } from '@/components/parent/setting-row';
 import { Toggle } from '@/components/ui/toggle';
-import { useSettings } from '@/lib/hooks/use-settings';
+import { useSettings, type AppSettingsPatch } from '@/lib/hooks/use-settings';
 import { ParentSettingsTimeTab } from './parent-settings-time-tab';
 import { ParentSettingsLangTab } from './parent-settings-lang-tab';
 import { ParentSettingsAudioTab } from './parent-settings-audio-tab';
@@ -104,7 +104,14 @@ export function ParentSettingsContent() {
 
       {/* Tab content */}
       <div style={{ padding: '16px 18px 24px' }}>
-        {tab === 'time' && <ParentSettingsTimeTab settings={settings} onChange={handleChange} />}
+        {tab === 'time' && (
+          <ParentSettingsTimeTab
+            settings={settings}
+            onChange={handleChange}
+            appSettings={appSettings}
+            updateAppSettings={updateAppSettings}
+          />
+        )}
         {tab === 'lang' && <ParentSettingsLangTab settings={settings} onChange={handleChange} />}
         {tab === 'audio' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -115,8 +122,7 @@ export function ParentSettingsContent() {
                 right={
                   <Toggle
                     checked={appSettings.highContrast}
-                    // TODO(phase-3a-06)[important]: use onChange={v => updateAppSettings({ highContrast: v })} to consume Toggle's emitted value — see BACKLOG.md #10 / GH #22
-                    onChange={() => updateAppSettings({ highContrast: !appSettings.highContrast })}
+                    onChange={v => updateAppSettings({ highContrast: v })}
                   />
                 }
               />
@@ -126,7 +132,7 @@ export function ParentSettingsContent() {
                 right={
                   <Toggle
                     checked={appSettings.reduceMotion}
-                    onChange={() => updateAppSettings({ reduceMotion: !appSettings.reduceMotion })}
+                    onChange={v => updateAppSettings({ reduceMotion: v })}
                   />
                 }
               />
