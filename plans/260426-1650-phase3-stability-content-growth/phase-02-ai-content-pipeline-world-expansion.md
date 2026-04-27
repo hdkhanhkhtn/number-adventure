@@ -232,7 +232,7 @@ Runtime:
 
 ## Todo List
 
-- [ ] 3B-01: Create Zod schema + AI lesson generator script with `--dry-run`
+- [x] 3B-01: Create Zod schema + AI lesson generator script with `--dry-run`
 - [ ] 3B-02: Add Lesson metadata fields + migration + `lesson-loader.ts` + feature flag
 - [ ] 3B-03: Complete TTS script (EN+VI), generate 202 MP3 files, commit
 - [ ] 3B-04: World 6 Counting Meadow — 9 lesson templates + AI generation + seed
