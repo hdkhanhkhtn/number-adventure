@@ -4,6 +4,10 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useGameProgress } from '@/context/game-progress-context';
 import { IconBtn } from '@/components/ui/icon-btn';
+import { Panel } from '@/components/parent/panel';
+import { SettingRow } from '@/components/parent/setting-row';
+import { Toggle } from '@/components/ui/toggle';
+import { useSettings } from '@/lib/hooks/use-settings';
 import { ParentSettingsTimeTab } from './parent-settings-time-tab';
 import { ParentSettingsLangTab } from './parent-settings-lang-tab';
 import { ParentSettingsAudioTab } from './parent-settings-audio-tab';
@@ -30,6 +34,7 @@ export function ParentSettingsContent() {
   const { state, updateSettings } = useGameProgress();
   const { childId } = state;
 
+  const { settings: appSettings, update: updateAppSettings } = useSettings();
   const [tab, setTab] = useState<Tab>('time');
   const [settings, setSettings] = useState<Partial<ChildSettings>>(DEFAULTS);
   const [saving, setSaving] = useState(false);
@@ -101,7 +106,33 @@ export function ParentSettingsContent() {
       <div style={{ padding: '16px 18px 24px' }}>
         {tab === 'time' && <ParentSettingsTimeTab settings={settings} onChange={handleChange} />}
         {tab === 'lang' && <ParentSettingsLangTab settings={settings} onChange={handleChange} />}
-        {tab === 'audio' && <ParentSettingsAudioTab settings={settings} onChange={handleChange} />}
+        {tab === 'audio' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <ParentSettingsAudioTab settings={settings} onChange={handleChange} appSettings={appSettings} updateAppSettings={updateAppSettings} />
+            <Panel title="Trợ năng" sub="Hiển thị và chuyển động">
+              <SettingRow
+                label="Tương phản cao"
+                right={
+                  <Toggle
+                    checked={appSettings.highContrast}
+                    // TODO(phase-3a-06)[important]: use onChange={v => updateAppSettings({ highContrast: v })} to consume Toggle's emitted value — see BACKLOG.md #10 / GH #22
+                    onChange={() => updateAppSettings({ highContrast: !appSettings.highContrast })}
+                  />
+                }
+              />
+              <SettingRow
+                label="Giảm chuyển động"
+                last
+                right={
+                  <Toggle
+                    checked={appSettings.reduceMotion}
+                    onChange={() => updateAppSettings({ reduceMotion: !appSettings.reduceMotion })}
+                  />
+                }
+              />
+            </Panel>
+          </div>
+        )}
         {tab === 'security' && <ParentSettingsSecurityTab childId={childId} />}
       </div>
     </div>
