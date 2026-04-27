@@ -179,8 +179,8 @@ client: setChild(newChildId) → localStorage updated → guest data cleared
 
 ## Todo List
 
-- [ ] 3A-01: Fix blank screen — expose `isHydrated`, add guard to all child pages
-- [ ] 3A-02: Guest→DB migration endpoint + "Save progress" banner
+- [x] 3A-01: Fix blank screen — expose `isHydrated`, add guard to all child pages
+- [x] 3A-02: Guest→DB migration endpoint + "Save progress" banner
 - [ ] 3A-03: Onboarding partial-state persistence + splash skip
 - [ ] 3A-04: Back navigation helper + `router.replace` after game + page transitions
 - [ ] 3A-05: `useSettings` hook + volume slider + contrast + reduce-motion
