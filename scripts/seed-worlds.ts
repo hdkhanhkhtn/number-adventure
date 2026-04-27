@@ -25,9 +25,16 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 // ── CLI args ──────────────────────────────────────────────────────────────────
-const args = process.argv.slice(2);
-const worldArg = args[args.indexOf('--world') + 1] as string | undefined;
+const args    = process.argv.slice(2);
+const worldIdx = args.indexOf('--world');
+const worldArg = worldIdx !== -1 ? args[worldIdx + 1] : undefined;
 const dryRun   = args.includes('--dry-run');
+
+// Guard: --world flag provided but no value given (or next token is another flag)
+if (args.includes('--world') && (!worldArg || worldArg.startsWith('--'))) {
+  console.error('--world requires a world ID value. Example: --world counting-meadow');
+  process.exit(1);
+}
 
 // ── Config ────────────────────────────────────────────────────────────────────
 interface WorldEntry { id: string; gameType: string; lessonCount: number }
@@ -82,6 +89,7 @@ async function main(): Promise<void> {
   for (const world of worlds) {
     console.log(`\n[generate] ${world.id}…`);
     const dryFlag  = dryRun ? ' --dry-run' : '';
+    // TODO(phase-3b)[suggestion]: world.id is unquoted in shell command string — quote it to handle hypothetical IDs with spaces — see BACKLOG.md #13
     const ok = run(`npx tsx "${generateScript}" --world ${world.id}${dryFlag}`);
     if (!ok) {
       console.error(`  ✗ generation failed for ${world.id}`);
