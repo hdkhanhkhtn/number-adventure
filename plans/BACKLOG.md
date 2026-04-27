@@ -22,6 +22,8 @@ Mỗi entry có GitHub Issue link để track trên remote.
 |---|---|---|---|---|---|
 | 1 | `isHydrated` guard missing in play page — cold load triggers premature redirect to `/` before hydration completes | `app/(child)/play/[gameType]/[lessonId]/page.tsx:108` | review | Phase 3A | #14 |
 | 2 | Write-through localStorage cache fires on `sessionActive` changes (not serialised) — redundant writes on game-intensive pages | `context/game-progress-context.tsx:99` | review | Phase 3A | #15 |
+| 5 | Spec ambiguity on guest data copy — route comment says "no copy needed" (guest data is local-only) but plan.md Validation Summary confirms guest rows DO exist in DB and must be copied; contradiction must be resolved before Phase 3C migration work begins | `app/api/children/migrate/route.ts:8` + `plans/260426-1650-phase3-stability-content-growth/plan.md:74` | review | Phase 3A-02 / Phase 3C | — |
+| 6 | Banner re-show after 3 sessions not implemented — plan 3A-02 specifies "re-shows after 3 sessions" but current code dismisses permanently in-memory (resets on every page reload, no session counter) | `app/(child)/layout.tsx:141` | review | Phase 3A-02 | — |
 
 ---
 
@@ -31,6 +33,8 @@ Mỗi entry có GitHub Issue link để track trên remote.
 |---|---|---|---|---|---|
 | 3 | `pulse` keyframe not self-contained in SkeletonScreen — animation silently no-ops if global CSS missing | `components/ui/skeleton-screen.tsx:16` | review | Phase 3A | — |
 | 4 | `JSON.parse(cached)` in reward page has no try/catch — malformed sessionStorage throws uncaught exception | `app/(child)/reward/page.tsx:33` | review | Phase 3A | — |
+| 7 | Idempotency key in migrate endpoint uses (parentId + name) only — sibling name collision (same name, different age) returns wrong existing child | `app/api/children/migrate/route.ts:42` | review | Phase 3A-02 | — |
+| 8 | CSRF protection relies on implicit SameSite cookie behaviour — not documented; if cookie `SameSite` attribute ever changes, endpoint becomes CSRF-vulnerable | `app/api/children/migrate/route.ts:11` | review | Phase 3A-02 | — |
 
 ---
 
