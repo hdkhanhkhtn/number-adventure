@@ -24,6 +24,8 @@ Mỗi entry có GitHub Issue link để track trên remote.
 | 2 | Write-through localStorage cache fires on `sessionActive` changes (not serialised) — redundant writes on game-intensive pages | `context/game-progress-context.tsx:99` | review | Phase 3A | #15 |
 | 5 | Spec ambiguity on guest data copy — route comment says "no copy needed" (guest data is local-only) but plan.md Validation Summary confirms guest rows DO exist in DB and must be copied; contradiction must be resolved before Phase 3C migration work begins | `app/api/children/migrate/route.ts:8` + `plans/260426-1650-phase3-stability-content-growth/plan.md:74` | review | Phase 3A-02 / Phase 3C | — |
 | 6 | Banner re-show after 3 sessions not implemented — plan 3A-02 specifies "re-shows after 3 sessions" but current code dismisses permanently in-memory (resets on every page reload, no session counter) | `app/(child)/layout.tsx:141` | review | Phase 3A-02 | — |
+| 9 | `useSettings.update()` shallow merge destroys nested sub-keys — `update({ bedtime: { enabled: true } })` wipes `hour` and `minute`; needs deep merge or caller contract documented | `lib/hooks/use-settings.ts:76` | review | Phase 3A-05 | #21 |
+| 10 | Toggle `onChange` ignores emitted `checked` value in accessibility rows — uses stale closure negation instead of consuming Toggle's `(checked: boolean)` argument; works today but fragile | `components/screens/parent-settings-content.tsx:118,128` | review | Phase 3A-05 | #22 |
 
 ---
 

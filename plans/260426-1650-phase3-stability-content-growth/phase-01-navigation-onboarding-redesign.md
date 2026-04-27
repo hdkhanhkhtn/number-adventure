@@ -183,7 +183,7 @@ client: setChild(newChildId) → localStorage updated → guest data cleared
 - [x] 3A-02: Guest→DB migration endpoint + "Save progress" banner
 - [x] 3A-03: Onboarding partial-state persistence + splash skip
 - [x] 3A-04: Back navigation helper + `router.replace` after game + page transitions
-- [ ] 3A-05: `useSettings` hook + volume slider + contrast + reduce-motion
+- [x] 3A-05: `useSettings` hook + volume slider + contrast + reduce-motion
 - [ ] 3A-06: Bedtime mode + break reminder + game hints toggle
 - [ ] 3A-07: Parent game rotation control
 

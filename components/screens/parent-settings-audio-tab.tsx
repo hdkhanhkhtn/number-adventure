@@ -3,19 +3,46 @@
 import { Panel } from '@/components/parent/panel';
 import { SettingRow } from '@/components/parent/setting-row';
 import { Toggle } from '@/components/ui/toggle';
+import type { AppSettings } from '@/lib/hooks/use-settings';
 import type { ChildSettings } from '@/lib/types/common';
 
 interface Props {
   settings: Partial<ChildSettings>;
   onChange: (patch: Partial<ChildSettings>) => void;
+  appSettings: AppSettings;
+  updateAppSettings: (patch: Partial<AppSettings>) => void;
 }
 
 const VOICE_STYLES = ['Friendly', 'Slow', 'Adult'] as const;
 
-/** Audio tab — sfx, music, voice toggles + voice style */
-export function ParentSettingsAudioTab({ settings, onChange }: Props) {
+/** Audio tab — volume slider, sfx, music, voice toggles + voice style */
+export function ParentSettingsAudioTab({ settings, onChange, appSettings, updateAppSettings }: Props) {
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+      <Panel title="Âm lượng" sub="Điều chỉnh âm lượng chung của ứng dụng">
+        <SettingRow
+          label={`Âm lượng (${appSettings.volume}%)`}
+          last
+          right={
+            <input
+              type="range"
+              min={0}
+              max={100}
+              step={1}
+              value={appSettings.volume}
+              aria-label="Âm lượng ứng dụng"
+              onChange={e => updateAppSettings({ volume: Number(e.target.value) })}
+              style={{
+                width: 140,
+                accentColor: '#7FC089',
+                cursor: 'pointer',
+              }}
+            />
+          }
+        />
+      </Panel>
+
       <Panel title="Âm thanh" sub="Hiệu ứng và nhạc nền">
         <SettingRow
           label="Hiệu ứng âm thanh"
