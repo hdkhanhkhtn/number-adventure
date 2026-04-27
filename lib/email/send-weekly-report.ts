@@ -16,10 +16,13 @@ export async function sendWeeklyReport(
   childSummaries: ChildSummary[],
   unsubscribeUrl: string,
 ) {
+  // Strip CRLF characters to prevent email header injection (W4)
+  const safeName = (parent.name ?? 'Your').replace(/[\r\n]/g, '').slice(0, 50);
+
   await resend.emails.send({
     from: 'Bap Adventure <noreply@bap-adventure.com>',
     to: parent.email,
-    subject: `${parent.name ?? 'Your'}'s family weekly progress report`,
+    subject: `${safeName}'s family weekly progress report`,
     react: WeeklyReportTemplate({
       parentName: parent.name ?? '',
       children: childSummaries,
