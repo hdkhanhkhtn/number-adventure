@@ -19,7 +19,15 @@ const eslintConfig = defineConfig([
     files: ['**/__tests__/**', '**/*.test.ts', '**/*.test.tsx'],
     rules: {
       '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/no-unused-vars': 'off',
       'react/display-name': 'off',
+    },
+  },
+  {
+    // Jest setup and config are CommonJS — require() is intentional
+    files: ['jest.setup.js', 'jest.config.js'],
+    rules: {
+      '@typescript-eslint/no-require-imports': 'off',
     },
   },
   // Override default ignores of eslint-config-next.
