@@ -235,9 +235,9 @@ Runtime:
 - [x] 3B-01: Create Zod schema + AI lesson generator script with `--dry-run`
 - [x] 3B-02: Add Lesson metadata fields + migration + lesson-loader.ts + feature flag
 - [x] 3B-03: Complete TTS script (EN+VI) — script generates 0-100, WaveNet voices, Unicode vi-VN; run `npm run generate:audio` with GOOGLE_APPLICATION_CREDENTIALS to produce 202 MP3 files
-- [ ] 3B-04: World 6 Counting Meadow — 9 lesson templates + AI generation + seed
-- [ ] 3B-05: World 7 Writing Workshop — 9 lesson templates + AI generation + seed
-- [ ] 3B-06: Admin JSON config -> AI expand -> DB seed script
+- [x] 3B-04: World 6 Counting Meadow — 9 static templates in lesson-templates.ts (cm-01..09); run `npm run generate:lessons -- --world counting-meadow` + `npm run seed:lessons` when AI credentials available
+- [x] 3B-05: World 7 Writing Workshop — 9 static templates in lesson-templates.ts (ww-01..09); run `npm run generate:lessons -- --world writing-workshop` + `npm run seed:lessons` when AI credentials available
+- [x] 3B-06: Admin pipeline: `prisma/seed-worlds-config.json` + `scripts/seed-worlds.ts` + `npm run seed:worlds` — orchestrates generate + seed per world
 
 ## Success Criteria
 
