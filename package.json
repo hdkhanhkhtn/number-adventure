@@ -11,7 +11,8 @@
     "test": "jest",
     "test:coverage": "jest --coverage",
     "generate:audio": "tsx scripts/generate-tts-audio.ts",
-    "generate:lessons": "tsx scripts/generate-lessons.ts"
+    "generate:lessons": "tsx scripts/generate-lessons.ts",
+    "seed:lessons": "tsx scripts/seed-lessons.ts"
   },
   "dependencies": {
     "@prisma/client": "^5.22.0",

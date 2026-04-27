@@ -55,16 +55,23 @@ model ChildSettings {
 }
 
 model Lesson {
-  id         String   @id @default(cuid())
-  worldId    String
-  gameType   String   // hear-tap | build-number | even-odd | number-order | add-take
-  order      Int
-  title      String
-  difficulty String   @default("easy")
-  createdAt  DateTime @default(now())
+  id            String   @id @default(cuid())
+  worldId       String
+  gameType      String   // hear-tap | build-number | even-odd | number-order | add-take
+  order         Int
+  title         String
+  description   String?
+  objectives    Json?    // stores string[]
+  difficulty    String   @default("easy")
+  questionCount Int      @default(8)
+  passingStars  Int      @default(1)
+  published     Boolean  @default(false)
+  createdAt     DateTime @default(now())
 
   sessions  GameSession[]
   questions AIQuestion[]
+
+  @@unique([worldId, order])
 }
 
 model GameSession {

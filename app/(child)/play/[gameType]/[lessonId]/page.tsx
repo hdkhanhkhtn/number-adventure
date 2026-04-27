@@ -8,7 +8,7 @@ import { loadQuestions } from '@/lib/game-engine/question-loader';
 import { GAME_REGISTRY } from '@/lib/game-engine/registry';
 import type { AnyQuestion, GameType } from '@/lib/game-engine/types';
 import type { GameResult } from '@/lib/game-engine/types';
-import { LESSON_TEMPLATES } from '@/src/data/game-config/lesson-templates';
+import { loadLessonSync } from '@/lib/lesson-loader';
 import { HearTapGame } from './hear-tap-game';
 import { BuildNumberGame } from './build-number-game';
 import { EvenOddGame } from './even-odd-game';
@@ -55,7 +55,7 @@ export default function PlayPage({ params }: { params: Promise<{ gameType: strin
   const childId = state.childId ?? 'guest';
   const { startSession, submitAttempt, completeSession } = useGameSession(childId, lessonId);
 
-  const lesson = LESSON_TEMPLATES.find((l) => l.id === lessonId);
+  const lesson = loadLessonSync(lessonId);
   const validGameType = VALID_GAME_TYPES.includes(gameType as GameType) ? (gameType as GameType) : null;
 
   // Guard against React Strict Mode double-invocation creating duplicate sessions
