@@ -3,14 +3,14 @@
 import { Panel } from '@/components/parent/panel';
 import { SettingRow } from '@/components/parent/setting-row';
 import { Toggle } from '@/components/ui/toggle';
-import type { AppSettings } from '@/lib/hooks/use-settings';
+import type { AppSettings, AppSettingsPatch } from '@/lib/hooks/use-settings';
 import type { ChildSettings } from '@/lib/types/common';
 
 interface Props {
   settings: Partial<ChildSettings>;
   onChange: (patch: Partial<ChildSettings>) => void;
   appSettings: AppSettings;
-  updateAppSettings: (patch: Partial<AppSettings>) => void;
+  updateAppSettings: (patch: AppSettingsPatch) => void;
 }
 
 const VOICE_STYLES = ['Friendly', 'Slow', 'Adult'] as const;

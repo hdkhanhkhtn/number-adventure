@@ -12,6 +12,12 @@ export type AppSettings = {
   gameRotation: 'auto' | 'favorites' | 'all';
 };
 
+/** Patch type for useSettings.update() — allows partial nested objects */
+export type AppSettingsPatch = Partial<Omit<AppSettings, 'bedtime' | 'breakReminder'>> & {
+  bedtime?: Partial<AppSettings['bedtime']>;
+  breakReminder?: Partial<AppSettings['breakReminder']>;
+};
+
 const SETTINGS_KEY = 'bap-settings';
 
 const DEFAULT_SETTINGS: AppSettings = {
@@ -71,11 +77,17 @@ export function useSettings() {
     []
   );
 
-  // TODO(phase-3a-06)[important]: shallow merge loses nested sub-keys (bedtime.hour/minute, breakReminder.intervalMinutes)
-  // if caller passes partial nested obj e.g. update({ bedtime: { enabled: true } }) — see BACKLOG.md #9 / GH #21
-  const update = (patch: Partial<AppSettings>) => {
+  // Deep-merge nested objects so callers can pass partial sub-objects safely
+  // e.g. update({ bedtime: { enabled: true } }) preserves hour/minute
+  const update = (patch: AppSettingsPatch) => {
     setSettings(prev => {
-      const next = { ...prev, ...patch };
+      // Cast is safe: prev satisfies AppSettings and we deep-merge each nested struct
+      const next = {
+        ...prev,
+        ...patch,
+        bedtime: { ...prev.bedtime, ...(patch.bedtime ?? {}) },
+        breakReminder: { ...prev.breakReminder, ...(patch.breakReminder ?? {}) },
+      } as AppSettings;
       saveDebounced(next);
       return next;
     });
