@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useEffect, useMemo, useReducer } from 'react';
+import { createContext, useContext, useEffect, useMemo, useReducer, useState } from 'react';
 import type { ChildProfile, ChildSettings, WorldId } from '@/lib/types/common';
 
 // ── State shape ──────────────────────────────────────────────
@@ -51,6 +51,7 @@ function reducer(state: GameProgressState, action: Action): GameProgressState {
 // ── Context ──────────────────────────────────────────────────
 interface GameProgressContextValue {
   state: GameProgressState;
+  isHydrated: boolean;
   setChild: (childId: string, profile: ChildProfile) => void;
   setProfile: (profile: ChildProfile) => void;
   updateSettings: (settings: Partial<ChildSettings>) => void;
@@ -61,6 +62,7 @@ interface GameProgressContextValue {
 
 const GameProgressContext = createContext<GameProgressContextValue>({
   state: INITIAL_STATE,
+  isHydrated: false,
   setChild: () => undefined,
   setProfile: () => undefined,
   updateSettings: () => undefined,
@@ -73,6 +75,7 @@ const LS_KEY = 'bap-progress-cache';
 
 export function GameProgressProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(reducer, INITIAL_STATE);
+  const [isHydrated, setIsHydrated] = useState(false);
 
   // Load from localStorage on mount (instant display while DB fetch reconciles)
   useEffect(() => {
@@ -89,9 +92,13 @@ export function GameProgressProvider({ children }: { children: React.ReactNode }
     } catch {
       // Ignore malformed cache
     }
+    setIsHydrated(true);
   }, []);
 
   // Write-through cache on every state change
+  // TODO(phase-3a)[important]: sessionActive is part of state but not serialised, so any SET_SESSION_ACTIVE
+  // dispatch triggers a needless localStorage write. Extract a stable serialisable slice to avoid.
+  // See BACKLOG.md #2
   useEffect(() => {
     try {
       localStorage.setItem(LS_KEY, JSON.stringify({
@@ -108,13 +115,14 @@ export function GameProgressProvider({ children }: { children: React.ReactNode }
   // Memoize ctx so consumers only re-render when state actually changes
   const ctx = useMemo<GameProgressContextValue>(() => ({
     state,
+    isHydrated,
     setChild: (childId, profile) => dispatch({ type: 'SET_CHILD', payload: { childId, profile } }),
     setProfile: (profile) => dispatch({ type: 'SET_PROFILE', payload: profile }),
     updateSettings: (settings) => dispatch({ type: 'UPDATE_SETTINGS', payload: settings }),
     setWorld: (worldId) => dispatch({ type: 'SET_WORLD', payload: worldId }),
     setSessionActive: (active) => dispatch({ type: 'SET_SESSION_ACTIVE', payload: active }),
     clear: () => dispatch({ type: 'CLEAR' }),
-  }), [state]);
+  }), [state, isHydrated]);
 
   return (
     <GameProgressContext.Provider value={ctx}>

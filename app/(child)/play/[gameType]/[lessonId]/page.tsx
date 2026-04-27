@@ -19,6 +19,7 @@ import { NumberWritingGame } from './number-writing-game';
 import { useSessionTimer } from '@/lib/hooks/use-session-timer';
 import { TimeUpOverlay } from '@/components/screens/time-up-overlay';
 import { ExitConfirmModal } from '@/components/game/exit-confirm-modal';
+import { SkeletonScreen } from '@/components/ui/skeleton-screen';
 
 const VALID_GAME_TYPES = Object.keys(GAME_REGISTRY) as GameType[];
 
@@ -41,7 +42,7 @@ const GAME_MAP: Record<GameType, React.ComponentType<GameProps>> = {
 
 export default function PlayPage({ params }: { params: Promise<{ gameType: string; lessonId: string }> }) {
   const { gameType, lessonId } = use(params);
-  const { state } = useGameProgress();
+  const { state, isHydrated } = useGameProgress();
   const router = useRouter();
   const [questions, setQuestions] = useState<AnyQuestion[]>([]);
   const [loading, setLoading] = useState(true);
@@ -105,6 +106,8 @@ export default function PlayPage({ params }: { params: Promise<{ gameType: strin
     void submitAttempt({ answer, correct });
   };
 
+  if (!isHydrated) return <SkeletonScreen />;
+  if (!state.childId) { router.replace('/'); return null; }
   if (!validGameType) return <div style={{ padding: 40 }}>Unknown game type.</div>;
   if (loading) {
     return (
