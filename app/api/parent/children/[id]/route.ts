@@ -41,8 +41,12 @@ export async function PUT(
     }
     updates.age = body.age;
   }
+  const ALLOWED_COLORS = ['sun', 'sage', 'coral', 'lavender', 'sky'] as const;
   if (body.color !== undefined) {
-    updates.color = String(body.color);
+    if (!ALLOWED_COLORS.includes(body.color as typeof ALLOWED_COLORS[number])) {
+      return NextResponse.json({ error: `color must be one of: ${ALLOWED_COLORS.join(', ')}` }, { status: 400 });
+    }
+    updates.color = body.color;
   }
 
   const updated = await prisma.child.update({

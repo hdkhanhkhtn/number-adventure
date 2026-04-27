@@ -32,6 +32,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
   }
 
+  const ALLOWED_COLORS = ['sun', 'sage', 'coral', 'lavender', 'sky'] as const;
   const { name, age, color = 'sage' } = body;
 
   if (!name || typeof name !== 'string' || name.trim().length === 0) {
@@ -39,6 +40,15 @@ export async function POST(request: NextRequest) {
   }
   if (typeof age !== 'number' || age < 2 || age > 12) {
     return NextResponse.json({ error: 'age must be 2–12' }, { status: 400 });
+  }
+  if (!ALLOWED_COLORS.includes(color as typeof ALLOWED_COLORS[number])) {
+    return NextResponse.json({ error: `color must be one of: ${ALLOWED_COLORS.join(', ')}` }, { status: 400 });
+  }
+
+  // Cap at 10 children per parent to prevent storage abuse (W1)
+  const existing = await prisma.child.count({ where: { parentId } });
+  if (existing >= 10) {
+    return NextResponse.json({ error: 'Maximum 10 child profiles per account' }, { status: 400 });
   }
 
   const child = await prisma.child.create({
