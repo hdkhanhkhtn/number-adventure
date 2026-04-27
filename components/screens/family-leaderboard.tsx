@@ -4,7 +4,7 @@ interface LeaderboardEntry {
   childId: string;
   name: string;
   color: string;
-  starsThisWeek: number;
+  totalStars: number;
   rank: number;
 }
 
@@ -21,7 +21,7 @@ export function FamilyLeaderboard({ entries }: Props) {
   return (
     <div className="mx-4 mb-4 rounded-2xl bg-gradient-to-br from-indigo-50 to-purple-50 border border-indigo-100 p-4">
       <h3 className="text-sm font-bold text-indigo-700 mb-3 flex items-center gap-1">
-        <span>🏆</span> Family Leaderboard — This Week
+        <span>🏆</span> Family Leaderboard
       </h3>
       <ol className="space-y-2">
         {entries.map((entry) => (
@@ -36,7 +36,7 @@ export function FamilyLeaderboard({ entries }: Props) {
               {entry.name[0].toUpperCase()}
             </div>
             <span className="flex-1 text-sm font-medium text-gray-800">{entry.name}</span>
-            <span className="text-sm font-bold text-amber-600">{entry.starsThisWeek} ⭐</span>
+            <span className="text-sm font-bold text-amber-600">{entry.totalStars} ⭐</span>
           </li>
         ))}
       </ol>

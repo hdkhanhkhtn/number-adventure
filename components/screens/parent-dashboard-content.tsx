@@ -28,7 +28,7 @@ interface LeaderboardEntry {
   childId: string;
   name: string;
   color: string;
-  starsThisWeek: number;
+  totalStars: number;
   rank: number;
 }
 
@@ -86,13 +86,13 @@ export function ParentDashboardContent() {
             try {
               const r = await fetch(`/api/report/${c.id}`, { credentials: 'include' });
               const data: ReportData = r.ok ? await r.json() : { totalStars: 0 };
-              return { childId: c.id, name: c.name, color: c.color, starsThisWeek: data.totalStars ?? 0, rank: 0 };
+              return { childId: c.id, name: c.name, color: c.color, totalStars: data.totalStars ?? 0, rank: 0 };
             } catch {
-              return { childId: c.id, name: c.name, color: c.color, starsThisWeek: 0, rank: 0 };
+              return { childId: c.id, name: c.name, color: c.color, totalStars: 0, rank: 0 };
             }
           })
         );
-        entries.sort((a, b) => b.starsThisWeek - a.starsThisWeek);
+        entries.sort((a, b) => b.totalStars - a.totalStars);
         setLeaderboard(entries.map((e, i) => ({ ...e, rank: i + 1 })));
       })
       .catch(() => undefined);
