@@ -19,6 +19,13 @@ interface StickerEntry {
 export default function StickersPage() {
   const { state, isHydrated } = useGameProgress();
   const router = useRouter();
+  const handleBack = () => {
+    if (window.history.length > 1) {
+      router.back();
+    } else {
+      router.push('/home');
+    }
+  };
   const [stickers, setStickers] = useState<StickerEntry[]>([]);
   const [total, setTotal] = useState(40);
   const [selectedSticker, setSelectedSticker] = useState<StickerEntry | null>(null);
@@ -50,7 +57,7 @@ export default function StickersPage() {
       <GardenBg variant="lavender" />
       <div style={{ position: 'relative', zIndex: 1, height: '100%', display: 'flex', flexDirection: 'column' }}>
         <div style={{ padding: '56px 20px 14px', display: 'flex', alignItems: 'center', gap: 12 }}>
-          <IconBtn color="cream" size={48} onClick={() => router.back()}>‹</IconBtn>
+          <IconBtn color="cream" size={48} onClick={handleBack}>‹</IconBtn>
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 20, fontWeight: 700, color: '#2D3A2E' }}>Sticker Book</div>
             <div style={{ fontSize: 13, color: '#6B7A6C', fontWeight: 600 }}>{collected} of {total} collected</div>
