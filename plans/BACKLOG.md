@@ -26,6 +26,8 @@ Mỗi entry có GitHub Issue link để track trên remote.
 | 6 | Banner re-show after 3 sessions not implemented — plan 3A-02 specifies "re-shows after 3 sessions" but current code dismisses permanently in-memory (resets on every page reload, no session counter) | `app/(child)/layout.tsx:141` | review | Phase 3A-02 | — |
 | 9 | `useSettings.update()` shallow merge destroys nested sub-keys — `update({ bedtime: { enabled: true } })` wipes `hour` and `minute`; needs deep merge or caller contract documented | `lib/hooks/use-settings.ts:76` | review | Phase 3A-05 | #21 |
 | 10 | Toggle `onChange` ignores emitted `checked` value in accessibility rows — uses stale closure negation instead of consuming Toggle's `(checked: boolean)` argument; works today but fragile | `components/screens/parent-settings-content.tsx:118,128` | review | Phase 3A-05 | #22 |
+| 11 | `worldArg` parsed incorrectly when `--world` flag is absent — `indexOf` returns `-1`, `-1+1=0`, so `args[0]` is assigned; `npm run seed:worlds -- --dry-run` crashes with misleading error "World '--dry-run' not found" | `scripts/seed-worlds.ts:29` | review | Phase 3B | #30 |
+| 12 | `--world` as last arg (no value) silently falls back to all-worlds instead of erroring — args[indexOf+1] is `undefined` (falsy), causing full pipeline run unintentionally | `scripts/seed-worlds.ts:29` | review | Phase 3B | #31 |
 
 ---
 
@@ -34,6 +36,7 @@ Mỗi entry có GitHub Issue link để track trên remote.
 | # | Issue | File:Line | Source | Phase | GitHub |
 |---|---|---|---|---|---|
 | 3 | `pulse` keyframe not self-contained in SkeletonScreen — animation silently no-ops if global CSS missing | `components/ui/skeleton-screen.tsx:16` | review | Phase 3A | — |
+| 13 | `world.id` unquoted in `execSync` command string — IDs with spaces or shell metacharacters would misbehave; quote as `"${world.id}"` | `scripts/seed-worlds.ts:86` | review | Phase 3B | — |
 | 4 | `JSON.parse(cached)` in reward page has no try/catch — malformed sessionStorage throws uncaught exception | `app/(child)/reward/page.tsx:33` | review | Phase 3A | — |
 | 7 | Idempotency key in migrate endpoint uses (parentId + name) only — sibling name collision (same name, different age) returns wrong existing child | `app/api/children/migrate/route.ts:42` | review | Phase 3A-02 | — |
 | 8 | CSRF protection relies on implicit SameSite cookie behaviour — not documented; if cookie `SameSite` attribute ever changes, endpoint becomes CSRF-vulnerable | `app/api/children/migrate/route.ts:11` | review | Phase 3A-02 | — |

@@ -1,0 +1,11 @@
+{
+  "worlds": [
+    { "id": "number-garden",    "gameType": "hear-tap",        "lessonCount": 9 },
+    { "id": "counting-castle",  "gameType": "number-order",    "lessonCount": 9 },
+    { "id": "even-odd-house",   "gameType": "even-odd",        "lessonCount": 9 },
+    { "id": "number-sequence",  "gameType": "number-order",    "lessonCount": 9 },
+    { "id": "math-kitchen",     "gameType": "add-take",        "lessonCount": 9 },
+    { "id": "counting-meadow",  "gameType": "count-objects",   "lessonCount": 9 },
+    { "id": "writing-workshop", "gameType": "number-writing",  "lessonCount": 9 }
+  ]
+}
