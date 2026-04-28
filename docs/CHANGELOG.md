@@ -2,6 +2,56 @@
 
 All notable changes to Bap Number Adventure are documented here.
 
+## [Phase 3C] — Social & Multi-Profile (2026-04-28)
+
+**Status:** Complete ✅
+
+### Multi-Child Profiles
+- `GET/POST /api/parent/children` — list children, create child (max 10, color allowlist: sun/sage/coral/lavender/sky, age 2–12)
+- `PUT /api/parent/children/[id]` — update child profile with IDOR protection
+- `components/screens/child-switcher-modal.tsx` — bottom sheet UI for profile switching
+- `GameProgressContext`: added `SWITCH_CHILD` action; resets `currentWorldId` + `sessionActive` on switch; persists `activeChildId` to localStorage (`bap-active-child`)
+- `useGame`: exposed `switchChild(childId, profile)` method
+- Avatar on home screen now tappable, triggers child switcher modal
+
+### Encouragement Messages
+- `GET/POST /api/parent/encouragement` — parent creates message (1–200 chars, ownership verified); child fetches unread messages (unauthenticated, childId existence check)
+- `PATCH /api/parent/encouragement` — mark message read (requires `{ id, childId }` body for ownership verification)
+- `EncouragementMessage` table: id, parentId, childId, message (String), read (Boolean @default(false)), createdAt, index on (childId, createdAt DESC)
+- `components/screens/encouragement-banner.tsx` — soft card displayed on child home screen after top bar; shows single unread message with dismiss button
+- Message read status tracked in DB; dismissal triggers PATCH update
+
+### Weekly Progress Email
+- `GET /api/cron/weekly-report` — Vercel Cron endpoint (Monday 09:00 UTC), Bearer `CRON_SECRET` auth
+- `lib/email/send-weekly-report.ts` — lazy Resend init via `getResend()`; cursor-batched parent queries (50/batch); CRLF-stripped parent names for security
+- `lib/email/weekly-report-template.tsx` — React Email component; child name, session count, accuracy %, stars, streak, signed unsubscribe link
+- `lib/email/unsubscribe-token.ts` — HMAC-SHA256 signed tokens; `createUnsubscribeToken()`, `verifyUnsubscribeToken()`; uses `CRON_SECRET` as key; `timingSafeEqual` comparison
+- `GET /api/parent/unsubscribe?token=<hmac>` — HMAC-verified unsubscribe endpoint; sets `Parent.emailReports = false`; redirects to `/?unsubscribed=1`
+- `Parent.emailReports Boolean @default(true)` — opt-out model; parents can toggle via settings
+- `GET/PATCH /api/parent/settings` — email opt-in toggle persisted to DB
+- `vercel.json` — cron configuration: `{ "path": "/api/cron/weekly-report", "schedule": "0 9 * * 1" }`
+
+### Progress Export
+- `lib/export/export-progress.ts` — `exportAsCSV(data)` client-side blob download; `exportAsPDF(data)` dynamic import of jsPDF for SSR safety
+- CSV includes: child name, date range, lessons, stars, accuracy, streak
+- PDF renders formatted report with child name and progress metrics
+
+### Family Leaderboard
+- `components/screens/family-leaderboard.tsx` — ranked list of parent's children by `totalStars` (all-time), shown only when 2+ children
+- Rank icons: 👑 (1st), 🥈 (2nd), 🥉 (3rd)
+- Integrated into parent dashboard; fetches `/api/parent/children` + `/api/report/:id` per child
+- Note: N+1 query pattern deferred to Phase 4 for server-side aggregation endpoint
+
+### Security & Config
+- **Color allowlist** for child profiles: `['sun','sage','coral','lavender','sky']`
+- **Child count cap**: max 10 per parent
+- **IDOR protection**: every endpoint verifies `child.parentId === parentId` before returning data
+- **HMAC token security**: unsubscribe URLs signed to prevent unauthorized opt-outs
+- **CRLF stripping**: parent names sanitized in email subjects (prevents header injection)
+- **Env vars**: `RESEND_API_KEY`, `CRON_SECRET`, `NEXT_PUBLIC_APP_URL`
+
+---
+
 ## [Phase 2] — Content & Polish Expansion (2026-04-25 to 2026-04-26)
 
 **Status:** Complete ✅

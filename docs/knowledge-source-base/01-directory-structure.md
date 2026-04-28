@@ -6,6 +6,7 @@ NumberAdventure/
 ├── CLAUDE.md                         # AI workspace context (project-specific)
 ├── AGENTS.md                         # OpenCode orchestrator instructions
 ├── README.md                         # Project overview
+├── vercel.json                       # Phase 3C: Vercel Cron config
 │
 ├── .claude/                          # AI workspace config
 │   ├── agents/                       # AI agent definitions
@@ -84,8 +85,15 @@ app/api/
   │   └── route.ts                   # GET all stickers + earned
   ├── worlds/
   │   └── route.ts                   # GET world list
-  └── streaks/
-      └── [childId]/route.ts         # GET streak data
+  ├── streaks/
+  │   └── [childId]/route.ts         # GET streak data
+  ├── parent/ (Phase 3C)
+  │   ├── children/route.ts          # GET/POST child profiles; PUT [id] update
+  │   ├── encouragement/route.ts     # GET/POST/PATCH encouragement messages
+  │   ├── settings/route.ts          # GET/PATCH parent settings (emailReports)
+  │   └── unsubscribe/route.ts       # GET unsubscribe token verify
+  └── cron/ (Phase 3C)
+      └── weekly-report/route.ts     # GET Vercel Cron endpoint; Bearer auth
 ```
 
 ### Prisma (Database)
@@ -144,6 +152,9 @@ components/
     parent-dashboard-content.tsx
     parent-settings-content.tsx
     parent-report-content.tsx
+    child-switcher-modal.tsx           # Phase 3C: multi-child profile switcher
+    encouragement-banner.tsx           # Phase 3C: parent message display
+    family-leaderboard.tsx             # Phase 3C: all-time stars ranking
 
 lib/
   db/
@@ -156,6 +167,12 @@ lib/
     difficulty-calculator.ts
   services/
     audio.ts                         # AudioService (Web Speech + Howler)
+  email/ (Phase 3C)
+    send-weekly-report.ts            # Resend init + batch reporting
+    weekly-report-template.tsx       # React Email template
+    unsubscribe-token.ts             # HMAC-SHA256 token utils
+  export/ (Phase 3C)
+    export-progress.ts               # CSV/PDF client-side download
   hooks/
     useAudio.ts
     useGame.ts

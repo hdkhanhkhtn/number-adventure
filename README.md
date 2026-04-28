@@ -24,6 +24,11 @@
 | **Math Kitchen** | Simple addition/subtraction cooking theme |
 | **Rewards** | Stickers, celebrations, streak tracking |
 | **Parent Dashboard** | Progress overview, daily stats, settings |
+| **Multi-Child Profiles** | Switch between children; max 10 per parent; color-coded avatars |
+| **Parent Encouragement** | Parents send custom messages; child sees on home screen |
+| **Weekly Email Reports** | Automated progress summaries (Monday 09:00 UTC); opt-out via signed link |
+| **Progress Export** | Download child progress as CSV or PDF |
+| **Family Leaderboard** | All-time stars ranking (2+ children) |
 
 ---
 
@@ -92,6 +97,13 @@ Source component prototypes: `src/` (app.jsx, games.jsx, ui.jsx, ...)
 # Install dependencies
 npm install
 
+# Set up environment variables
+cp .env.example .env.local
+# Update with your API keys:
+#   RESEND_API_KEY=<your-resend-key>
+#   CRON_SECRET=<random-secret-for-cron-auth>
+#   NEXT_PUBLIC_APP_URL=http://localhost:3000
+
 # Run dev server
 npm run dev
 
@@ -101,6 +113,14 @@ npm test
 # Build
 npm run build
 ```
+
+### Environment Variables
+
+| Variable | Purpose | Required |
+|---|---|---|
+| `RESEND_API_KEY` | Email service (weekly reports) | Phase 3C+ |
+| `CRON_SECRET` | Bearer token for `/api/cron/weekly-report`; also HMAC key for unsubscribe tokens | Phase 3C+ |
+| `NEXT_PUBLIC_APP_URL` | Base URL for email links (e.g., https://bap.example.com) | Phase 3C+ |
 
 ---
 

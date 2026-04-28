@@ -131,3 +131,112 @@ Display:
   └─ Reward screen (StreakCard)
   NO separate /progress/streak route in MVP
 ```
+
+## Child Switching Flow (Phase 3C)
+
+```
+1. Child taps avatar on home screen
+   → ChildSwitcherModal opens (bottom sheet)
+   → fetches /api/parent/children on modal open
+   → renders list of parent's children
+
+2. Parent taps child name
+   → calls GameProgressContext.switchChild(childId, profile)
+   → triggers SWITCH_CHILD reducer action:
+       ├─ activeChildId ← childId
+       ├─ currentWorldId ← null (reset to prevent stale state)
+       ├─ sessionActive ← false (stop current session)
+       └─ localStorage.setItem('bap-active-child', childId)
+   → ChildSwitcherModal closes
+
+3. UI re-renders
+   → Home screen shows selected child's data
+   → Profile stats refresh from DB
+   → All game state reset for new child
+```
+
+## Encouragement Message Flow (Phase 3C)
+
+```
+Parent Action (creates message):
+  1. Parent posts /api/parent/encouragement
+     → { parentId, childId, message (1–200 chars) }
+     → ownership verified (message.parentId === parentId)
+     → saved to EncouragementMessage table
+     → read = false (default)
+
+Child Action (receives & reads):
+  1. Child home screen loads
+     → fetches /api/parent/encouragement?childId=...
+     → unauthenticated endpoint; checks childId exists
+     → returns latest unread message (order by createdAt DESC)
+
+  2. EncouragementBanner renders
+     → receives { messageId, childId, message, onDismiss }
+     → displays soft card with parent message
+
+  3. Child dismisses
+     → calls PATCH /api/parent/encouragement
+     → { id (messageId), childId }
+     → ownership verified (message.childId === childId)
+     → message.read = true
+     → next load shows no banner (or next unread)
+```
+
+## Weekly Email Flow (Phase 3C)
+
+```
+Vercel Cron Trigger:
+  Monday 09:00 UTC
+  → GET /api/cron/weekly-report
+  → Bearer: CRON_SECRET (env auth)
+
+Endpoint Flow:
+  1. Query Parent table
+     → where emailReports = true
+     → cursor pagination (50/batch) to prevent OOM
+
+  2. Per parent:
+     → Fetch children (all per parent)
+     → Aggregate per child: session count, accuracy %, stars, streak
+     → Sanitize parent name (strip CRLF for header injection safety)
+     → Render weekly-report-template (React Email)
+     → Call Resend.send(email)
+     → Track: { sent: count, failed: count }
+
+  3. Unsubscribe handling:
+     → createUnsubscribeToken(parentId)
+     → HMAC-SHA256 signed with CRON_SECRET
+     → embed in email link: /api/parent/unsubscribe?token=...
+
+  4. Return:
+     → { sent: count, failed: count }
+
+Unsubscribe endpoint:
+  GET /api/parent/unsubscribe?token=<hmac>
+  → verifyUnsubscribeToken(token) — timingSafeEqual check
+  → Parent.emailReports = false
+  → Redirect to /?unsubscribed=1
+```
+
+## Family Leaderboard Display (Phase 3C)
+
+```
+Parent Dashboard:
+  1. Fetch /api/parent/children
+     → list all children with totalStars (computed at fetch time)
+
+  2. IF children.length >= 2:
+     → <FamilyLeaderboard /> renders
+     → sorts by totalStars (descending)
+     → rank icons: 👑 (1st), 🥈 (2nd), 🥉 (3rd)
+
+  3. Per child:
+     → fetch /api/report/:childId
+     → extract totalStars for latest session data
+     → (Note: N+1 pattern; deferred to Phase 4 for server aggregation)
+
+Display:
+  ├─ Rank, child name, avatar color, total stars
+  └─ Shows only when 2+ children in family
+```

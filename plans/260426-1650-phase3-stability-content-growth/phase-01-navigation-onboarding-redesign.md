@@ -9,7 +9,7 @@
 ## Overview
 
 - **Priority:** Critical / High
-- **Status:** Pending
+- **Status:** In Progress — code gaps remain (see Remaining Work below)
 - **Effort:** ~3 days
 - **Description:** Fix blank screens, stabilize back navigation, complete onboarding wizard, add guest-to-DB migration prompt, finish settings page.
 
@@ -107,13 +107,43 @@ client: setChild(newChildId) → localStorage updated → guest data cleared
    if (!state.childId) { router.replace('/'); return null; }
    ```
 
-### Task 3A-02: Guest-to-DB migration (Critical)
+### Task 3A-02: Guest-to-DB migration (Critical) — INCOMPLETE
 
-1. Create `app/api/children/migrate/route.ts`:
+**Current state:** `app/api/children/migrate/route.ts` EXISTS but only creates a new Child record. It does NOT copy game data.
+
+1. Update `app/api/children/migrate/route.ts` to use a Prisma `$transaction`:
+   ```typescript
+   const result = await prisma.$transaction(async (tx) => {
+     // 1. Create new child under parent
+     const newChild = await tx.child.create({ data: { parentId, name, age, color } });
+     // 2. Copy GameSession rows: UPDATE guestChild sessions → newChild.id
+     await tx.gameSession.updateMany({
+       where: { childId: guestChildId },
+       data: { childId: newChild.id },
+     });
+     // 3. Copy GameAttempt rows linked to those sessions
+     await tx.gameAttempt.updateMany({
+       where: { session: { childId: newChild.id } },
+       data: {}, // already linked via session
+     });
+     // 4. Copy ChildSticker rows
+     await tx.childSticker.updateMany({
+       where: { childId: guestChildId },
+       data: { childId: newChild.id },
+     });
+     // 5. Copy Streak rows
+     await tx.streak.updateMany({
+       where: { childId: guestChildId },
+       data: { childId: newChild.id },
+     });
+     // 6. Delete guest child record
+     await tx.child.delete({ where: { id: guestChildId } });
+     return newChild;
+   });
+   ```
    - Accepts `{ guestId: string }` body
    - Validates parent session from cookie
-   - Creates new DB Child under parent
-   - Copies `GameSession`, `GameAttempt`, `ChildSticker`, `Streak` from guest child (if any exist in DB)
+   - Wraps entire copy-then-delete in a single Prisma `$transaction` to prevent partial migration
    - Returns `{ child: { id, name, age, color } }`
 2. In `app/(child)/layout.tsx`, after hydration check:
    - Detect `state.childId?.startsWith('guest_')` AND parent cookie exists
@@ -180,12 +210,143 @@ client: setChild(newChildId) → localStorage updated → guest data cleared
 ## Todo List
 
 - [x] 3A-01: Fix blank screen — expose `isHydrated`, add guard to all child pages
-- [x] 3A-02: Guest→DB migration endpoint + "Save progress" banner
+- [ ] 3A-02: Guest→DB migration endpoint — **INCOMPLETE** (file exists but does NOT copy GameSession, GameAttempt, ChildSticker, Streak)
 - [x] 3A-03: Onboarding partial-state persistence + splash skip
 - [x] 3A-04: Back navigation helper + `router.replace` after game + page transitions
-- [x] 3A-05: `useSettings` hook + volume slider + contrast + reduce-motion
+- [x] 3A-05: `useSettings` hook + volume slider + contrast + reduce-motion — **PARTIAL** (hook exists with localStorage, DB sync missing)
 - [x] 3A-06: Bedtime mode + break reminder + game hints toggle
 - [x] 3A-07: Parent game rotation control
+
+## Remaining Work
+
+### Gap 3A-R1 (CRITICAL): Incomplete data migration in `app/api/children/migrate/route.ts`
+
+**Current state:** File exists but only creates a new Child record. Does NOT copy GameSession, GameAttempt, ChildSticker, Streak from guest child to new child.
+
+**File:** `app/api/children/migrate/route.ts`
+
+**What to change:**
+1. Wrap entire migration in `prisma.$transaction(async (tx) => { ... })`
+2. After creating new Child, `updateMany` on GameSession, ChildSticker, Streak to reassign `childId` from guestChildId to newChild.id
+3. GameAttempt rows are linked via session FK, so they follow automatically (verify schema)
+4. Delete guest child record last, inside the transaction
+5. If any step fails, transaction rolls back — no partial data loss
+
+**Acceptance criteria:**
+- Guest user's GameSession, GameAttempt, ChildSticker, Streak rows all appear under new parent-linked child after migration
+- If migration fails mid-way, no data is lost (transaction rollback)
+- API returns 200 with `{ child: { id, name, age, color } }` on success
+
+---
+
+### Gap 3A-R2 (HIGH): Play page guard fires too late
+
+**File:** `app/(child)/play/[gameType]/[lessonId]/page.tsx`
+
+**Current state:** Guard at line ~110 runs AFTER `startSession()` at line ~56. The fallback `childId ?? 'guest'` creates ghost sessions with literal string `'guest'` as childId.
+
+**What to change:**
+1. Move the `if (!state.childId) { router.replace('/'); return null; }` guard BEFORE the `useGameSession` hook initialization or before `startSession()` call
+2. Remove the `childId ?? 'guest'` fallback — if no childId, redirect instead of creating a session
+
+**Acceptance criteria:**
+- Navigating to `/play/hear-tap/ng-01` without a profile redirects to `/` without creating a ghost session
+- No DB rows with `childId = 'guest'`
+
+---
+
+### Gap 3A-R3 (HIGH): Prisma `ChildSettings` missing new columns
+
+**File:** `prisma/schema.prisma` — `ChildSettings` model
+
+**Current columns:** dailyMin, difficulty, kidLang, parentLang, sfx, music, voice, voiceStyle, quietHours
+
+**Columns to add:**
+```prisma
+volume               Int      @default(80)
+highContrast         Boolean  @default(false)
+reduceMotion         Boolean  @default(false)
+bedtimeEnabled       Boolean  @default(false)
+bedtimeHour          Int      @default(21)
+bedtimeMinute        Int      @default(0)
+breakReminderEnabled Boolean  @default(false)
+breakReminderIntervalMin Int  @default(20)
+gameHints            Boolean  @default(true)
+gameRotation         String   @default("auto")
+```
+
+**Migration command:** `npx prisma migrate dev --name add-child-settings-app-prefs`
+
+**Acceptance criteria:**
+- `npx prisma migrate dev` succeeds without error
+- `npx prisma studio` shows new columns on ChildSettings table with correct defaults
+- Existing rows gain default values for all new columns
+
+---
+
+### Gap 3A-R4 (HIGH): `use-settings.ts` not synced to DB
+
+**File:** `lib/hooks/use-settings.ts`
+
+**Current state:** Reads/writes ONLY to localStorage key `bap-settings`. No DB interaction.
+
+**What to change:**
+1. On mount, after hydration, if `childId` is set (non-guest):
+   ```typescript
+   useEffect(() => {
+     if (!childId || childId.startsWith('guest_')) return;
+     fetch(`/api/children/${childId}/settings`)
+       .then(res => res.json())
+       .then(dbSettings => {
+         // merge DB settings over localStorage defaults
+         setSettings(prev => ({ ...prev, ...dbSettings }));
+       })
+       .catch(() => { /* use localStorage fallback silently */ });
+   }, [childId]);
+   ```
+2. On settings update, debounced PATCH to DB:
+   ```typescript
+   const debouncedSync = useMemo(() => debounce((updated: AppSettings) => {
+     if (!childId || childId.startsWith('guest_')) return;
+     fetch(`/api/children/${childId}/settings`, {
+       method: 'PATCH',
+       headers: { 'Content-Type': 'application/json' },
+       body: JSON.stringify(updated),
+     }).catch(() => { /* silent — localStorage is source of truth for guests */ });
+   }, 300), [childId]);
+   ```
+
+**Acceptance criteria:**
+- Logged-in child: settings load from DB on mount, writes sync to DB on change (debounced 300ms)
+- Guest child: settings read/write localStorage only (no API calls)
+- Network failure: graceful fallback to localStorage, no error shown to user
+
+---
+
+### Gap 3A-R5 (HIGH): `/api/children/[id]/settings` PATCH whitelist incomplete
+
+**File:** `app/api/children/[id]/settings/route.ts` (or equivalent settings PATCH endpoint)
+
+**Current allowed keys:** `['dailyMin','difficulty','kidLang','parentLang','sfx','music','voice','voiceStyle','quietHours']`
+
+**Keys to add:** `volume`, `highContrast`, `reduceMotion`, `bedtimeEnabled`, `bedtimeHour`, `bedtimeMinute`, `breakReminderEnabled`, `breakReminderIntervalMin`, `gameHints`, `gameRotation`
+
+**What to change:** Add the 10 new keys to the allowed whitelist array. After the Prisma migration (3A-R3), the `prisma.childSettings.update()` call will write them to DB.
+
+**Acceptance criteria:**
+- `PATCH /api/children/{id}/settings` with body `{ "volume": 50, "gameRotation": "favorites" }` returns 200 and persists to DB
+- Unknown keys are still rejected (whitelist filtering)
+- All 19 keys (9 original + 10 new) accepted
+
+---
+
+### Implementation Order for Remaining Gaps
+
+1. **3A-R3** first (Prisma migration) — all other gaps depend on DB columns existing
+2. **3A-R5** next (API whitelist) — unblocks DB sync
+3. **3A-R4** next (useSettings DB sync) — depends on 3A-R3 + 3A-R5
+4. **3A-R1** (migration transaction) — independent, can parallel with 3A-R4/R5
+5. **3A-R2** (play page guard) — independent, can parallel with others
 
 ## Success Criteria
 
