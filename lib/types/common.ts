@@ -55,6 +55,17 @@ export interface ChildSettings {
   voice: boolean;
   voiceStyle: string;
   quietHours: boolean;
+  // Phase 3A extended fields
+  volume: number;
+  highContrast: boolean;
+  reduceMotion: boolean;
+  bedtimeEnabled: boolean;
+  bedtimeHour: number;
+  bedtimeMinute: number;
+  breakReminderEnabled: boolean;
+  breakReminderIntervalMin: number;
+  gameHints: boolean;
+  gameRotation: 'auto' | 'favorites' | 'all';
 }
 
 // ── Progress ────────────────────────────────────────────────

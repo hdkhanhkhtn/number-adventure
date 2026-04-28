@@ -67,6 +67,16 @@ model ChildSettings {
   voice      Boolean @default(true)
   voiceStyle String  @default("Friendly")
   quietHours Boolean @default(false)
+  volume              Int     @default(80)
+  highContrast        Boolean @default(false)
+  reduceMotion        Boolean @default(false)
+  bedtimeEnabled      Boolean @default(false)
+  bedtimeHour         Int     @default(21)
+  bedtimeMinute       Int     @default(0)
+  breakReminderEnabled      Boolean @default(false)
+  breakReminderIntervalMin  Int     @default(20)
+  gameHints           Boolean @default(true)
+  gameRotation        String  @default("auto")
 
   child Child @relation(fields: [childId], references: [id], onDelete: Cascade)
 }

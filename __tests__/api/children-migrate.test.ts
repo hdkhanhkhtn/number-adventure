@@ -4,6 +4,25 @@
  */
 import { NextRequest } from 'next/server';
 
+// Transaction proxy mock — all DB calls inside $transaction go through mockTx
+const mockTx = {
+  child: {
+    findFirst: jest.fn(),
+    create: jest.fn(),
+  },
+  gameSession: {
+    updateMany: jest.fn(),
+  },
+  childSticker: {
+    updateMany: jest.fn(),
+  },
+  streak: {
+    findUnique: jest.fn(),
+    upsert: jest.fn(),
+    delete: jest.fn(),
+  },
+};
+
 // Mock Prisma before importing the route handler
 jest.mock('@/lib/prisma', () => ({
   prisma: {
@@ -12,8 +31,8 @@ jest.mock('@/lib/prisma', () => ({
     },
     child: {
       findFirst: jest.fn(),
-      create: jest.fn(),
     },
+    $transaction: jest.fn(),
   },
 }));
 
@@ -22,7 +41,7 @@ import { prisma } from '@/lib/prisma';
 
 const mockParentFindUnique = prisma.parent.findUnique as jest.Mock;
 const mockChildFindFirst = prisma.child.findFirst as jest.Mock;
-const mockChildCreate = prisma.child.create as jest.Mock;
+const mockChildCreate = mockTx.child.create;
 
 function makeRequest(body: unknown, parentIdCookie?: string): NextRequest {
   const url = new URL('http://localhost/api/children/migrate');
@@ -41,6 +60,24 @@ beforeEach(() => {
   mockParentFindUnique.mockReset();
   mockChildFindFirst.mockReset();
   mockChildCreate.mockReset();
+  mockTx.child.findFirst.mockReset();
+  mockTx.gameSession.updateMany.mockReset();
+  mockTx.childSticker.updateMany.mockReset();
+  mockTx.streak.findUnique.mockReset();
+  mockTx.streak.upsert.mockReset();
+  mockTx.streak.delete.mockReset();
+
+  // Default: $transaction executes the callback with the tx proxy
+  (prisma.$transaction as jest.Mock).mockReset();
+  (prisma.$transaction as jest.Mock).mockImplementation(
+    async (cb: (tx: typeof mockTx) => Promise<unknown>) => cb(mockTx),
+  );
+
+  // Default: tx side-effect mocks return sensible no-ops unless overridden per test
+  mockTx.child.findFirst.mockResolvedValue(null); // no existing child by default
+  mockTx.gameSession.updateMany.mockResolvedValue({ count: 0 });
+  mockTx.childSticker.updateMany.mockResolvedValue({ count: 0 });
+  mockTx.streak.findUnique.mockResolvedValue(null);
 });
 
 describe('POST /api/children/migrate', () => {
@@ -75,8 +112,8 @@ describe('POST /api/children/migrate', () => {
       const req = makeRequest({ name: 'Alice', age: 5, color: 'sage' }, 'parent-123');
       await POST(req);
 
-      // child.findFirst and child.create should NOT be called if parent doesn't exist
-      expect(mockChildFindFirst).not.toHaveBeenCalled();
+      // tx.child.findFirst and tx.child.create should NOT be called if parent doesn't exist
+      expect(mockTx.child.findFirst).not.toHaveBeenCalled();
       expect(mockChildCreate).not.toHaveBeenCalled();
     });
   });
@@ -411,7 +448,7 @@ describe('POST /api/children/migrate', () => {
     });
 
     it('returns 200 with existing child if same name already migrated', async () => {
-      mockChildFindFirst.mockResolvedValueOnce({
+      mockTx.child.findFirst.mockResolvedValueOnce({
         id: 'child-existing-123',
         name: 'Alice',
         age: 5,
@@ -430,7 +467,6 @@ describe('POST /api/children/migrate', () => {
     });
 
     it('creates new child and returns 201 when name is unique', async () => {
-      mockChildFindFirst.mockResolvedValueOnce(null);
       mockChildCreate.mockResolvedValueOnce({
         id: 'child-new-123',
         name: 'Alice',
@@ -457,7 +493,6 @@ describe('POST /api/children/migrate', () => {
     });
 
     it('checks idempotency by querying findFirst with parentId + name', async () => {
-      mockChildFindFirst.mockResolvedValueOnce(null);
       mockChildCreate.mockResolvedValueOnce({
         id: 'child-123',
         name: 'Alice',
@@ -468,14 +503,14 @@ describe('POST /api/children/migrate', () => {
       const req = makeRequest({ name: 'Alice', age: 5, color: 'sage' }, 'parent-123');
       await POST(req);
 
-      expect(mockChildFindFirst).toHaveBeenCalledWith({
+      // findFirst now runs inside $transaction (R2 fix — closes TOCTOU race)
+      expect(mockTx.child.findFirst).toHaveBeenCalledWith({
         where: { parentId: 'parent-123', name: 'Alice' },
         select: { id: true, name: true, age: true, color: true },
       });
     });
 
     it('returns correct response shape: { child: { id, name, age, color } }', async () => {
-      mockChildFindFirst.mockResolvedValueOnce(null);
       mockChildCreate.mockResolvedValueOnce({
         id: 'child-abc-123',
         name: 'Bob',
@@ -498,6 +533,88 @@ describe('POST /api/children/migrate', () => {
     });
   });
 
+  describe('guestId data copy', () => {
+    beforeEach(() => {
+      mockParentFindUnique.mockResolvedValue({ id: 'parent-123' });
+      // mockTx.child.findFirst defaults to null (set in outer beforeEach)
+      mockChildCreate.mockResolvedValueOnce({
+        id: 'child-new-123',
+        name: 'Alice',
+        age: 5,
+        color: 'sage',
+      });
+    });
+
+    it('copies sessions, stickers, and streak when valid guestId provided', async () => {
+      const guestStreak = {
+        childId: 'guest_abc',
+        currentStreak: 3,
+        longestStreak: 5,
+        lastPlayDate: new Date('2026-04-01'),
+      };
+      mockTx.streak.findUnique.mockResolvedValueOnce(guestStreak);
+
+      const req = makeRequest(
+        { name: 'Alice', age: 5, color: 'sage', guestId: 'guest_abc' },
+        'parent-123',
+      );
+      const res = await POST(req);
+
+      expect(res.status).toBe(201);
+      expect(mockTx.gameSession.updateMany).toHaveBeenCalledWith({
+        where: { childId: 'guest_abc' },
+        data: { childId: 'child-new-123' },
+      });
+      expect(mockTx.childSticker.updateMany).toHaveBeenCalledWith({
+        where: { childId: 'guest_abc' },
+        data: { childId: 'child-new-123' },
+      });
+      expect(mockTx.streak.upsert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { childId: 'child-new-123' },
+          create: expect.objectContaining({ currentStreak: 3, longestStreak: 5 }),
+        }),
+      );
+      expect(mockTx.streak.delete).toHaveBeenCalledWith({ where: { childId: 'guest_abc' } });
+    });
+
+    it('skips data copy when guestId is missing', async () => {
+      const req = makeRequest({ name: 'Alice', age: 5, color: 'sage' }, 'parent-123');
+      const res = await POST(req);
+
+      expect(res.status).toBe(201);
+      expect(mockTx.gameSession.updateMany).not.toHaveBeenCalled();
+      expect(mockTx.childSticker.updateMany).not.toHaveBeenCalled();
+      expect(mockTx.streak.findUnique).not.toHaveBeenCalled();
+    });
+
+    it('skips data copy when guestId does not start with guest_', async () => {
+      const req = makeRequest(
+        { name: 'Alice', age: 5, color: 'sage', guestId: 'real-child-id' },
+        'parent-123',
+      );
+      const res = await POST(req);
+
+      expect(res.status).toBe(201);
+      expect(mockTx.gameSession.updateMany).not.toHaveBeenCalled();
+    });
+
+    it('creates new child without streak copy when guest has no streak', async () => {
+      mockTx.streak.findUnique.mockResolvedValueOnce(null); // no streak for guest
+
+      const req = makeRequest(
+        { name: 'Alice', age: 5, color: 'sage', guestId: 'guest_no-streak' },
+        'parent-123',
+      );
+      const res = await POST(req);
+
+      expect(res.status).toBe(201);
+      expect(mockTx.gameSession.updateMany).toHaveBeenCalled();
+      expect(mockTx.streak.upsert).not.toHaveBeenCalled();
+      expect(mockTx.streak.delete).not.toHaveBeenCalled();
+    });
+  });
+
   describe('error handling', () => {
     beforeEach(() => {
       mockParentFindUnique.mockResolvedValue({ id: 'parent-123' });
@@ -515,7 +632,7 @@ describe('POST /api/children/migrate', () => {
     });
 
     it('returns 500 when child.findFirst throws', async () => {
-      mockChildFindFirst.mockRejectedValueOnce(new Error('DB query failed'));
+      mockTx.child.findFirst.mockRejectedValueOnce(new Error('DB query failed'));
 
       const req = makeRequest({ name: 'Alice', age: 5, color: 'sage' }, 'parent-123');
       const res = await POST(req);
@@ -526,7 +643,6 @@ describe('POST /api/children/migrate', () => {
     });
 
     it('returns 500 when child.create throws', async () => {
-      mockChildFindFirst.mockResolvedValueOnce(null);
       mockChildCreate.mockRejectedValueOnce(new Error('Constraint violation'));
 
       const req = makeRequest({ name: 'Alice', age: 5, color: 'sage' }, 'parent-123');

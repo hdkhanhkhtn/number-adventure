@@ -7,6 +7,9 @@ import { NextRequest } from 'next/server';
 // Mock Prisma before importing the route handler
 jest.mock('@/lib/prisma', () => ({
   prisma: {
+    child: {
+      findUnique: jest.fn(),
+    },
     gameSession: {
       create: jest.fn(),
     },
@@ -16,8 +19,10 @@ jest.mock('@/lib/prisma', () => ({
 import { POST } from '@/app/api/sessions/route';
 import { prisma } from '@/lib/prisma';
 
+const mockChildFindUnique = prisma.child.findUnique as jest.Mock;
 const mockCreate = prisma.gameSession.create as jest.Mock;
 
+// Tests use guest_ prefix to bypass auth; child.findUnique returns null (no real child)
 function makeRequest(body: unknown): NextRequest {
   return new NextRequest('http://localhost/api/sessions', {
     method: 'POST',
@@ -27,6 +32,8 @@ function makeRequest(body: unknown): NextRequest {
 }
 
 beforeEach(() => {
+  mockChildFindUnique.mockReset();
+  mockChildFindUnique.mockResolvedValue(null); // no real child with guest_ ID
   mockCreate.mockReset();
 });
 
@@ -34,7 +41,7 @@ describe('POST /api/sessions', () => {
   it('returns 201 with sessionId on valid input', async () => {
     mockCreate.mockResolvedValueOnce({ id: 'session-abc' });
 
-    const req = makeRequest({ childId: 'child-1', lessonId: 'lesson-1' });
+    const req = makeRequest({ childId: 'guest_child-1', lessonId: 'lesson-1' });
     const res = await POST(req);
     const body = await res.json();
 
@@ -45,11 +52,11 @@ describe('POST /api/sessions', () => {
   it('calls prisma.gameSession.create with correct data', async () => {
     mockCreate.mockResolvedValueOnce({ id: 'session-xyz' });
 
-    const req = makeRequest({ childId: 'child-2', lessonId: 'lesson-5' });
+    const req = makeRequest({ childId: 'guest_child-2', lessonId: 'lesson-5' });
     await POST(req);
 
     expect(mockCreate).toHaveBeenCalledWith({
-      data: { childId: 'child-2', lessonId: 'lesson-5', status: 'in_progress' },
+      data: { childId: 'guest_child-2', lessonId: 'lesson-5', status: 'in_progress' },
     });
   });
 
@@ -63,7 +70,7 @@ describe('POST /api/sessions', () => {
   });
 
   it('returns 400 when lessonId is missing', async () => {
-    const req = makeRequest({ childId: 'child-1' });
+    const req = makeRequest({ childId: 'guest_child-1' });
     const res = await POST(req);
     const body = await res.json();
 
@@ -81,7 +88,7 @@ describe('POST /api/sessions', () => {
   it('returns 500 when prisma throws', async () => {
     mockCreate.mockRejectedValueOnce(new Error('DB connection failed'));
 
-    const req = makeRequest({ childId: 'child-1', lessonId: 'lesson-1' });
+    const req = makeRequest({ childId: 'guest_child-1', lessonId: 'lesson-1' });
     const res = await POST(req);
     const body = await res.json();
 

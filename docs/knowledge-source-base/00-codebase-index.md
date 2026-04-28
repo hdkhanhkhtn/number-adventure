@@ -32,11 +32,17 @@ Full-stack Next.js application with PostgreSQL backend, AI content generation, a
 - `progress/`: fetch user progress, streak
 - `parent-report/`: simple parent report
 - `stickers/`: sticker inventory, unlock tracking
+- `parent/children`: multi-child profile management (list, create, update with IDOR checks)
+- `parent/encouragement`: parent-to-child message POST/GET/PATCH (ownership verified)
+- `parent/settings`: email opt-in toggle (emailReports)
+- `parent/unsubscribe`: HMAC-signed token verification; sets emailReports=false
+- `cron/weekly-report`: Vercel Cron endpoint (Monday 09:00 UTC); cursor-batched reporting; Resend email
 
 **Reusable Components (`components/`)**
 - `ui/`: NumberTile, Button, Card, StreakCard, etc.
 - `game/`: GameContainer, QuestionDisplay, AnswerGrid, Reward
 - `layout/`: AppShell, IOSFrame, Headers
+- `screens/`: child-switcher-modal, encouragement-banner, family-leaderboard (Phase 3C)
 
 **Game Logic (`lib/game-engine/`)**
 - Question generator per game type
@@ -55,6 +61,8 @@ Full-stack Next.js application with PostgreSQL backend, AI content generation, a
 **Services (`lib/services/`)**
 - AudioService: Web Speech API + Howler.js fallback
 - Streak calculator
+- **Email (`lib/email/`)**: send-weekly-report, weekly-report-template, unsubscribe-token (Phase 3C)
+- **Export (`lib/export/`)**: export-progress (CSV/PDF client-side blob download) (Phase 3C)
 
 **Hooks (`lib/hooks/`)**
 - `useProgress`: fetch + cache user progress
@@ -69,8 +77,8 @@ Full-stack Next.js application with PostgreSQL backend, AI content generation, a
 ### Database Schema (`prisma/`)
 
 **Core Tables:**
-- `Parent(id, email, passwordHash, pin)` — Parent accounts
-- `Child(id, parentId, name, age, avatarColor)` — Child profiles
+- `Parent(id, email, passwordHash, pin, emailReports)` — Parent accounts; emailReports @default(true) for weekly email opt-in
+- `Child(id, parentId, name, age, avatarColor)` — Child profiles; max 10 per parent; color allowlist: sun/sage/coral/lavender/sky
 - `ChildSettings(childId, dailyMinutes, difficulty, language, audioEnabled)` — Child preferences
 - `Lesson(id, worldId, gameType, title, order, skillTags)` — Static lesson reference
 - `GameSession(id, childId, lessonId, startedAt, completedAt, stars, accuracy)` — Play session
@@ -79,6 +87,7 @@ Full-stack Next.js application with PostgreSQL backend, AI content generation, a
 - `Sticker(id, name, world, imageUrl, unlockCondition)` — Sticker definitions
 - `ChildSticker(childId, stickerId, earnedAt)` — Earned stickers
 - `Streak(childId, currentStreak, longestStreak, lastActivityDate)` — Daily streak tracking
+- `EncouragementMessage(id, parentId, childId, message, read, createdAt)` — Parent-to-child messages; index on (childId, createdAt DESC)
 
 ### Design & Assets (`handoff/`, `public/`)
 

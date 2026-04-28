@@ -52,7 +52,9 @@ export default function PlayPage({ params }: { params: Promise<{ gameType: strin
   const dailyMin = state.settings?.dailyMin ?? 15;
   const { timeUp } = useSessionTimer(dailyMin);
 
-  const childId = state.childId ?? 'guest';
+  // Resolve childId — empty string used as no-op sentinel for useGameSession
+  // (avoids ?? 'guest' fallback which could create phantom guest sessions)
+  const childId = state.childId ?? '';
   const { startSession, submitAttempt, completeSession } = useGameSession(childId, lessonId);
 
   const lesson = loadLessonSync(lessonId);
@@ -68,7 +70,14 @@ export default function PlayPage({ params }: { params: Promise<{ gameType: strin
     }
   }, [timeUp, loading, router]);
 
+  // Start session — guard runs FIRST: redirect if not hydrated or childId missing
   useEffect(() => {
+    if (!isHydrated) return;
+    // Guard: no authenticated child — redirect to root before startSession fires
+    if (!childId || !state.profile) {
+      router.replace('/');
+      return;
+    }
     if (!validGameType) return;
     if (hasStarted.current) return;
     hasStarted.current = true;
@@ -81,10 +90,10 @@ export default function PlayPage({ params }: { params: Promise<{ gameType: strin
       if (!cancelled) { setQuestions(qs); setLoading(false); }
     })();
     return () => { cancelled = true; };
-  // Intentionally runs once on mount only. hasStarted ref guards against
+  // Intentionally runs once after hydration. hasStarted ref guards against
   // React Strict Mode double-invocation creating duplicate game sessions.
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [isHydrated, childId]);
 
   const handleComplete = async (result: GameResult) => {
     const sessionResult = await completeSession(result.stars);

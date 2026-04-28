@@ -32,9 +32,9 @@ created: 2026-04-26
 
 | # | Phase | File | Status | Priority | Effort |
 |---|-------|------|--------|----------|--------|
-| 1 | Navigation & Onboarding Redesign | [phase-01](phase-01-navigation-onboarding-redesign.md) | Pending | Critical | ~3d |
-| 2 | AI Content Pipeline & World Expansion | [phase-02](phase-02-ai-content-pipeline-world-expansion.md) | Pending | High | ~3d |
-| 3 | Social & Multi-Profile | [phase-03](phase-03-social-multi-profile.md) | Pending | Medium | ~3d |
+| 1 | Navigation & Onboarding Redesign | [phase-01](phase-01-navigation-onboarding-redesign.md) | In Progress — Code gaps remain (see phase-01) | Critical | ~3d |
+| 2 | AI Content Pipeline & World Expansion | [phase-02](phase-02-ai-content-pipeline-world-expansion.md) | Code Complete — Operational steps pending | High | ~3d |
+| 3 | Social & Multi-Profile | [phase-03](phase-03-social-multi-profile.md) | Complete (2026-04-28) | Medium | ~3d |
 
 ## Execution Order
 

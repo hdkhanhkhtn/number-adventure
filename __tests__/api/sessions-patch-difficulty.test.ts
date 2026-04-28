@@ -52,6 +52,9 @@ jest.mock('@/lib/prisma', () => ({
       findUnique: jest.fn().mockResolvedValue(null),
       create: jest.fn(),
     },
+    child: {
+      findUnique: jest.fn().mockResolvedValue(null),
+    },
   },
 }));
 
@@ -70,9 +73,10 @@ function makeParams(id: string) {
 
 // ── Shared fixtures ───────────────────────────────────────────
 
+// guest_ prefix bypasses auth check so tests don't need cookie setup
 const SESSION = {
   id: 'sess-001',
-  childId: 'child-001',
+  childId: 'guest_child-001',
   lessonId: 'lesson-001',
   status: 'in_progress',
   stars: 0,

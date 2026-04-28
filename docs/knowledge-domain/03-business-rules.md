@@ -89,3 +89,62 @@ DO NOT include:
 - Complex analytics dashboards
 - Weekly/monthly charts (Phase 2+)
 - AI-generated tips (Phase 2+)
+
+---
+
+## Multi-Child Profile Switching (Phase 3C)
+
+| Rule | Detail |
+|---|---|
+| Max children | 10 per parent |
+| Color allowlist | `['sun','sage','coral','lavender','sky']` (enforced on create/update) |
+| Age range | 2–12 years |
+| Active child | Stored in localStorage (`bap-active-child`); persists across sessions |
+| Switching | Avatar tap → ChildSwitcherModal → switchChild() → SWITCH_CHILD reducer |
+| State reset | Switching resets `currentWorldId = null` + `sessionActive = false` (prevents stale state) |
+| IDOR protection | Every endpoint verifies `child.parentId === parentId` before returning data |
+
+## Encouragement Messages (Phase 3C)
+
+| Rule | Detail |
+|---|---|
+| Author | Parent writes message (ownership verified via parentId) |
+| Length | 1–200 characters |
+| Recipient | Child identified by childId |
+| Display | Single unread message shown on child home screen (EncouragementBanner) |
+| Read status | Tracked in DB; GET returns unread only; PATCH marks read |
+| Fetch | Child-side GET is unauthenticated (checks childId exists); prevents orphaned messages |
+| Dismiss | PATCH requires both id (messageId) + childId for ownership verification |
+
+## Weekly Email Reports (Phase 3C)
+
+| Rule | Detail |
+|---|---|
+| Schedule | Vercel Cron: Monday 09:00 UTC |
+| Trigger | `/api/cron/weekly-report` with Bearer `CRON_SECRET` auth |
+| Opt-in | `Parent.emailReports @default(true)` — parents opt OUT via unsubscribe token |
+| Batching | Cursor-based pagination (50 parents per batch) to prevent OOM |
+| Content | Child name, session count, accuracy %, total stars, streak days |
+| Unsubscribe | HMAC-SHA256 signed token in email footer; click → `/api/parent/unsubscribe?token=...` → sets `emailReports = false` |
+| Security | CRLF stripping on parent name (prevents email header injection); timingSafeEqual for token comparison |
+| Fallback | If Resend send fails, error logged; cron returns `{ sent, failed }` counts |
+
+## Progress Export (Phase 3C)
+
+| Rule | Detail |
+|---|---|
+| Format | CSV or PDF (client-side only, no server storage) |
+| Data | Child name, date range, lessons completed, stars earned, accuracy %, current streak |
+| Trigger | Parent dashboard export button (post-Phase-3C analytics section) |
+| Implementation | CSV: blob download; PDF: dynamic jsPDF import (SSR-safe) |
+| Scope | Single child per export (selected from dropdown) |
+
+## Family Leaderboard (Phase 3C)
+
+| Rule | Detail |
+|---|---|
+| Visibility | Shown on parent dashboard only when ≥2 children in family |
+| Ranking | Sorted by `totalStars` (all-time, descending) |
+| Icons | 👑 rank 1st, 🥈 rank 2nd, 🥉 rank 3rd; numeric rank 4+ |
+| Data | Child name, avatar color, total stars |
+| Note | N+1 query pattern (fetches `/api/report/:childId` per child); deferred to Phase 4 for server-side aggregation endpoint |

@@ -23,6 +23,18 @@ export async function POST(request: NextRequest, { params }: Params) {
     const session = await prisma.gameSession.findUnique({ where: { id: sessionId } });
     if (!session) return NextResponse.json({ error: 'Session not found' }, { status: 404 });
 
+    // Auth: guest sessions are unprotected; registered child sessions require parent ownership
+    if (!session.childId.startsWith('guest_')) {
+      const cookieParentId = request.cookies.get('parentId')?.value;
+      if (!cookieParentId) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
+      const child = await prisma.child.findUnique({ where: { id: session.childId }, select: { parentId: true } });
+      if (!child || child.parentId !== cookieParentId) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      }
+    }
+
     const attempt = await prisma.gameAttempt.create({
       data: {
         sessionId,

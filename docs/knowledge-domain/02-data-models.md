@@ -10,9 +10,11 @@ model Parent {
   passwordHash String
   pinHash      String?  // bcrypt hashed 4-digit parent gate
   name         String?
+  emailReports Boolean  @default(true)  // Phase 3C: opt-out model for weekly email
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
   children     Child[]
+  messages     EncouragementMessage[]   // Phase 3C: parent-written messages
 }
 ```
 
@@ -150,6 +152,23 @@ model Streak {
   lastActivityDate DateTime?
   
   child       Child @relation(fields: [childId], references: [id])
+}
+```
+
+### EncouragementMessage (Phase 3C)
+```prisma
+model EncouragementMessage {
+  id        String   @id @default(cuid())
+  parentId  String
+  childId   String
+  message   String   // 1–200 characters
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+  
+  parent    Parent @relation(fields: [parentId], references: [id])
+  child     Child @relation(fields: [childId], references: [id])
+  
+  @@index([childId, createdAt(sort: Desc)])  // for fetching latest unread
 }
 ```
 

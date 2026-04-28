@@ -9,7 +9,7 @@
 ## Overview
 
 - **Priority:** High
-- **Status:** Pending
+- **Status:** Code Complete — Operational steps pending (data generation + TTS audio)
 - **Effort:** ~3 days
 - **Description:** Build offline AI lesson generator, migrate lessons from static TS to DB with feature flag, generate Google TTS audio pack, populate Worlds 6+7.
 
@@ -239,11 +239,79 @@ Runtime:
 - [x] 3B-05: World 7 Writing Workshop — 9 static templates in lesson-templates.ts (ww-01..09); run `npm run generate:lessons -- --world writing-workshop` + `npm run seed:lessons` when AI credentials available
 - [x] 3B-06: Admin pipeline: `prisma/seed-worlds-config.json` + `scripts/seed-worlds.ts` + `npm run seed:worlds` — orchestrates generate + seed per world
 
+## Remaining Operational Steps
+
+All code infrastructure is complete. The following runtime/operations tasks must be executed to activate the pipeline:
+
+### Step 1: Generate lesson data
+
+**Command:** `npm run generate:lessons -- --all`
+
+**Prerequisites:** Set env vars in `.env`:
+- `AI_ENDPOINT` — 9router endpoint URL
+- `AI_API_KEY` — API key for 9router
+- `AI_MODEL` — model identifier
+
+**Output:** `prisma/seed-lessons.json` (generated lesson content validated by Zod)
+
+**Verify:** File exists and contains valid JSON array of lessons per world.
+
+---
+
+### Step 2: Seed lessons to DB
+
+**Command:** `npm run seed:lessons`
+
+**Prerequisites:** Step 1 complete; PostgreSQL running; `DATABASE_URL` set in `.env`
+
+**Output:** Lesson rows upserted to DB (idempotent via `@@unique([worldId, order])`)
+
+**Verify:** `npx prisma studio` → Lesson table shows rows for all 7 worlds, 9 lessons each = 63 rows
+
+---
+
+### Step 3: Generate TTS audio
+
+**Command:** `npm run generate:audio`
+
+**Prerequisites:** `GOOGLE_APPLICATION_CREDENTIALS` set in `.env` (path to Google Cloud service account JSON)
+
+**Output:** 202 MP3 files at `public/audio/tts/en-US/{0..100}.mp3` and `public/audio/tts/vi-VN/{0..100}.mp3`
+
+**Note:** Script uses 60ms rate limit between API calls. Full generation takes ~12 seconds.
+
+**Verify:** `ls public/audio/tts/en-US/ | wc -l` should output `101`; same for `vi-VN`
+
+---
+
+### Step 4: Verify audio path in useAudio hook
+
+**IMPORTANT:** The TTS script outputs to `public/audio/tts/{locale}/{n}.mp3`, NOT `public/audio/numbers/{lang}/{n}.mp3` as originally planned in the phase doc.
+
+**Action:** Check `lib/hooks/use-audio.ts` (or wherever TTS playback is implemented) and confirm it references:
+- `public/audio/tts/en-US/{n}.mp3` for English
+- `public/audio/tts/vi-VN/{n}.mp3` for Vietnamese
+
+If the hook references `public/audio/numbers/`, update the path to `public/audio/tts/`.
+
+---
+
+### Step 5: Activate DB lesson loading
+
+**Action:** Set in `.env`:
+```
+NEXT_PUBLIC_USE_DB_LESSONS=true
+```
+
+**Verify:** Start dev server (`npm run dev`), navigate to any world — lessons should load from DB via `unstable_cache` (1h TTL). If DB is empty, static fallback activates transparently.
+
+---
+
 ## Success Criteria
 
 - `npm run generate:lessons -- --world number-garden --dry-run` outputs valid JSON
 - `NEXT_PUBLIC_USE_DB_LESSONS=true` loads lessons from DB; `false` uses static templates
-- All 202 TTS files exist at `public/audio/numbers/{en,vi}/{0..100}.mp3`
+- All 202 TTS files exist at `public/audio/tts/{en-US,vi-VN}/{0..100}.mp3`
 - Worlds 6+7 each have 9 playable lessons (3 easy, 3 medium, 3 hard)
 - Lesson seed script is idempotent (re-run produces no duplicates)
 
@@ -265,6 +333,6 @@ Runtime:
 
 ## Next Steps
 
-- After TTS files committed, update `useAudio` hook to prefer pre-recorded files over Web Speech API
+- After TTS files committed, verify `useAudio` hook references `public/audio/tts/{locale}/{n}.mp3` path (NOT `numbers/`)
 - Feature flag allows gradual rollout: enable DB lessons per world
 - Future: larger audio packs (phrases, sentences) should use Vercel Blob or Cloudflare R2

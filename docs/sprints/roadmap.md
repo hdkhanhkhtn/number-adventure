@@ -215,16 +215,16 @@ All screens designed in Claude Design and exported as a runnable HTML prototype.
 | 3B-05 | World 7: Writing Workshop (number-writing) — full lesson set with AI-generated content | Medium |
 | 3B-06 | Admin script: add new worlds/lessons without code changes (JSON config → AI expand → DB seed) | Medium |
 
-### Phase 3C — Social & Multi-Profile 📋 Planned
-**Focus:** Multi-child support, parent engagement, shareable progress
+### Phase 3C — Social & Multi-Profile ✅ Done
+**Completed:** 2026-04-28
 
-| # | Task | Priority |
+| # | Task | Status |
 |---|---|---|
-| 3C-01 | Multi-child profiles: UI to add/switch between children (Prisma schema already supports children[]) | High |
-| 3C-02 | Parent-to-child encouragement messages: parent writes, child sees on home screen | Medium |
-| 3C-03 | Weekly progress email report for parents | Medium |
-| 3C-04 | Export child progress as PDF/CSV (parent dashboard) | Low |
-| 3C-05 | Leaderboard (friends/family only, opt-in) | Low |
+| 3C-01 | Multi-child profiles: UI to add/switch between children; ChildSwitcherModal + SWITCH_CHILD action | Done |
+| 3C-02 | Parent-to-child encouragement messages: POST create, GET fetch, PATCH mark read; EncouragementBanner on home | Done |
+| 3C-03 | Weekly progress email report for parents; Vercel Cron Monday 09:00 UTC; Resend integration | Done |
+| 3C-04 | Export child progress as PDF/CSV (client-side via jsPDF, blob download) | Done |
+| 3C-05 | Family leaderboard (all-time stars, 2+ children, rank icons); integrated in parent dashboard | Done |
 
 ---
 
