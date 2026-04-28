@@ -3,14 +3,8 @@ import type { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
 /** POST /api/children/migrate — create a DB child for an authenticated parent
- *  from a guest session. Guest data is local-only (no DB rows exist for guest_xxx
- *  child IDs because use-game-session.ts skips all DB writes for guest users).
- *  Migration only needs to CREATE a new child record; no data copy is required.
- *
- * TODO(phase-3c)[important]: Spec ambiguity — plan.md Validation Summary (line 74) confirms
- *  guest sessions ARE written to DB under a guest child record and MUST be copied via Prisma
- *  transaction. Audit use-game-session.ts for guest_* write paths and resolve before Phase 3C.
- *  See BACKLOG.md #5. */
+ *  from a guest session. Copies all guest session data (GameSession, ChildSticker,
+ *  Streak) to the new child record via a Prisma transaction. */
 export async function POST(request: NextRequest) {
   try {
     const cookieParentId = request.cookies.get('parentId')?.value;
@@ -27,8 +21,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const body = await request.json() as { name?: unknown; age?: unknown; color?: unknown };
-    const { name, age, color } = body;
+    const body = await request.json() as {
+      name?: unknown;
+      age?: unknown;
+      color?: unknown;
+      guestId?: unknown;
+    };
+    const { name, age, color, guestId } = body;
 
     if (typeof name !== 'string' || name.trim().length < 1 || name.trim().length > 50) {
       return NextResponse.json({ error: 'name must be 1–50 characters' }, { status: 400 });
@@ -43,6 +42,11 @@ export async function POST(request: NextRequest) {
       ? (color as string)
       : 'sage';
 
+    // Resolve guest ID — must be a non-empty string starting with guest_
+    const resolvedGuestId = typeof guestId === 'string' && guestId.startsWith('guest_')
+      ? guestId
+      : null;
+
     // Idempotency: return existing child if same name was already migrated
     // TODO(phase-3a-02)[suggestion]: key on (parentId + name + age) to prevent sibling collision
     //  (two children named "Alice" at different ages returns wrong record) — see BACKLOG.md #7
@@ -54,9 +58,57 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ child: existing }, { status: 200 });
     }
 
-    const child = await prisma.child.create({
-      data: { parentId: cookieParentId, name: name.trim(), age, color: resolvedColor },
-      select: { id: true, name: true, age: true, color: true },
+    // Create child and copy all guest data in a single transaction
+    const { child } = await prisma.$transaction(async (tx) => {
+      // 1. Create new DB child under parent
+      const child = await tx.child.create({
+        data: {
+          parentId: cookieParentId,
+          name: name.trim(),
+          age,
+          color: resolvedColor,
+        },
+        select: { id: true, name: true, age: true, color: true },
+      });
+
+      if (resolvedGuestId) {
+        // 2. Reassign sessions from guest child to new child
+        //    (GameAttempt cascades via sessionId FK — no separate update needed)
+        await tx.gameSession.updateMany({
+          where: { childId: resolvedGuestId },
+          data: { childId: child.id },
+        });
+
+        // 3. Reassign stickers
+        await tx.childSticker.updateMany({
+          where: { childId: resolvedGuestId },
+          data: { childId: child.id },
+        });
+
+        // 4. Copy streak (if exists) then remove the guest streak
+        const guestStreak = await tx.streak.findUnique({
+          where: { childId: resolvedGuestId },
+        });
+        if (guestStreak) {
+          await tx.streak.upsert({
+            where: { childId: child.id },
+            create: {
+              childId: child.id,
+              currentStreak: guestStreak.currentStreak,
+              longestStreak: guestStreak.longestStreak,
+              lastPlayDate: guestStreak.lastPlayDate,
+            },
+            update: {
+              currentStreak: guestStreak.currentStreak,
+              longestStreak: guestStreak.longestStreak,
+              lastPlayDate: guestStreak.lastPlayDate,
+            },
+          });
+          await tx.streak.delete({ where: { childId: resolvedGuestId } });
+        }
+      }
+
+      return { child };
     });
 
     return NextResponse.json({ child }, { status: 201 });

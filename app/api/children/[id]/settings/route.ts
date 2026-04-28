@@ -41,7 +41,14 @@ export async function PATCH(request: NextRequest, { params }: Params) {
     const body = await request.json();
 
     // Strip unknown keys — only allow known ChildSettings fields
-    const allowed = ['dailyMin','difficulty','kidLang','parentLang','sfx','music','voice','voiceStyle','quietHours'];
+    const allowed = [
+      'dailyMin', 'difficulty', 'kidLang', 'parentLang',
+      'sfx', 'music', 'voice', 'voiceStyle', 'quietHours',
+      'volume', 'highContrast', 'reduceMotion',
+      'bedtimeEnabled', 'bedtimeHour', 'bedtimeMinute',
+      'breakReminderEnabled', 'breakReminderIntervalMin',
+      'gameHints', 'gameRotation',
+    ];
     const data = Object.fromEntries(
       Object.entries(body as Record<string, unknown>).filter(([k]) => allowed.includes(k))
     );

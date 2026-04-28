@@ -1,0 +1,11 @@
+-- AlterTable
+ALTER TABLE "ChildSettings" ADD COLUMN     "bedtimeEnabled" BOOLEAN NOT NULL DEFAULT false,
+ADD COLUMN     "bedtimeHour" INTEGER NOT NULL DEFAULT 21,
+ADD COLUMN     "bedtimeMinute" INTEGER NOT NULL DEFAULT 0,
+ADD COLUMN     "breakReminderEnabled" BOOLEAN NOT NULL DEFAULT false,
+ADD COLUMN     "breakReminderIntervalMin" INTEGER NOT NULL DEFAULT 20,
+ADD COLUMN     "gameHints" BOOLEAN NOT NULL DEFAULT true,
+ADD COLUMN     "gameRotation" TEXT NOT NULL DEFAULT 'auto',
+ADD COLUMN     "highContrast" BOOLEAN NOT NULL DEFAULT false,
+ADD COLUMN     "reduceMotion" BOOLEAN NOT NULL DEFAULT false,
+ADD COLUMN     "volume" INTEGER NOT NULL DEFAULT 80;
