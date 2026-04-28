@@ -2,6 +2,105 @@
 
 All notable changes to Bap Number Adventure are documented here.
 
+## [Phase 3A] — Navigation & Onboarding (2026-04-28)
+
+**Status:** Complete ✅
+
+### Hydration & Loading States
+- `context/game-progress-context.tsx` — `isHydrated` flag (true after first context mount) prevents SSR mismatch hydration warnings
+- All child pages wrapped with `useEffect` + `isHydrated` guard to show `<SkeletonScreen />` during hydration
+- `components/ui/skeleton-screen.tsx` — reusable loading skeleton component
+
+### Settings Persistence & Sync
+- `lib/hooks/use-settings.ts` — dedicated hook for ChildSettings lifecycle:
+  - GET on component mount (fetch from DB)
+  - localStorage write on every change (optimistic update)
+  - debounced PATCH (300ms) to `/api/children/[id]/settings` (prevents thrashing)
+  - Authenticated users → DB sync; guest users → localStorage only
+- Supports all ChildSettings fields: volume, highContrast, reduceMotion, bedtime*, breakReminder*, gameHints, gameRotation
+
+### Guest → Child Migration
+- `app/api/children/migrate/route.ts` — POST endpoint (auth required)
+- Prisma transaction copies all guest data:
+  - GameSession[] + GameAttempt[] (preserves play history)
+  - ChildSticker[] (preserves earned stickers)
+  - Streak (preserves current/longest streak)
+- P2002 unique constraint handled → 409 response (child profile exists)
+- IDOR protection: verifies parent ownership before migrating
+
+### Onboarding & User Experience
+- `components/screens/save-progress-banner.tsx` — soft dismissible banner
+  - Appears on home screen after guest session when parent logs in
+  - "Your progress will be saved to your child's profile"
+  - Dismiss button or auto-hide on child switch
+- `app/(child)/layout.tsx` — integrated onboarding:
+  - Partial-state persistence during wizard (stores langChoice, profileName, avatarColor in localStorage)
+  - Splash screen auto-advance with skip button
+  - Banner integration below top bar
+
+### Dependencies Added
+- None new (uses existing Next.js, React, Prisma, Tailwind)
+
+---
+
+## [Phase 3B] — AI Content Pipeline & World Expansion (2026-04-28)
+
+**Status:** Code Complete (operational steps: run generate:lessons + seed:lessons + generate:audio) ✅
+
+### AI Lesson Generation
+- `lib/lesson-loader.ts` — feature-flagged loader:
+  - IF `NEXT_PUBLIC_USE_DB_LESSONS=true` → fetch from DB with `unstable_cache(1h)` (prefer for production)
+  - ELSE → static fallback (hardcoded lessons in file)
+  - Graceful fallback prevents app breakage if feature flag or DB is unavailable
+- `lib/schemas/lesson-schema.ts` — Zod validation schema for AI-generated lesson structure:
+  - `title` (string)
+  - `description` (string, optional)
+  - `objectives` (string[], optional)
+  - `published` (boolean, defaults to true)
+  - Validates all lessons before inserting into DB
+
+### Scripts for Content Generation
+- `scripts/generate-lessons.ts` — OpenAI-compatible API (claude-3-5-sonnet or similar):
+  - Flags: `--world <worldId>` (single), `--all` (all worlds), `--dry-run` (no DB write)
+  - Generates title, description (2–3 sentences), objectives (3–5 per lesson)
+  - Batch queries (max 10 lessons/request for efficiency)
+  - Requires: `AI_ENDPOINT`, `AI_API_KEY`, `AI_MODEL` in env
+- `scripts/generate-tts-audio.ts` — Google Text-to-Speech (existing):
+  - Generates MP3 files for all numbers 0–100
+  - Languages: English + Vietnamese
+  - Output: `public/audio/tts/{lang}/num-{n}.mp3`
+  - Requires: `GOOGLE_APPLICATION_CREDENTIALS` (service account JSON path)
+- `scripts/seed-lessons.ts` — Prisma seed: inserts lessons + worlds into DB
+- `scripts/seed-worlds.ts` — Prisma seed: creates world definitions (6–7 worlds)
+
+### New Worlds & Game Types
+- **World 6: Counting Meadow** (`counting-meadow`):
+  - Game type: `count-objects` (visual counting, interactive)
+  - Lessons: cm-01 through cm-09 (9 lessons)
+  - Content: AI-generated counting scenarios with visual objects
+- **World 7: Writing Workshop** (`writing-workshop`):
+  - Game type: `number-writing` (digit input, handwriting simulation)
+  - Lessons: ww-01 through ww-09 (9 lessons)
+  - Content: AI-generated prompts for digit recognition + writing
+
+### Database Changes
+- Prisma migration `20260427132100`:
+  - Added `description String?` to Lesson model
+  - Added `objectives String[]` to Lesson model (array of strings)
+  - Added `published Boolean @default(true)` to Lesson model
+- Lesson table now supports AI-generated rich metadata (beyond just title + gameType)
+
+### npm Scripts
+- `npm run generate:lessons` → `tsx scripts/generate-lessons.ts`
+- `npm run generate:audio` → `tsx scripts/generate-tts-audio.ts`
+- `npm run seed:lessons` → `prisma db seed (seed-lessons)`
+- `npm run seed:worlds` → `prisma db seed (seed-worlds)`
+
+### Dependencies Added
+- No new runtime dependencies (scripts use existing Node.js APIs)
+
+---
+
 ## [Phase 3C] — Social & Multi-Profile (2026-04-28)
 
 **Status:** Complete ✅
@@ -10,7 +109,7 @@ All notable changes to Bap Number Adventure are documented here.
 - `GET/POST /api/parent/children` — list children, create child (max 10, color allowlist: sun/sage/coral/lavender/sky, age 2–12)
 - `PUT /api/parent/children/[id]` — update child profile with IDOR protection
 - `components/screens/child-switcher-modal.tsx` — bottom sheet UI for profile switching
-- `GameProgressContext`: added `SWITCH_CHILD` action; resets `currentWorldId` + `sessionActive` on switch; persists `activeChildId` to localStorage (`bap-active-child`)
+- `GameProgressContext`: added `switchChild` action; resets `currentWorldId` + `sessionActive` on switch; persists `activeChildId` to localStorage (`bap-active-child`)
 - `useGame`: exposed `switchChild(childId, profile)` method
 - Avatar on home screen now tappable, triggers child switcher modal
 

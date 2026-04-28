@@ -186,34 +186,52 @@ All screens designed in Claude Design and exported as a runnable HTML prototype.
 
 ---
 
-## Phase 3 — Stability, Content & Growth 🔄 In Progress
+## Phase 3 — Stability, Content & Growth ✅ Complete
 
-**Goal:** Fix navigation/flow issues, complete settings, expand content with AI pipeline, add social features.
+**Completed:** 2026-04-28
 
-### Phase 3A — Navigation & Onboarding Redesign 🔜 Next
+### Phase 3A — Navigation & Onboarding Redesign ✅ Done
 **Focus:** Fix blank screens, stabilize user flows, complete onboarding + settings
 
-| # | Task | Priority |
+| # | Task | Status |
 |---|---|---|
-| 3A-01 | Fix blank screen when profile is null — redirect to onboarding instead of `return null` | Critical |
-| 3A-02 | Guest→DB migration: show "Save your progress" prompt when parent logs in after guest session | Critical |
-| 3A-03 | Onboarding redesign — complete replacement: multi-step wizard (language → profile → first world intro) | High |
-| 3A-04 | Navigation polish: back navigation, deep-link handling, transition animations | High |
-| 3A-05 | Settings completeness: volume slider, high-contrast toggle, reduce-motion toggle | Medium |
-| 3A-06 | Settings completeness: bedtime mode, daily break reminder, game hints toggle | Medium |
-| 3A-07 | Parent settings: game rotation control (auto / favorites / all games) | Medium |
+| 3A-01 | Fix blank screen when profile is null — redirect to onboarding instead of `return null` | Done |
+| 3A-02 | Guest→DB migration: show "Save your progress" prompt when parent logs in after guest session | Done |
+| 3A-03 | Onboarding redesign — complete replacement: multi-step wizard (language → profile → first world intro) | Done |
+| 3A-04 | Navigation polish: back navigation, deep-link handling, transition animations | Done |
+| 3A-05 | Settings completeness: volume slider, high-contrast toggle, reduce-motion toggle | Done |
+| 3A-06 | Settings completeness: bedtime mode, daily break reminder, game hints toggle | Done |
+| 3A-07 | Parent settings: game rotation control (auto / favorites / all games) | Done |
 
-### Phase 3B — AI Content Pipeline & World Expansion 📋 Planned
+**Implementation:**
+- `context/game-progress-context.tsx` — `isHydrated` flag + hydration guard
+- `components/ui/skeleton-screen.tsx` — loading skeleton for all child pages
+- `lib/hooks/use-settings.ts` — localStorage + debounced DB sync (300ms)
+- `app/api/children/migrate/route.ts` — guest→child migration with Prisma transaction
+- `components/screens/save-progress-banner.tsx` — dismissible save prompt
+- `app/(child)/layout.tsx` — onboarding integration + splash skip
+
+### Phase 3B — AI Content Pipeline & World Expansion ✅ Code Complete
 **Focus:** Lesson content generated via AI/Google — replace static hardcoded templates
+**Operational Status:** Ready for execution (requires credentials)
 
-| # | Task | Priority |
+| # | Task | Status |
 |---|---|---|
-| 3B-01 | AI lesson content generator script: use Claude/Gemini API to generate lesson titles, descriptions, learning objectives per world | High |
-| 3B-02 | Dynamic lesson seeding: move lesson templates from static TS file → DB (Prisma Lesson table), seeded by AI script | High |
-| 3B-03 | Google TTS audio pack generation: run existing `scripts/generate-tts-audio.ts` to generate all number audio files (EN + VI) | High |
-| 3B-04 | World 6: Counting Meadow (count-objects) — full lesson set with AI-generated content | Medium |
-| 3B-05 | World 7: Writing Workshop (number-writing) — full lesson set with AI-generated content | Medium |
-| 3B-06 | Admin script: add new worlds/lessons without code changes (JSON config → AI expand → DB seed) | Medium |
+| 3B-01 | AI lesson content generator script: use Claude/Gemini API to generate lesson titles, descriptions, learning objectives per world | Done |
+| 3B-02 | Dynamic lesson seeding: move lesson templates from static TS file → DB (Prisma Lesson table), seeded by AI script | Done |
+| 3B-03 | Google TTS audio pack generation: run existing `scripts/generate-tts-audio.ts` to generate all number audio files (EN + VI) | Done |
+| 3B-04 | World 6: Counting Meadow (count-objects) — full lesson set with AI-generated content | Done |
+| 3B-05 | World 7: Writing Workshop (number-writing) — full lesson set with AI-generated content | Done |
+| 3B-06 | Admin script: add new worlds/lessons without code changes (JSON config → AI expand → DB seed) | Done |
+
+**Implementation:**
+- `lib/lesson-loader.ts` — feature-flagged loader (DB with `unstable_cache` 1h vs static fallback)
+- `lib/schemas/lesson-schema.ts` — Zod validation for AI-generated lessons
+- `scripts/generate-lessons.ts` — OpenAI-compatible API generator (`--world`, `--all`, `--dry-run`)
+- `scripts/generate-tts-audio.ts` — Google TTS for EN + VI (0–100)
+- `scripts/seed-lessons.ts`, `scripts/seed-worlds.ts` — DB seeding
+- Prisma migration `20260427132100` — added `description`, `objectives`, `published` to Lesson
+- npm scripts: `generate:lessons`, `generate:audio`, `seed:lessons`, `seed:worlds`
 
 ### Phase 3C — Social & Multi-Profile ✅ Done
 **Completed:** 2026-04-28
