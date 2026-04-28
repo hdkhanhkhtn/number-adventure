@@ -5,6 +5,9 @@ import { NextRequest } from 'next/server';
 
 jest.mock('@/lib/prisma', () => ({
   prisma: {
+    child: {
+      findUnique: jest.fn(),
+    },
     gameSession: {
       findUnique: jest.fn(),
     },
@@ -19,6 +22,9 @@ import { prisma } from '@/lib/prisma';
 
 const mockSessionFind = prisma.gameSession.findUnique as jest.Mock;
 const mockAttemptCreate = prisma.gameAttempt.create as jest.Mock;
+
+// Session fixture uses guest_ prefix so no parentId cookie is required for auth
+const GUEST_SESSION = { id: 'session-1', childId: 'guest_test-child' };
 
 function makeRequest(sessionId: string, body: unknown): NextRequest {
   return new NextRequest(`http://localhost/api/sessions/${sessionId}/attempts`, {
@@ -39,7 +45,7 @@ beforeEach(() => {
 
 describe('POST /api/sessions/:id/attempts', () => {
   it('returns 201 with attemptId on valid input', async () => {
-    mockSessionFind.mockResolvedValueOnce({ id: 'session-1' });
+    mockSessionFind.mockResolvedValueOnce(GUEST_SESSION);
     mockAttemptCreate.mockResolvedValueOnce({ id: 'attempt-abc' });
 
     const req = makeRequest('session-1', { answer: '5', correct: true, timeMs: 1200 });
@@ -51,7 +57,7 @@ describe('POST /api/sessions/:id/attempts', () => {
   });
 
   it('creates attempt with correct data', async () => {
-    mockSessionFind.mockResolvedValueOnce({ id: 'session-1' });
+    mockSessionFind.mockResolvedValueOnce(GUEST_SESSION);
     mockAttemptCreate.mockResolvedValueOnce({ id: 'attempt-xyz' });
 
     const req = makeRequest('session-1', {
@@ -74,7 +80,7 @@ describe('POST /api/sessions/:id/attempts', () => {
   });
 
   it('defaults questionId to null when omitted', async () => {
-    mockSessionFind.mockResolvedValueOnce({ id: 'session-1' });
+    mockSessionFind.mockResolvedValueOnce(GUEST_SESSION);
     mockAttemptCreate.mockResolvedValueOnce({ id: 'attempt-1' });
 
     const req = makeRequest('session-1', { answer: '3', correct: true });
@@ -85,7 +91,7 @@ describe('POST /api/sessions/:id/attempts', () => {
   });
 
   it('defaults timeMs to 0 when omitted', async () => {
-    mockSessionFind.mockResolvedValueOnce({ id: 'session-1' });
+    mockSessionFind.mockResolvedValueOnce(GUEST_SESSION);
     mockAttemptCreate.mockResolvedValueOnce({ id: 'attempt-1' });
 
     const req = makeRequest('session-1', { answer: '3', correct: true });
@@ -96,7 +102,7 @@ describe('POST /api/sessions/:id/attempts', () => {
   });
 
   it('defaults correct to false when omitted', async () => {
-    mockSessionFind.mockResolvedValueOnce({ id: 'session-1' });
+    mockSessionFind.mockResolvedValueOnce(GUEST_SESSION);
     mockAttemptCreate.mockResolvedValueOnce({ id: 'attempt-1' });
 
     const req = makeRequest('session-1', { answer: '3' });

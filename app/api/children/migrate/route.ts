@@ -47,19 +47,19 @@ export async function POST(request: NextRequest) {
       ? guestId
       : null;
 
-    // Idempotency: return existing child if same name was already migrated
-    // TODO(phase-3a-02)[suggestion]: key on (parentId + name + age) to prevent sibling collision
-    //  (two children named "Alice" at different ages returns wrong record) — see BACKLOG.md #7
-    const existing = await prisma.child.findFirst({
-      where: { parentId: cookieParentId, name: name.trim() },
-      select: { id: true, name: true, age: true, color: true },
-    });
-    if (existing) {
-      return NextResponse.json({ child: existing }, { status: 200 });
-    }
+    // Create child and copy all guest data in a single transaction.
+    // findFirst runs INSIDE the transaction to close the TOCTOU window under
+    // PostgreSQL READ COMMITTED (R1+R2 must be together — neither alone is sufficient).
+    const txResult = await prisma.$transaction(async (tx) => {
+      // Idempotency: return existing child if same name was already migrated
+      // TODO(phase-3a-02)[suggestion]: key on (parentId + name + age) to prevent sibling collision
+      //  (two children named "Alice" at different ages returns wrong record) — see BACKLOG.md #7
+      const existing = await tx.child.findFirst({
+        where: { parentId: cookieParentId, name: name.trim() },
+        select: { id: true, name: true, age: true, color: true },
+      });
+      if (existing) return { child: existing, isNew: false as const };
 
-    // Create child and copy all guest data in a single transaction
-    const { child } = await prisma.$transaction(async (tx) => {
       // 1. Create new DB child under parent
       const child = await tx.child.create({
         data: {
@@ -108,11 +108,16 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      return { child };
+      return { child, isNew: true };
     });
 
-    return NextResponse.json({ child }, { status: 201 });
-  } catch {
+    return NextResponse.json({ child: txResult.child }, { status: txResult.isNew ? 201 : 200 });
+  } catch (e) {
+    // P2002 = unique constraint violation — concurrent request already created the child
+    if (e && typeof e === 'object' && 'code' in e && (e as { code: string }).code === 'P2002') {
+      return NextResponse.json({ error: 'Child already exists' }, { status: 409 });
+    }
+    console.error('[api/children/migrate POST] Error:', e);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

@@ -31,12 +31,18 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { name, age, color } = body as { name?: string; age?: number; color?: string };
 
-    if (!name || typeof age !== 'number' || age < 1 || age > 18) {
-      return NextResponse.json({ error: 'name and age (1–18) required' }, { status: 400 });
+    if (typeof name !== 'string' || name.trim().length < 1 || name.trim().length > 50) {
+      return NextResponse.json({ error: 'name must be 1–50 characters' }, { status: 400 });
+    }
+    if (typeof age !== 'number' || !Number.isInteger(age) || age < 1 || age > 18) {
+      return NextResponse.json({ error: 'age must be an integer between 1 and 18' }, { status: 400 });
     }
 
+    const VALID_COLORS = ['sun', 'sage', 'coral', 'lavender', 'sky'] as const;
+    const resolvedColor = VALID_COLORS.includes(color as typeof VALID_COLORS[number]) ? color! : 'sage';
+
     const child = await prisma.child.create({
-      data: { parentId: cookieParentId, name, age, color: color ?? 'sage' },
+      data: { parentId: cookieParentId, name: name.trim(), age, color: resolvedColor },
     });
 
     return NextResponse.json({ child }, { status: 201 });

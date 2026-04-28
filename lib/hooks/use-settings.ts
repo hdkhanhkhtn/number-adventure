@@ -19,25 +19,25 @@ export type AppSettingsPatch = Partial<Omit<AppSettings, 'bedtime' | 'breakRemin
   breakReminder?: Partial<AppSettings['breakReminder']>;
 };
 
-const SETTINGS_KEY = 'bap-settings';
-
 const DEFAULT_SETTINGS: AppSettings = {
   volume: 80,
   highContrast: false,
   reduceMotion: false,
-  bedtime: { enabled: false, hour: 20, minute: 0 },
+  bedtime: { enabled: false, hour: 21, minute: 0 },
   breakReminder: { enabled: false, intervalMinutes: 20 },
   gameHints: true,
   gameRotation: 'auto',
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function debounce<T extends (...args: any[]) => void>(fn: T, ms: number): T {
+function debounce<T extends (...args: any[]) => void>(fn: T, ms: number): T & { cancel: () => void } {
   let timer: ReturnType<typeof setTimeout>;
-  return ((...args: Parameters<T>) => {
+  const debounced = ((...args: Parameters<T>) => {
     clearTimeout(timer);
     timer = setTimeout(() => fn(...args), ms);
-  }) as T;
+  }) as T & { cancel: () => void };
+  debounced.cancel = () => clearTimeout(timer);
+  return debounced;
 }
 
 export function useSettings() {
@@ -47,17 +47,27 @@ export function useSettings() {
   const [settings, setSettings] = useState<AppSettings>(DEFAULT_SETTINGS);
   const [hydrated, setHydrated] = useState(false);
 
-  // Load from localStorage on mount
+  // Load from localStorage — namespaced per child to prevent cross-child contamination on
+  // shared family devices. Runs on mount and when childId first becomes available.
   useEffect(() => {
     try {
-      const raw = localStorage.getItem(SETTINGS_KEY);
+      const settingsKey = childId ? `bap-settings-${childId}` : 'bap-settings';
+      // One-time migration: copy legacy global key to child-specific key then remove legacy
+      if (childId) {
+        const legacyRaw = localStorage.getItem('bap-settings');
+        if (legacyRaw && !localStorage.getItem(settingsKey)) {
+          localStorage.setItem(settingsKey, legacyRaw);
+          localStorage.removeItem('bap-settings');
+        }
+      }
+      const raw = localStorage.getItem(settingsKey);
       if (raw) {
         const parsed = JSON.parse(raw) as Partial<AppSettings>;
         setSettings(prev => ({ ...prev, ...parsed }));
       }
     } catch { /* private browsing or corrupt data */ }
     setHydrated(true);
-  }, []);
+  }, [childId]);
 
   // Fetch DB settings after hydration when child is authenticated (non-guest)
   useEffect(() => {
@@ -110,7 +120,8 @@ export function useSettings() {
   const saveDebounced = useMemo(
     () => debounce((s: AppSettings, cId: string | null) => {
       try {
-        localStorage.setItem(SETTINGS_KEY, JSON.stringify(s));
+        const settingsKey = cId ? `bap-settings-${cId}` : 'bap-settings';
+        localStorage.setItem(settingsKey, JSON.stringify(s));
       } catch { /* private browsing */ }
       // Persist to DB for authenticated (non-guest) children
       if (cId && !cId.startsWith('guest_')) {
@@ -134,6 +145,11 @@ export function useSettings() {
     }, 300),
     []
   );
+
+  // Cancel pending debounce on unmount — prevents stale writes after context switch
+  useEffect(() => {
+    return () => { saveDebounced.cancel(); };
+  }, [saveDebounced]);
 
   // Deep-merge nested objects so callers can pass partial sub-objects safely
   // e.g. update({ bedtime: { enabled: true } }) preserves hour/minute

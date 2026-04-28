@@ -25,7 +25,7 @@ const TABS: { key: Tab; label: string }[] = [
   { key: 'gameplay', label: '🎮 Trò chơi' },
 ];
 
-const DEFAULTS: ChildSettings = {
+const DEFAULTS: Partial<ChildSettings> = {
   dailyMin: 15, difficulty: 'easy', kidLang: 'en', parentLang: 'vi',
   sfx: true, music: true, voice: true, voiceStyle: 'Friendly', quietHours: false,
 };
