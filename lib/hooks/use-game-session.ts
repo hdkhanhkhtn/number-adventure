@@ -35,7 +35,8 @@ export function useGameSession(childId: string, lessonId: string) {
   const startSession = useCallback(async (): Promise<string | null> => {
     // Guest users (Phase B local-only) skip DB session creation to avoid FK violations.
     // Phase C will wire real auth and remove this guard.
-    if (childId.startsWith('guest_')) return null;
+    // Guard against empty childId (null-coalesced sentinel) and guest sessions
+    if (!childId || childId.startsWith('guest_')) return null;
 
     // Drain any queued offline attempts before creating a new session
     await trySyncNow();

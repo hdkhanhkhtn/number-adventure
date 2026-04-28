@@ -7,7 +7,7 @@ import { updateDifficultyProfile } from '@/lib/game-engine/session-difficulty-up
 type Params = { params: Promise<{ id: string }> };
 
 /** GET /api/sessions/:id — get session details */
-export async function GET(_request: NextRequest, { params }: Params) {
+export async function GET(request: NextRequest, { params }: Params) {
   try {
     const { id } = await params;
     const session = await prisma.gameSession.findUnique({
@@ -15,6 +15,19 @@ export async function GET(_request: NextRequest, { params }: Params) {
       include: { attempts: true, lesson: true },
     });
     if (!session) return NextResponse.json({ error: 'Session not found' }, { status: 404 });
+
+    // Auth: guest sessions are unprotected; registered child sessions require parent ownership
+    if (!session.childId.startsWith('guest_')) {
+      const cookieParentId = request.cookies.get('parentId')?.value;
+      if (!cookieParentId) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
+      const child = await prisma.child.findUnique({ where: { id: session.childId }, select: { parentId: true } });
+      if (!child || child.parentId !== cookieParentId) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      }
+    }
+
     return NextResponse.json({ session });
   } catch (e) {
     console.error('[api/sessions/id GET] Error:', e);
@@ -35,6 +48,18 @@ export async function PATCH(request: NextRequest, { params }: Params) {
       include: { attempts: true, lesson: true },
     });
     if (!session) return NextResponse.json({ error: 'Session not found' }, { status: 404 });
+
+    // Auth: guest sessions are unprotected; registered child sessions require parent ownership
+    if (!session.childId.startsWith('guest_')) {
+      const cookieParentId = request.cookies.get('parentId')?.value;
+      if (!cookieParentId) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
+      const child = await prisma.child.findUnique({ where: { id: session.childId }, select: { parentId: true } });
+      if (!child || child.parentId !== cookieParentId) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      }
+    }
 
     // Guard against completing an already-completed session (prevents double streak/sticker)
     if (session.status === 'completed') {

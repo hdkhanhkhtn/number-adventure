@@ -136,7 +136,12 @@ export default function ChildLayout({ children }: { children: React.ReactNode })
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: state.profile.name, age: state.profile.age, color: state.profile.color }),
+        body: JSON.stringify({
+          name: state.profile.name,
+          age: state.profile.age,
+          color: state.profile.color,
+          guestId: state.childId ?? undefined, // pass guest ID so server copies session data
+        }),
       });
       if (res.ok) {
         const { child } = await res.json() as { child: { id: string; name: string; age: number; color: string } };
