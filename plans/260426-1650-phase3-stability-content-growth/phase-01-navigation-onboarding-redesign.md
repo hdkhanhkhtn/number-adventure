@@ -9,7 +9,7 @@
 ## Overview
 
 - **Priority:** Critical / High
-- **Status:** In Progress — code gaps remain (see Remaining Work below)
+- **Status:** Complete (2026-04-28)
 - **Effort:** ~3 days
 - **Description:** Fix blank screens, stabilize back navigation, complete onboarding wizard, add guest-to-DB migration prompt, finish settings page.
 
@@ -210,16 +210,18 @@ client: setChild(newChildId) → localStorage updated → guest data cleared
 ## Todo List
 
 - [x] 3A-01: Fix blank screen — expose `isHydrated`, add guard to all child pages
-- [ ] 3A-02: Guest→DB migration endpoint — **INCOMPLETE** (file exists but does NOT copy GameSession, GameAttempt, ChildSticker, Streak)
+- [x] 3A-02: Guest→DB migration endpoint — Prisma $transaction copies GameSession, ChildSticker, Streak; P2002 → 409
 - [x] 3A-03: Onboarding partial-state persistence + splash skip
 - [x] 3A-04: Back navigation helper + `router.replace` after game + page transitions
-- [x] 3A-05: `useSettings` hook + volume slider + contrast + reduce-motion — **PARTIAL** (hook exists with localStorage, DB sync missing)
+- [x] 3A-05: `useSettings` hook + volume slider + contrast + reduce-motion + DB sync (GET on mount, PATCH debounced 300ms)
 - [x] 3A-06: Bedtime mode + break reminder + game hints toggle
 - [x] 3A-07: Parent game rotation control
 
 ## Remaining Work
 
-### Gap 3A-R1 (CRITICAL): Incomplete data migration in `app/api/children/migrate/route.ts`
+> All gaps closed — Phase 3A complete as of 2026-04-28.
+
+### ~~Gap 3A-R1 (CRITICAL): Incomplete data migration in `app/api/children/migrate/route.ts`~~
 
 **Current state:** File exists but only creates a new Child record. Does NOT copy GameSession, GameAttempt, ChildSticker, Streak from guest child to new child.
 
