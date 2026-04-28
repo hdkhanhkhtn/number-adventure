@@ -42,10 +42,25 @@ model ChildSettings {
   id              String   @id @default(cuid())
   childId         String   @unique
   dailyMinutes    Int      @default(30)
-  difficulty      String   @default("easy")  // easy | medium | hard
-  language        String   @default("en")    // en | vi | bi
+  difficulty      String   @default("easy")           // easy | medium | hard
+  language        String   @default("en")             // en | vi | bi
   audioEnabled    Boolean  @default(true)
   celebrationsOn  Boolean  @default(true)
+  
+  // Phase 3A: Audio & Accessibility
+  volume          Int      @default(100)              // 0-100 volume slider
+  highContrast    Boolean  @default(false)            // high contrast mode toggle
+  reduceMotion    Boolean  @default(false)            // reduce animation toggle
+  
+  // Phase 3A: Parental Controls
+  bedtimeEnabled  Boolean  @default(false)            // bedtime cutoff mode
+  bedtimeHour     Int?     // 0-23, cutoff hour
+  breakReminderEnabled Boolean @default(true)         // daily break reminder
+  breakReminderMinutes Int?  // 0-999, minutes between breaks
+  
+  // Phase 3A: Game Preferences
+  gameHintsEnabled Boolean @default(true)             // show hints in game
+  gameRotation    String   @default("auto")           // auto | favorites | all
   
   child           Child @relation(fields: [childId], references: [id])
 }
@@ -54,15 +69,20 @@ model ChildSettings {
 ### Lesson (static config, stored in DB for reference)
 ```prisma
 model Lesson {
-  id        String   @id  // "math-kitchen-add-1"
-  worldId   String      // "math-kitchen"
-  gameType  String      // "add-take"
-  title     String
-  order     Int
-  skillTags String[]    // ["addition", "tens"]
+  id          String   @id             // "math-kitchen-add-1"
+  worldId     String                   // "math-kitchen"
+  gameType    String                   // "add-take", "count-objects", "number-writing"
+  title       String
+  order       Int
+  skillTags   String[]                 // ["addition", "tens"]
   
-  sessions  GameSession[]
-  questions AIQuestion[]
+  // Phase 3B: AI-Generated Content
+  description String?                  // 2-3 sentence lesson overview
+  objectives  String[]                 // 3-5 learning objectives
+  published   Boolean @default(true)    // lesson visibility flag
+  
+  sessions    GameSession[]
+  questions   AIQuestion[]
 }
 ```
 

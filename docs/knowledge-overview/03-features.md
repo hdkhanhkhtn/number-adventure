@@ -2,27 +2,37 @@
 
 ## Child Features
 
-| Feature | Route | Data Source | Priority |
+| Feature | Route | Data Source | Status |
 |---|---|---|---|
-| Onboarding | `/onboarding` | Client (POST `/api/children`) | Must |
-| Home Screen | `/home` | `/api/progress` (streak, stats) | Must |
-| World Map | `/worlds/:worldId` | Static config + `/api/progress` | Must |
-| Hear & Tap Game | `/play/hear-tap/:lessonId` | `/api/ai/generate` (cached) | Must |
-| Number Order Game | `/play/number-order/:lessonId` | `/api/ai/generate` (cached) | Must |
-| Build the Number Game | `/play/build-number/:lessonId` | `/api/ai/generate` (cached) | Must |
-| Even or Odd Game | `/play/even-odd/:lessonId` | `/api/ai/generate` (cached) | Must |
-| Add/Take (Math Kitchen) | `/play/add-take/:lessonId` | `/api/ai/generate` (cached) | Must |
-| Reward / Celebration | overlay after session | Calculated from GameSession | Must |
-| Sticker Collection | `/stickers` | `/api/children/:id/stickers` | Should |
-| StreakCard | part of home/dashboard | `/api/progress` | Should |
+| **Onboarding (Multi-Step Wizard)** | `/onboarding` | Client (POST `/api/children`) | Phase 3A ✅ |
+| **Home Screen** | `/home` | `/api/progress` (streak, stats); EncouragementBanner | Phase 3C ✅ |
+| **World Map** | `/worlds/:worldId` | Static config + `/api/progress` | Phase 1 ✅ |
+| **Game: Hear & Tap** | `/play/hear-tap/:lessonId` | `/api/ai/generate` (cached) or DB Lesson | Phase 1 ✅ |
+| **Game: Number Order** | `/play/number-order/:lessonId` | `/api/ai/generate` (cached) or DB Lesson | Phase 1 ✅ |
+| **Game: Build the Number** | `/play/build-number/:lessonId` | `/api/ai/generate` (cached) or DB Lesson | Phase 1 ✅ |
+| **Game: Even or Odd** | `/play/even-odd/:lessonId` | `/api/ai/generate` (cached) or DB Lesson | Phase 1 ✅ |
+| **Game: Add/Take (Math Kitchen)** | `/play/add-take/:lessonId` | `/api/ai/generate` (cached) or DB Lesson | Phase 1 ✅ |
+| **Game: Count Objects** | `/play/count-objects/:lessonId` | DB Lesson (World 6: Counting Meadow) | Phase 3B ✅ |
+| **Game: Number Writing** | `/play/number-writing/:lessonId` | DB Lesson (World 7: Writing Workshop) | Phase 3B ✅ |
+| **Reward / Celebration** | overlay after session | Calculated from GameSession | Phase 1 ✅ |
+| **Sticker Collection** | `/stickers` | `/api/children/:id/stickers` | Phase 1 ✅ |
+| **StreakCard** | part of home/dashboard | `/api/progress` | Phase 1 ✅ |
+| **Settings (Volume, Contrast, Motion)** | part of parent settings | `/api/children/[id]/settings` | Phase 3A ✅ |
+| **Settings (Bedtime, Break Reminder, Hints, Game Rotation)** | part of parent settings | `/api/children/[id]/settings` | Phase 3A ✅ |
 
 ## Parent Features
 
-| Feature | Route | Data Source | Priority |
+| Feature | Route | Data Source | Status |
 |---|---|---|---|
-| Parent Gate (PIN) | `/parent` (verify at `/api/auth/pin`) | Parent.pin (DB) | Must |
-| Progress Dashboard | `/parent/dashboard` | `/api/parent-report` | Must |
-| Settings | `/parent/settings` | `/api/children/:id/settings` | Must |
+| **Parent Gate (PIN)** | `/parent` (verify at `/api/auth/pin`) | Parent.pin (DB) | Phase 1 ✅ |
+| **Progress Dashboard** | `/parent/dashboard` | `/api/parent-report`, Family Leaderboard | Phase 3C ✅ |
+| **Settings (Difficulty, Language, Audio, Celebrations)** | `/parent/settings` | `/api/children/:id/settings` | Phase 1 ✅ |
+| **Multi-Child Profile Switcher** | Home screen (tap avatar) | `/api/parent/children` | Phase 3C ✅ |
+| **Parent-to-Child Encouragement Messages** | Home screen (EncouragementBanner) | `/api/parent/encouragement` | Phase 3C ✅ |
+| **Weekly Progress Email Report** | Cron (Monday 09:00 UTC) | `/api/cron/weekly-report` + Resend | Phase 3C ✅ |
+| **Email Unsubscribe** | `/?unsubscribed=1` | `/api/parent/unsubscribe` (HMAC token) | Phase 3C ✅ |
+| **Progress Export (CSV + PDF)** | Parent dashboard export button | Client-side jsPDF blob download | Phase 3C ✅ |
+| **Family Leaderboard** | `/parent/dashboard` (2+ children) | All-time stars rank per child | Phase 3C ✅ |
 
 ## Backend API
 

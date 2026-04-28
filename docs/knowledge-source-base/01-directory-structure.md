@@ -92,8 +92,9 @@ app/api/
   │   ├── encouragement/route.ts     # GET/POST/PATCH encouragement messages
   │   ├── settings/route.ts          # GET/PATCH parent settings (emailReports)
   │   └── unsubscribe/route.ts       # GET unsubscribe token verify
-  └── cron/ (Phase 3C)
-      └── weekly-report/route.ts     # GET Vercel Cron endpoint; Bearer auth
+  ├── cron/ (Phase 3C)
+  │   └── weekly-report/route.ts     # GET Vercel Cron endpoint; Bearer auth
+  └── children/migrate/route.ts       # Phase 3A: POST guest→child migration
 ```
 
 ### Prisma (Database)
@@ -155,6 +156,7 @@ components/
     child-switcher-modal.tsx           # Phase 3C: multi-child profile switcher
     encouragement-banner.tsx           # Phase 3C: parent message display
     family-leaderboard.tsx             # Phase 3C: all-time stars ranking
+    save-progress-banner.tsx           # Phase 3A: guest→child migration prompt
 
 lib/
   db/
@@ -173,11 +175,15 @@ lib/
     unsubscribe-token.ts             # HMAC-SHA256 token utils
   export/ (Phase 3C)
     export-progress.ts               # CSV/PDF client-side download
+  schemas/ (Phase 3B)
+    lesson-schema.ts                 # Zod validation for AI-generated lessons
+  lesson-loader.ts (Phase 3B)        # Feature-flagged loader (DB vs static fallback)
   hooks/
     useAudio.ts
     useGame.ts
     useProgress.ts
     useSession.ts
+    use-settings.ts                  # Phase 3A: localStorage + debounced DB sync
   utils/
     number-helpers.ts
     storage.ts
@@ -189,10 +195,14 @@ data/
     build-number.ts
     even-odd.ts
     add-take.ts                      # Math Kitchen game type
+    count-objects.ts                 # Phase 3B: visual counting
+    number-writing.ts                # Phase 3B: digit input & writing
   worlds/
     world-1-farm.ts
     world-2-space.ts
     world-3-ocean.ts
     world-4-jungle.ts
     world-5-math-kitchen.ts
+    world-6-counting-meadow.ts       # Phase 3B: count-objects game type
+    world-7-writing-workshop.ts      # Phase 3B: number-writing game type
 ```
