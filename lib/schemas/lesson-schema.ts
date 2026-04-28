@@ -16,7 +16,12 @@ export const LessonSchema = z.object({
 
 export type LessonData = z.infer<typeof LessonSchema>;
 
-/** Array wrapper for batch validation of AI response */
+/** Array wrapper for per-world AI response validation (max 9 per world) */
 export const LessonArraySchema = z.object({
   lessons: z.array(LessonSchema).min(1).max(9),
+});
+
+/** Schema for the full seed file containing all worlds (no max cap) */
+export const SeedFileSchema = z.object({
+  lessons: z.array(LessonSchema).min(1),
 });

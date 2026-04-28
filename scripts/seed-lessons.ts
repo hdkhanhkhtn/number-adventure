@@ -7,7 +7,7 @@
 import fs from 'fs';
 import path from 'path';
 import { PrismaClient } from '@prisma/client';
-import { LessonArraySchema } from '../lib/schemas/lesson-schema';
+import { SeedFileSchema } from '../lib/schemas/lesson-schema';
 
 const prisma = new PrismaClient();
 const SEED_FILE = path.resolve(__dirname, '../prisma/seed-lessons.json');
@@ -20,7 +20,7 @@ async function main() {
   }
 
   const raw = JSON.parse(fs.readFileSync(SEED_FILE, 'utf-8'));
-  const result = LessonArraySchema.safeParse(raw);
+  const result = SeedFileSchema.safeParse(raw);
   if (!result.success) {
     console.error('Invalid seed-lessons.json:');
     result.error.issues.forEach(i => console.error(`  [${i.path.join('.')}] ${i.message}`));

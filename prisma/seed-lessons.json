@@ -1,0 +1,1006 @@
+{
+  "lessons": [
+    {
+      "slug": "co-01-count-to-three",
+      "worldId": "counting-castle",
+      "gameType": "number-order",
+      "order": 1,
+      "title": "Count to 3",
+      "description": "Help the castle pages put numbers 1 to 3 in the right order by spotting what comes first, next, and last.",
+      "objectives": [
+        "Recognize numbers 1 to 3",
+        "Place 1, 2, and 3 in order",
+        "Use first, next, and last words"
+      ],
+      "difficulty": "easy",
+      "questionCount": 5,
+      "passingStars": 1
+    },
+    {
+      "slug": "co-02-before-and-after",
+      "worldId": "counting-castle",
+      "gameType": "number-order",
+      "order": 2,
+      "title": "Before and After to 5",
+      "description": "Find which small number comes before or after as castle doors open to show number paths from 1 to 5.",
+      "objectives": [
+        "Recognize numbers 1 to 5",
+        "Identify the number before another number",
+        "Identify the number after another number"
+      ],
+      "difficulty": "easy",
+      "questionCount": 6,
+      "passingStars": 1
+    },
+    {
+      "slug": "co-03-build-a-number-line",
+      "worldId": "counting-castle",
+      "gameType": "number-order",
+      "order": 3,
+      "title": "Build a Number Line to 5",
+      "description": "Arrange mixed-up number tiles to complete a simple castle number line from 1 to 5.",
+      "objectives": [
+        "Order numbers from 1 to 5",
+        "Spot missing numbers in a short sequence",
+        "Check number order from left to right"
+      ],
+      "difficulty": "easy",
+      "questionCount": 7,
+      "passingStars": 2
+    },
+    {
+      "slug": "co-04-count-to-eight",
+      "worldId": "counting-castle",
+      "gameType": "number-order",
+      "order": 4,
+      "title": "Count to 8",
+      "description": "Put numbers 1 to 8 in order to help the royal cook stack treasure cakes in the correct sequence.",
+      "objectives": [
+        "Recognize numbers 1 to 8",
+        "Order a longer number sequence",
+        "Find the next number in counting order"
+      ],
+      "difficulty": "medium",
+      "questionCount": 8,
+      "passingStars": 2
+    },
+    {
+      "slug": "co-05-missing-middle-numbers",
+      "worldId": "counting-castle",
+      "gameType": "number-order",
+      "order": 5,
+      "title": "Missing Middle Numbers",
+      "description": "Fill in numbers missing from the middle of castle paths and banners using counting order to 10.",
+      "objectives": [
+        "Count in order to 10",
+        "Find missing numbers in a sequence",
+        "Use number patterns to complete rows"
+      ],
+      "difficulty": "medium",
+      "questionCount": 9,
+      "passingStars": 2
+    },
+    {
+      "slug": "co-06-race-to-ten",
+      "worldId": "counting-castle",
+      "gameType": "number-order",
+      "order": 6,
+      "title": "Race to 10",
+      "description": "Choose and place numbers quickly to complete number tracks from 1 to 10 before the dragon reaches the tower.",
+      "objectives": [
+        "Order numbers from 1 to 10",
+        "Compare nearby numbers",
+        "Identify what comes before, after, and between"
+      ],
+      "difficulty": "medium",
+      "questionCount": 10,
+      "passingStars": 2
+    },
+    {
+      "slug": "co-07-count-back-and-forth",
+      "worldId": "counting-castle",
+      "gameType": "number-order",
+      "order": 7,
+      "title": "Count Back and Forth",
+      "description": "Master number order by arranging numbers forward and backward on castle stairways up to 12.",
+      "objectives": [
+        "Order numbers to 12",
+        "Recognize forward and backward counting",
+        "Complete reversed number sequences"
+      ],
+      "difficulty": "hard",
+      "questionCount": 11,
+      "passingStars": 3
+    },
+    {
+      "slug": "co-08-skip-the-gap",
+      "worldId": "counting-castle",
+      "gameType": "number-order",
+      "order": 8,
+      "title": "Skip the Gap",
+      "description": "Solve trickier number lines with several missing spaces and mixed choices as you repair the castle bridge.",
+      "objectives": [
+        "Find multiple missing numbers",
+        "Order numbers within 1 to 15",
+        "Use sequence clues to test choices"
+      ],
+      "difficulty": "hard",
+      "questionCount": 12,
+      "passingStars": 3
+    },
+    {
+      "slug": "co-09-royal-number-challenge",
+      "worldId": "counting-castle",
+      "gameType": "number-order",
+      "order": 9,
+      "title": "Royal Number Challenge",
+      "description": "Complete the grand castle challenge by sorting mixed numbers, fixing broken number lines, and choosing correct positions up to 20.",
+      "objectives": [
+        "Order numbers to 20",
+        "Identify numbers before, after, and between",
+        "Solve mixed number-order puzzles"
+      ],
+      "difficulty": "hard",
+      "questionCount": 15,
+      "passingStars": 3
+    },
+    {
+      "slug": "cm-01",
+      "worldId": "counting-meadow",
+      "gameType": "count-objects",
+      "order": 1,
+      "title": "Count the Daisies",
+      "description": "Children count small groups of daisies in the meadow and choose the matching number.",
+      "objectives": [
+        "Count up to 3 objects",
+        "Match quantities to numbers",
+        "Practice careful pointing while counting"
+      ],
+      "difficulty": "easy",
+      "questionCount": 5,
+      "passingStars": 1
+    },
+    {
+      "slug": "cm-02",
+      "worldId": "counting-meadow",
+      "gameType": "count-objects",
+      "order": 2,
+      "title": "Ladybug Spot Counting",
+      "description": "Learners count ladybugs on leaves and build confidence counting objects up to 5.",
+      "objectives": [
+        "Count up to 5 objects",
+        "Identify how many items are in a group",
+        "Strengthen one-to-one counting"
+      ],
+      "difficulty": "easy",
+      "questionCount": 6,
+      "passingStars": 1
+    },
+    {
+      "slug": "cm-03",
+      "worldId": "counting-meadow",
+      "gameType": "count-objects",
+      "order": 3,
+      "title": "Butterflies in the Grass",
+      "description": "Players count butterflies resting in the meadow grass and select the correct total.",
+      "objectives": [
+        "Count up to 5 objects",
+        "Compare different small groups",
+        "Use number words accurately"
+      ],
+      "difficulty": "easy",
+      "questionCount": 7,
+      "passingStars": 2
+    },
+    {
+      "slug": "cm-04",
+      "worldId": "counting-meadow",
+      "gameType": "count-objects",
+      "order": 4,
+      "title": "Count the Mushrooms",
+      "description": "Children count groups of mushrooms around the meadow, including mixed arrangements up to 8.",
+      "objectives": [
+        "Count up to 8 objects",
+        "Count objects arranged in lines and clusters",
+        "Avoid skipping objects while counting"
+      ],
+      "difficulty": "medium",
+      "questionCount": 8,
+      "passingStars": 2
+    },
+    {
+      "slug": "cm-05",
+      "worldId": "counting-meadow",
+      "gameType": "count-objects",
+      "order": 5,
+      "title": "Busy Bees to Count",
+      "description": "Learners count buzzing bees near flowers in different layouts and choose the correct number.",
+      "objectives": [
+        "Count up to 8 objects",
+        "Recognize that arrangement does not change quantity",
+        "Improve visual counting accuracy"
+      ],
+      "difficulty": "medium",
+      "questionCount": 9,
+      "passingStars": 2
+    },
+    {
+      "slug": "cm-06",
+      "worldId": "counting-meadow",
+      "gameType": "count-objects",
+      "order": 6,
+      "title": "Pebbles by the Stream",
+      "description": "Players count pebbles beside a meadow stream, working with larger groups up to 10.",
+      "objectives": [
+        "Count up to 10 objects",
+        "Track counted and uncounted items",
+        "Connect object groups to numerals"
+      ],
+      "difficulty": "medium",
+      "questionCount": 10,
+      "passingStars": 2
+    },
+    {
+      "slug": "cm-07",
+      "worldId": "counting-meadow",
+      "gameType": "count-objects",
+      "order": 7,
+      "title": "Fireflies at Dusk",
+      "description": "Children count glowing fireflies in scattered groups across the evening meadow up to 12.",
+      "objectives": [
+        "Count up to 12 objects",
+        "Count objects in scattered arrangements",
+        "Check counts by recounting when needed"
+      ],
+      "difficulty": "hard",
+      "questionCount": 11,
+      "passingStars": 3
+    },
+    {
+      "slug": "cm-08",
+      "worldId": "counting-meadow",
+      "gameType": "count-objects",
+      "order": 8,
+      "title": "Acorns Under the Oak",
+      "description": "Learners count acorns hidden among grass and roots, using careful visual scanning up to 15.",
+      "objectives": [
+        "Count up to 15 objects",
+        "Use systematic scanning to count hidden items",
+        "Maintain one-to-one correspondence with larger groups"
+      ],
+      "difficulty": "hard",
+      "questionCount": 12,
+      "passingStars": 3
+    },
+    {
+      "slug": "cm-09",
+      "worldId": "counting-meadow",
+      "gameType": "count-objects",
+      "order": 9,
+      "title": "Meadow Mix Counting Challenge",
+      "description": "Players count mixed meadow objects like flowers, snails, and stones in larger sets up to 20.",
+      "objectives": [
+        "Count up to 20 objects",
+        "Count varied object groups accurately",
+        "Apply counting strategies to complex scenes"
+      ],
+      "difficulty": "hard",
+      "questionCount": 15,
+      "passingStars": 3
+    },
+    {
+      "slug": "ev-01-even-or-odd-basics",
+      "worldId": "even-odd-house",
+      "gameType": "even-odd",
+      "order": 1,
+      "title": "Meet Even and Odd",
+      "description": "Children sort small numbers into the Even room or the Odd room by looking at pairs and leftovers.",
+      "objectives": [
+        "Recognize even and odd numbers to 10",
+        "Use pairing to decide if a number is even or odd"
+      ],
+      "difficulty": "easy",
+      "questionCount": 5,
+      "passingStars": 1
+    },
+    {
+      "slug": "ev-02-match-the-house",
+      "worldId": "even-odd-house",
+      "gameType": "even-odd",
+      "order": 2,
+      "title": "Find the Right House",
+      "description": "Players help numbers 1 to 12 reach the correct house by checking whether each number can be split into pairs.",
+      "objectives": [
+        "Identify even and odd numbers to 12",
+        "Practice sorting numbers by parity"
+      ],
+      "difficulty": "easy",
+      "questionCount": 6,
+      "passingStars": 1
+    },
+    {
+      "slug": "ev-03-even-odd-neighbors",
+      "worldId": "even-odd-house",
+      "gameType": "even-odd",
+      "order": 3,
+      "title": "Even-Odd Number Line",
+      "description": "Children use a number line to spot the pattern of even and odd numbers and choose the correct label.",
+      "objectives": [
+        "Notice the alternating even-odd pattern",
+        "Identify even and odd numbers to 20"
+      ],
+      "difficulty": "easy",
+      "questionCount": 7,
+      "passingStars": 2
+    },
+    {
+      "slug": "ev-04-count-and-check",
+      "worldId": "even-odd-house",
+      "gameType": "even-odd",
+      "order": 4,
+      "title": "Count and Check",
+      "description": "Students count groups of objects and decide whether the total belongs in the Even room or the Odd room.",
+      "objectives": [
+        "Count objects accurately to 20",
+        "Determine if a counted total is even or odd"
+      ],
+      "difficulty": "medium",
+      "questionCount": 8,
+      "passingStars": 2
+    },
+    {
+      "slug": "ev-05-fill-the-pattern",
+      "worldId": "even-odd-house",
+      "gameType": "even-odd",
+      "order": 5,
+      "title": "Finish the Pattern",
+      "description": "Players complete number patterns by using the repeating even-odd rule and selecting the missing number type.",
+      "objectives": [
+        "Use parity patterns to predict missing numbers",
+        "Classify numbers to 20 as even or odd"
+      ],
+      "difficulty": "medium",
+      "questionCount": 9,
+      "passingStars": 2
+    },
+    {
+      "slug": "ev-06-compare-two-numbers",
+      "worldId": "even-odd-house",
+      "gameType": "even-odd",
+      "order": 6,
+      "title": "Compare the Numbers",
+      "description": "Children look at two numbers and decide whether both are even, both are odd, or one of each.",
+      "objectives": [
+        "Compare parity of two numbers",
+        "Strengthen recognition of even and odd numbers to 30"
+      ],
+      "difficulty": "medium",
+      "questionCount": 10,
+      "passingStars": 2
+    },
+    {
+      "slug": "ev-07-odd-one-out",
+      "worldId": "even-odd-house",
+      "gameType": "even-odd",
+      "order": 7,
+      "title": "Find the Odd One Out",
+      "description": "Players examine groups of numbers and pick the one that does not match the others by evenness or oddness.",
+      "objectives": [
+        "Identify a number with different parity in a set",
+        "Explain why numbers belong to even or odd groups"
+      ],
+      "difficulty": "hard",
+      "questionCount": 12,
+      "passingStars": 3
+    },
+    {
+      "slug": "ev-08-parity-challenge",
+      "worldId": "even-odd-house",
+      "gameType": "even-odd",
+      "order": 8,
+      "title": "Parity Challenge",
+      "description": "Students solve mixed even-odd questions with larger numbers, quick choices, and pattern clues around the house.",
+      "objectives": [
+        "Classify numbers to 50 as even or odd",
+        "Use last-digit clues to determine parity",
+        "Apply parity rules in mixed tasks"
+      ],
+      "difficulty": "hard",
+      "questionCount": 14,
+      "passingStars": 3
+    },
+    {
+      "slug": "ev-09-master-of-the-house",
+      "worldId": "even-odd-house",
+      "gameType": "even-odd",
+      "order": 9,
+      "title": "Master of Even-Odd House",
+      "description": "Children complete a final challenge by sorting, comparing, and spotting parity patterns across many numbers.",
+      "objectives": [
+        "Demonstrate mastery of even and odd numbers",
+        "Sort, compare, and pattern numbers by parity",
+        "Work confidently with numbers to 50"
+      ],
+      "difficulty": "hard",
+      "questionCount": 15,
+      "passingStars": 3
+    },
+    {
+      "slug": "ma-01-count-fruit-in-bowls",
+      "worldId": "math-kitchen",
+      "gameType": "add-take",
+      "order": 1,
+      "title": "Count Fruit in Bowls",
+      "description": "Children add and take small groups of fruit in kitchen bowls to find how many are left.",
+      "objectives": [
+        "Count objects to 5",
+        "Add 1 to a small group",
+        "Take away 1 from a small group"
+      ],
+      "difficulty": "easy",
+      "questionCount": 5,
+      "passingStars": 1
+    },
+    {
+      "slug": "ma-02-cookies-on-the-tray",
+      "worldId": "math-kitchen",
+      "gameType": "add-take",
+      "order": 2,
+      "title": "Cookies on the Tray",
+      "description": "Players help place and remove cookies from a baking tray while solving simple add and take problems.",
+      "objectives": [
+        "Count objects to 6",
+        "Model adding with kitchen items",
+        "Model taking away with kitchen items"
+      ],
+      "difficulty": "easy",
+      "questionCount": 6,
+      "passingStars": 1
+    },
+    {
+      "slug": "ma-03-spoons-and-cups",
+      "worldId": "math-kitchen",
+      "gameType": "add-take",
+      "order": 3,
+      "title": "Spoons and Cups",
+      "description": "Children practice combining and removing spoons and cups to build early number sense in the kitchen.",
+      "objectives": [
+        "Count objects to 7",
+        "Add and take within 5",
+        "Match actions to number changes"
+      ],
+      "difficulty": "easy",
+      "questionCount": 7,
+      "passingStars": 2
+    },
+    {
+      "slug": "ma-04-make-a-sandwich",
+      "worldId": "math-kitchen",
+      "gameType": "add-take",
+      "order": 4,
+      "title": "Make a Sandwich",
+      "description": "Players add and remove sandwich ingredients to solve kitchen math stories with totals up to 10.",
+      "objectives": [
+        "Add within 10",
+        "Take away within 10",
+        "Solve simple story problems"
+      ],
+      "difficulty": "medium",
+      "questionCount": 8,
+      "passingStars": 2
+    },
+    {
+      "slug": "ma-05-juice-cartons-and-straws",
+      "worldId": "math-kitchen",
+      "gameType": "add-take",
+      "order": 5,
+      "title": "Juice Cartons and Straws",
+      "description": "Children track how many straws are added to or taken from lunch drinks using visual math scenes.",
+      "objectives": [
+        "Count on from a number",
+        "Subtract by taking away",
+        "Compare starting and ending amounts"
+      ],
+      "difficulty": "medium",
+      "questionCount": 9,
+      "passingStars": 2
+    },
+    {
+      "slug": "ma-06-pizza-slice-party",
+      "worldId": "math-kitchen",
+      "gameType": "add-take",
+      "order": 6,
+      "title": "Pizza Slice Party",
+      "description": "Players serve and remove pizza slices for hungry guests and solve addition and subtraction problems within 12.",
+      "objectives": [
+        "Add within 12",
+        "Subtract within 12",
+        "Use pictures to explain answers"
+      ],
+      "difficulty": "medium",
+      "questionCount": 10,
+      "passingStars": 2
+    },
+    {
+      "slug": "ma-07-recipe-mixing-math",
+      "worldId": "math-kitchen",
+      "gameType": "add-take",
+      "order": 7,
+      "title": "Recipe Mixing Math",
+      "description": "Children adjust ingredients in bowls by adding and taking amounts to complete trickier kitchen recipes.",
+      "objectives": [
+        "Add within 15",
+        "Subtract within 15",
+        "Choose the correct operation from a story"
+      ],
+      "difficulty": "hard",
+      "questionCount": 12,
+      "passingStars": 3
+    },
+    {
+      "slug": "ma-08-bakery-box-challenge",
+      "worldId": "math-kitchen",
+      "gameType": "add-take",
+      "order": 8,
+      "title": "Bakery Box Challenge",
+      "description": "Players pack and unpack pastries in bakery boxes while solving multi-step add and take situations.",
+      "objectives": [
+        "Solve two-step add-take problems",
+        "Track changes across actions",
+        "Check answers with counting"
+      ],
+      "difficulty": "hard",
+      "questionCount": 13,
+      "passingStars": 3
+    },
+    {
+      "slug": "ma-09-chef-final-feast",
+      "worldId": "math-kitchen",
+      "gameType": "add-take",
+      "order": 9,
+      "title": "Chef Final Feast",
+      "description": "Children help the chef manage plates, treats, and ingredients in the busiest kitchen challenge of the world.",
+      "objectives": [
+        "Add and subtract within 20",
+        "Solve mixed kitchen story problems",
+        "Use efficient counting strategies"
+      ],
+      "difficulty": "hard",
+      "questionCount": 15,
+      "passingStars": 3
+    },
+    {
+      "slug": "ng-01-count-the-flowers",
+      "worldId": "number-garden",
+      "gameType": "hear-tap",
+      "order": 1,
+      "title": "Count the Flowers",
+      "description": "Children hear a number from 1 to 3 and tap the matching group of flowers in the garden.",
+      "objectives": [
+        "Recognize numbers 1 to 3",
+        "Match a spoken number to a quantity",
+        "Practice careful listening"
+      ],
+      "difficulty": "easy",
+      "questionCount": 5,
+      "passingStars": 1
+    },
+    {
+      "slug": "ng-02-find-the-butterflies",
+      "worldId": "number-garden",
+      "gameType": "hear-tap",
+      "order": 2,
+      "title": "Find the Butterflies",
+      "description": "Players listen for numbers 1 to 5 and tap the group with the correct number of butterflies.",
+      "objectives": [
+        "Recognize numbers 1 to 5",
+        "Count small groups accurately",
+        "Respond to spoken number prompts"
+      ],
+      "difficulty": "easy",
+      "questionCount": 6,
+      "passingStars": 1
+    },
+    {
+      "slug": "ng-03-tap-the-ladybugs",
+      "worldId": "number-garden",
+      "gameType": "hear-tap",
+      "order": 3,
+      "title": "Tap the Ladybugs",
+      "description": "Learners hear a target number and tap the patch showing that many ladybugs, building early counting confidence.",
+      "objectives": [
+        "Count objects up to 5",
+        "Connect number words to sets",
+        "Improve attention and listening"
+      ],
+      "difficulty": "easy",
+      "questionCount": 7,
+      "passingStars": 2
+    },
+    {
+      "slug": "ng-04-seed-packet-match",
+      "worldId": "number-garden",
+      "gameType": "hear-tap",
+      "order": 4,
+      "title": "Seed Packet Match",
+      "description": "Children hear numbers from 1 to 8 and tap the seed packet showing the matching amount of seeds.",
+      "objectives": [
+        "Recognize numbers 1 to 8",
+        "Count with one-to-one correspondence",
+        "Choose the correct quantity from several options"
+      ],
+      "difficulty": "medium",
+      "questionCount": 8,
+      "passingStars": 2
+    },
+    {
+      "slug": "ng-05-pond-pebble-count",
+      "worldId": "number-garden",
+      "gameType": "hear-tap",
+      "order": 5,
+      "title": "Pond Pebble Count",
+      "description": "Players listen to a number and tap the group of pebbles that matches, with closer answer choices to increase challenge.",
+      "objectives": [
+        "Count objects up to 8",
+        "Compare similar quantities",
+        "Strengthen listening-to-action skills"
+      ],
+      "difficulty": "medium",
+      "questionCount": 9,
+      "passingStars": 2
+    },
+    {
+      "slug": "ng-06-garden-basket-numbers",
+      "worldId": "number-garden",
+      "gameType": "hear-tap",
+      "order": 6,
+      "title": "Garden Basket Numbers",
+      "description": "Students hear numbers from 3 to 10 and tap the basket holding the matching number of fruits or vegetables.",
+      "objectives": [
+        "Recognize and count numbers up to 10",
+        "Match spoken numbers to visual sets",
+        "Build accuracy with mixed objects"
+      ],
+      "difficulty": "medium",
+      "questionCount": 10,
+      "passingStars": 2
+    },
+    {
+      "slug": "ng-07-busy-bee-groups",
+      "worldId": "number-garden",
+      "gameType": "hear-tap",
+      "order": 7,
+      "title": "Busy Bee Groups",
+      "description": "Children hear a number from 5 to 12 and tap the flower patch with that many bees, using more crowded scenes.",
+      "objectives": [
+        "Count larger groups up to 12",
+        "Identify quantities in busy pictures",
+        "Maintain focus during listening tasks"
+      ],
+      "difficulty": "hard",
+      "questionCount": 11,
+      "passingStars": 3
+    },
+    {
+      "slug": "ng-08-rows-in-the-garden",
+      "worldId": "number-garden",
+      "gameType": "hear-tap",
+      "order": 8,
+      "title": "Rows in the Garden",
+      "description": "Players hear a target number and tap the garden row with the correct number of plants, even when rows look similar.",
+      "objectives": [
+        "Count objects up to 12",
+        "Discriminate between close quantities",
+        "Translate spoken numbers into correct choices"
+      ],
+      "difficulty": "hard",
+      "questionCount": 12,
+      "passingStars": 3
+    },
+    {
+      "slug": "ng-09-harvest-count-challenge",
+      "worldId": "number-garden",
+      "gameType": "hear-tap",
+      "order": 9,
+      "title": "Harvest Count Challenge",
+      "description": "Learners hear numbers from 1 to 12 and tap the matching harvest group, mixing different garden items for the biggest challenge.",
+      "objectives": [
+        "Count and recognize numbers up to 12",
+        "Match number words to mixed sets",
+        "Apply listening and counting skills fluently"
+      ],
+      "difficulty": "hard",
+      "questionCount": 12,
+      "passingStars": 3
+    },
+    {
+      "slug": "ns-01-count-to-3",
+      "worldId": "number-sequence",
+      "gameType": "number-order",
+      "order": 1,
+      "title": "Count in Order to 3",
+      "description": "Children place numbers 1 to 3 in the correct order through simple sequencing play.",
+      "objectives": [
+        "Recognize numbers 1 to 3",
+        "Put numbers in order from smallest to largest",
+        "Build confidence with early counting"
+      ],
+      "difficulty": "easy",
+      "questionCount": 5,
+      "passingStars": 1
+    },
+    {
+      "slug": "ns-02-before-and-after-5",
+      "worldId": "number-sequence",
+      "gameType": "number-order",
+      "order": 2,
+      "title": "Before and After to 5",
+      "description": "Players practice finding which number comes before or after in short number lines up to 5.",
+      "objectives": [
+        "Recognize numbers up to 5",
+        "Identify the next number in a sequence",
+        "Identify the previous number in a sequence"
+      ],
+      "difficulty": "easy",
+      "questionCount": 6,
+      "passingStars": 1
+    },
+    {
+      "slug": "ns-03-mix-and-order-1-to-5",
+      "worldId": "number-sequence",
+      "gameType": "number-order",
+      "order": 3,
+      "title": "Put 1 to 5 in Order",
+      "description": "Children sort mixed-up numbers from 1 to 5 into the correct counting order.",
+      "objectives": [
+        "Sequence numbers 1 to 5",
+        "Compare which number is smaller or larger",
+        "Strengthen counting fluency"
+      ],
+      "difficulty": "easy",
+      "questionCount": 7,
+      "passingStars": 2
+    },
+    {
+      "slug": "ns-04-order-to-10",
+      "worldId": "number-sequence",
+      "gameType": "number-order",
+      "order": 4,
+      "title": "Number Order to 10",
+      "description": "Learners arrange numbers up to 10 and complete simple missing-number sequences.",
+      "objectives": [
+        "Recognize numbers up to 10",
+        "Arrange numbers from 1 to 10",
+        "Fill in one missing number in a sequence"
+      ],
+      "difficulty": "medium",
+      "questionCount": 8,
+      "passingStars": 2
+    },
+    {
+      "slug": "ns-05-missing-numbers-to-10",
+      "worldId": "number-sequence",
+      "gameType": "number-order",
+      "order": 5,
+      "title": "Find Missing Numbers to 10",
+      "description": "Players solve number-order puzzles by choosing the missing number in sequences within 10.",
+      "objectives": [
+        "Complete sequences up to 10",
+        "Use counting on to find missing numbers",
+        "Check number order for accuracy"
+      ],
+      "difficulty": "medium",
+      "questionCount": 9,
+      "passingStars": 2
+    },
+    {
+      "slug": "ns-06-forward-and-back-to-15",
+      "worldId": "number-sequence",
+      "gameType": "number-order",
+      "order": 6,
+      "title": "Forward and Back to 15",
+      "description": "Children practice ordering numbers forward and backward with sequences that go up to 15.",
+      "objectives": [
+        "Recognize numbers up to 15",
+        "Order numbers from least to greatest",
+        "Order short sequences backward"
+      ],
+      "difficulty": "medium",
+      "questionCount": 10,
+      "passingStars": 2
+    },
+    {
+      "slug": "ns-07-order-to-20",
+      "worldId": "number-sequence",
+      "gameType": "number-order",
+      "order": 7,
+      "title": "Number Sequences to 20",
+      "description": "Learners tackle longer mixed sequences and place numbers correctly from 1 to 20.",
+      "objectives": [
+        "Recognize numbers up to 20",
+        "Sequence longer number sets",
+        "Notice patterns in counting order"
+      ],
+      "difficulty": "hard",
+      "questionCount": 12,
+      "passingStars": 3
+    },
+    {
+      "slug": "ns-08-skip-the-gap",
+      "worldId": "number-sequence",
+      "gameType": "number-order",
+      "order": 8,
+      "title": "Fill the Gaps in Number Order",
+      "description": "Players complete trickier sequences with multiple missing numbers and mixed positions up to 20.",
+      "objectives": [
+        "Find multiple missing numbers",
+        "Use number order to solve gaps",
+        "Strengthen flexible counting skills"
+      ],
+      "difficulty": "hard",
+      "questionCount": 13,
+      "passingStars": 3
+    },
+    {
+      "slug": "ns-09-challenge-sequences-to-30",
+      "worldId": "number-sequence",
+      "gameType": "number-order",
+      "order": 9,
+      "title": "Number Order Challenge to 30",
+      "description": "Children solve advanced ordering puzzles with larger numbers, mixed arrangements, and longer sequences up to 30.",
+      "objectives": [
+        "Recognize numbers up to 30",
+        "Order larger mixed number sets",
+        "Apply counting strategies to complex sequences"
+      ],
+      "difficulty": "hard",
+      "questionCount": 15,
+      "passingStars": 3
+    },
+    {
+      "slug": "wr-01-trace-numbers-1-to-3",
+      "worldId": "writing-workshop",
+      "gameType": "number-writing",
+      "order": 1,
+      "title": "Trace Numbers 1 to 3",
+      "description": "Young learners trace and write the numbers 1, 2, and 3 with guided strokes and simple repetition.",
+      "objectives": [
+        "Trace number 1 correctly",
+        "Trace number 2 correctly",
+        "Trace number 3 correctly"
+      ],
+      "difficulty": "easy",
+      "questionCount": 6,
+      "passingStars": 1
+    },
+    {
+      "slug": "wr-02-write-numbers-4-and-5",
+      "worldId": "writing-workshop",
+      "gameType": "number-writing",
+      "order": 2,
+      "title": "Write Numbers 4 and 5",
+      "description": "Children practice tracing and writing the numbers 4 and 5, building control and confidence with each stroke.",
+      "objectives": [
+        "Trace number 4",
+        "Trace number 5",
+        "Write numbers with proper direction"
+      ],
+      "difficulty": "easy",
+      "questionCount": 6,
+      "passingStars": 1
+    },
+    {
+      "slug": "wr-03-mix-and-write-1-to-5",
+      "worldId": "writing-workshop",
+      "gameType": "number-writing",
+      "order": 3,
+      "title": "Mix and Write 1 to 5",
+      "description": "Learners review numbers 1 through 5 by tracing and writing them in mixed order.",
+      "objectives": [
+        "Recognize numbers 1 to 5",
+        "Write numbers 1 to 5 in mixed order",
+        "Improve pencil control"
+      ],
+      "difficulty": "easy",
+      "questionCount": 8,
+      "passingStars": 2
+    },
+    {
+      "slug": "wr-04-write-numbers-6-to-8",
+      "worldId": "writing-workshop",
+      "gameType": "number-writing",
+      "order": 4,
+      "title": "Write Numbers 6 to 8",
+      "description": "Children learn the shapes of 6, 7, and 8 through guided number-writing practice.",
+      "objectives": [
+        "Trace number 6",
+        "Trace number 7",
+        "Trace number 8",
+        "Write each number clearly"
+      ],
+      "difficulty": "medium",
+      "questionCount": 8,
+      "passingStars": 2
+    },
+    {
+      "slug": "wr-05-write-number-9-and-10",
+      "worldId": "writing-workshop",
+      "gameType": "number-writing",
+      "order": 5,
+      "title": "Write Number 9 and 10",
+      "description": "Students practice writing 9 and 10, including forming a two-digit number with correct spacing.",
+      "objectives": [
+        "Trace number 9",
+        "Write number 10",
+        "Understand that 10 uses two digits"
+      ],
+      "difficulty": "medium",
+      "questionCount": 7,
+      "passingStars": 2
+    },
+    {
+      "slug": "wr-06-review-write-1-to-10",
+      "worldId": "writing-workshop",
+      "gameType": "number-writing",
+      "order": 6,
+      "title": "Review Write 1 to 10",
+      "description": "A full review lesson where learners write numbers 1 through 10 in a shuffled sequence.",
+      "objectives": [
+        "Recognize numbers 1 to 10",
+        "Write numbers 1 to 10 from memory",
+        "Maintain correct number formation"
+      ],
+      "difficulty": "medium",
+      "questionCount": 10,
+      "passingStars": 2
+    },
+    {
+      "slug": "wr-07-fast-number-writing-1-to-10",
+      "worldId": "writing-workshop",
+      "gameType": "number-writing",
+      "order": 7,
+      "title": "Fast Number Writing 1 to 10",
+      "description": "Players write numbers 1 to 10 with less tracing support, building fluency and accuracy.",
+      "objectives": [
+        "Write numbers with less guidance",
+        "Improve speed and accuracy",
+        "Recall number forms independently"
+      ],
+      "difficulty": "hard",
+      "questionCount": 12,
+      "passingStars": 3
+    },
+    {
+      "slug": "wr-08-missing-number-writing",
+      "worldId": "writing-workshop",
+      "gameType": "number-writing",
+      "order": 8,
+      "title": "Missing Number Writing",
+      "description": "Children identify a missing number in a short sequence and write it correctly.",
+      "objectives": [
+        "Notice missing numbers in order",
+        "Write the correct missing number",
+        "Connect counting order to writing"
+      ],
+      "difficulty": "hard",
+      "questionCount": 10,
+      "passingStars": 3
+    },
+    {
+      "slug": "wr-09-write-and-match-1-to-10",
+      "worldId": "writing-workshop",
+      "gameType": "number-writing",
+      "order": 9,
+      "title": "Write and Match 1 to 10",
+      "description": "In this challenge, learners write numbers 1 to 10 after seeing them briefly, practicing memory and formation.",
+      "objectives": [
+        "Write numbers from visual memory",
+        "Form numbers neatly and correctly",
+        "Review all numbers 1 to 10"
+      ],
+      "difficulty": "hard",
+      "questionCount": 12,
+      "passingStars": 3
+    }
+  ]
+}
