@@ -4,6 +4,24 @@
  */
 import { NextRequest } from 'next/server';
 
+// Transaction proxy mock — all DB calls inside $transaction go through mockTx
+const mockTx = {
+  child: {
+    create: jest.fn(),
+  },
+  gameSession: {
+    updateMany: jest.fn(),
+  },
+  childSticker: {
+    updateMany: jest.fn(),
+  },
+  streak: {
+    findUnique: jest.fn(),
+    upsert: jest.fn(),
+    delete: jest.fn(),
+  },
+};
+
 // Mock Prisma before importing the route handler
 jest.mock('@/lib/prisma', () => ({
   prisma: {
@@ -12,8 +30,8 @@ jest.mock('@/lib/prisma', () => ({
     },
     child: {
       findFirst: jest.fn(),
-      create: jest.fn(),
     },
+    $transaction: jest.fn(),
   },
 }));
 
@@ -22,7 +40,7 @@ import { prisma } from '@/lib/prisma';
 
 const mockParentFindUnique = prisma.parent.findUnique as jest.Mock;
 const mockChildFindFirst = prisma.child.findFirst as jest.Mock;
-const mockChildCreate = prisma.child.create as jest.Mock;
+const mockChildCreate = mockTx.child.create;
 
 function makeRequest(body: unknown, parentIdCookie?: string): NextRequest {
   const url = new URL('http://localhost/api/children/migrate');
@@ -41,6 +59,22 @@ beforeEach(() => {
   mockParentFindUnique.mockReset();
   mockChildFindFirst.mockReset();
   mockChildCreate.mockReset();
+  mockTx.gameSession.updateMany.mockReset();
+  mockTx.childSticker.updateMany.mockReset();
+  mockTx.streak.findUnique.mockReset();
+  mockTx.streak.upsert.mockReset();
+  mockTx.streak.delete.mockReset();
+
+  // Default: $transaction executes the callback with the tx proxy
+  (prisma.$transaction as jest.Mock).mockReset();
+  (prisma.$transaction as jest.Mock).mockImplementation(
+    async (cb: (tx: typeof mockTx) => Promise<unknown>) => cb(mockTx),
+  );
+
+  // Default: tx side-effect mocks return sensible no-ops unless overridden per test
+  mockTx.gameSession.updateMany.mockResolvedValue({ count: 0 });
+  mockTx.childSticker.updateMany.mockResolvedValue({ count: 0 });
+  mockTx.streak.findUnique.mockResolvedValue(null);
 });
 
 describe('POST /api/children/migrate', () => {
