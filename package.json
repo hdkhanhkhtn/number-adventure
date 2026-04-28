@@ -10,10 +10,10 @@
     "lint": "eslint",
     "test": "jest",
     "test:coverage": "jest --coverage",
-    "generate:audio": "tsx scripts/generate-tts-audio.ts",
-    "generate:lessons": "tsx scripts/generate-lessons.ts",
-    "seed:lessons": "tsx scripts/seed-lessons.ts",
-    "seed:worlds": "tsx scripts/seed-worlds.ts"
+    "generate:audio": "npx tsx scripts/generate-tts-audio.ts",
+    "generate:lessons": "npx tsx scripts/generate-lessons.ts",
+    "seed:lessons": "npx tsx scripts/seed-lessons.ts",
+    "seed:worlds": "npx tsx scripts/seed-worlds.ts"
   },
   "dependencies": {
     "@prisma/client": "^5.22.0",
