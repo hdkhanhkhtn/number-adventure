@@ -64,6 +64,19 @@ AI_API_KEY=<your-api-key>
 
 # Next.js
 NEXTAUTH_SECRET=<32-char-random-string>   # openssl rand -base64 32
+
+# Email (Phase 3C — weekly reports)
+RESEND_API_KEY=re_<your-resend-key>
+CRON_SECRET=<random-string>               # openssl rand -hex 32
+
+# Content generation (local-only, never deploy to server)
+# AI_API_KEY=<your-api-key>
+# AI_ENDPOINT=https://9router.remotestaff.vn/v1
+# AI_MODEL=advance-model
+# GOOGLE_APPLICATION_CREDENTIALS=/path/to/service-account.json
+
+# Feature flags
+NEXT_PUBLIC_USE_DB_LESSONS=false          # set true after seeding lessons
 ```
 
 `.env` is never committed to git (it's in `.gitignore`).
@@ -133,7 +146,62 @@ git push origin main
 
 ---
 
-## Part 3 — Day-to-day Operations
+## Part 3 — One-time Content Generation (Phase 3B)
+
+Run these **once** after initial deploy to populate AI-generated lessons and TTS audio.
+All commands run locally (not on the server).
+
+### 3B-1: Generate AI lesson content
+
+Requires `AI_ENDPOINT`, `AI_API_KEY`, `AI_MODEL` in your local `.env`.
+
+```bash
+npm run generate:lessons -- --all
+# Outputs: prisma/seed-lessons.json
+# Preview only (no file write): npm run generate:lessons -- --all --dry-run
+```
+
+### 3B-2: Seed lessons to database
+
+Requires `DATABASE_URL` in your local `.env` pointing at the target DB.
+
+```bash
+npm run seed:lessons
+# Idempotent — safe to re-run; upserts by (worldId, order)
+# Verify: npx prisma studio → Lesson table should show 63 rows (7 worlds × 9 lessons)
+```
+
+### 3B-3: Generate TTS audio files
+
+Requires `GOOGLE_APPLICATION_CREDENTIALS` in your local `.env` (path to GCP service account JSON).
+
+```bash
+npm run generate:audio
+# Outputs: public/audio/tts/en-US/{0..100}.mp3  (101 files)
+#          public/audio/tts/vi-VN/{0..100}.mp3  (101 files)
+# Verify:  ls public/audio/tts/en-US/ | wc -l   → 101
+```
+
+Commit the generated MP3 files after verification (~3 MB total):
+
+```bash
+git add public/audio/tts/
+git commit -m "chore(audio): add TTS audio pack en-US and vi-VN (0-100)"
+```
+
+### 3B-4: Activate DB lessons (optional)
+
+Set in server `.env` to switch lesson source from static templates to DB:
+
+```dotenv
+NEXT_PUBLIC_USE_DB_LESSONS=true
+```
+
+Restart app to apply. Falls back to static templates automatically if DB is empty.
+
+---
+
+## Part 4 — Day-to-day Operations
 
 ### View logs
 
@@ -173,7 +241,7 @@ docker compose run --rm migrate npx prisma db seed    # seed data
 
 ---
 
-## Part 4 — Rollback
+## Part 5 — Rollback
 
 If a bad deploy gets through:
 
@@ -194,7 +262,7 @@ docker compose up -d --no-deps app
 
 ---
 
-## Part 5 — Environment Checklist (pre-deploy)
+## Part 6 — Environment Checklist (pre-deploy)
 
 - [ ] `npm run build` succeeds locally
 - [ ] `npm run type-check` passes
@@ -203,7 +271,7 @@ docker compose up -d --no-deps app
 - [ ] `.env` on server has all required values
 - [ ] GitHub Secrets are all set (VPS_HOST, VPS_USER, VPS_PORT, VPS_SSH_KEY, VPS_APP_DIR)
 
-## Part 6 — Performance Targets
+## Part 7 — Performance Targets
 
 | Metric | Target |
 |---|---|
